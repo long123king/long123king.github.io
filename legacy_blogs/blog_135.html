@@ -10,7 +10,7 @@
 <p>上层的网络层可以根据需要从队列中拿出sk_buff进行处理，如果是发往本机的，就交给上层协议继续处理，如果是转发的，就再处理一下TTL，然后交给以太网层转发出去。</p>
 <p>对于本机发往其他机器的sk_buff，通过各层协议，最终加入到CPU的sk_buff队列，然后交给以太网层传送出去。</p>
 <p>&nbsp;</p>
-<p><a href="http://images.cnitblog.com/blog/580388/201401/221111388518.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; border-top: 0px; margin-right: auto; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="http://images.cnitblog.com/blog/580388/201401/221111391792.png" width="646" height="345"></a></p>
+<p><a href="http://images.cnitblog.com/blog/580388/201401/221111388518.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; border-top: 0px; margin-right: auto; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="http://long123king.github.io/legacy_blogs/img/blog_135_221111391792.png" width="646" height="345"></a></p>
 <p>通过上图可见，Netfilter处于的位置，都是在以太网层上面的，因此这时截获的sk_buff都是与队列无关，因此next域都是NULL。</p>
 <p>否则的话，这应该也算是一个漏洞，因为相当于Netfilter就可以控制所有类型的sk_buff了，而不单单是它请求处理的类型。</p></body>
 </html>
