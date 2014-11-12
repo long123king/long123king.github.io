@@ -1,0 +1,406 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x5728;Linux&#x4E0B;&#x7F16;&#x8BD1;&#x5E26;&#x8C03;&#x8BD5;&#x529F;&#x80FD;&#x7684;Bochs</title>
+<body><p>在Linux下使用Bochs参考：</p>
+<p><a title="http://wangcong.org/articles/bochs.html" href="http://wangcong.org/articles/bochs.html">http://wangcong.org/articles/bochs.html</a></p>
+<p><a title="http://kinglaw05.blog.163.com/blog/static/59683314200911205510345/" href="http://kinglaw05.blog.163.com/blog/static/59683314200911205510345/">http://kinglaw05.blog.163.com/blog/static/59683314200911205510345/</a></p>
+<p>&nbsp;</p>
+<p>首先，安装libgtk2.0-dev，build-essential库</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo apt-get install libgtk2.0-dev build-essential</pre>
+<!--CRLF--></div>
+</div>
+<p>然后下载最新的bochs源码，解压</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo wget http:<span style="color: #008000;">//bochs.sourceforge.net/svn-snapshot/bochs-20140211.tar.gz</span></pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> sudo gzip -d bochs-20140211.tar.gz</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> sudo tar -xvf bochs-20140211.tar</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> cd bobochs-20140211</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<p>配置</p>
+<p>将.conf.linux修改成下面模样：</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> #!/bin/sh</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> #</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> # .conf.linux</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> #</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> #which_config=normal</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> which_config=plugins</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> CC=<span style="color: #006080;">"gcc"</span></pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> CXX=<span style="color: #006080;">"c++"</span></pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> CFLAGS=<span style="color: #006080;">"-Wall -O3 -fomit-frame-pointer -pipe"</span>    # <span style="color: #0000ff;">for</span> speed</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> #CFLAGS=<span style="color: #006080;">"-Wall -g -pipe"</span>                         # <span style="color: #0000ff;">for</span> development</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> CXXFLAGS=<span style="color: #006080;">"$CFLAGS"</span></pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum15" style="color: #606060;">  15:</span> <span style="color: #0000ff;">export</span> CC</pre>
+<!--CRLF-->
+<pre><span id="lnum16" style="color: #606060;">  16:</span> <span style="color: #0000ff;">export</span> CXX</pre>
+<!--CRLF-->
+<pre><span id="lnum17" style="color: #606060;">  17:</span> <span style="color: #0000ff;">export</span> CFLAGS</pre>
+<!--CRLF-->
+<pre><span id="lnum18" style="color: #606060;">  18:</span> <span style="color: #0000ff;">export</span> CXXFLAGS</pre>
+<!--CRLF-->
+<pre><span id="lnum19" style="color: #606060;">  19:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum20" style="color: #606060;">  20:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum21" style="color: #606060;">  21:</span> <span style="color: #0000ff;">case</span> $which_config in</pre>
+<!--CRLF-->
+<pre><span id="lnum22" style="color: #606060;">  22:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum23" style="color: #606060;">  23:</span>   normal)</pre>
+<!--CRLF-->
+<pre><span id="lnum24" style="color: #606060;">  24:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum25" style="color: #606060;">  25:</span>     #######################################################################</pre>
+<!--CRLF-->
+<pre><span id="lnum26" style="color: #606060;">  26:</span>     # configuration 1 <span style="color: #0000ff;">for</span> release binary RPMs</pre>
+<!--CRLF-->
+<pre><span id="lnum27" style="color: #606060;">  27:</span>     # Include a few standard options, speed optimizations, X11 only.</pre>
+<!--CRLF-->
+<pre><span id="lnum28" style="color: #606060;">  28:</span>     #######################################################################</pre>
+<!--CRLF-->
+<pre><span id="lnum29" style="color: #606060;">  29:</span>     ./configure --enable-sb16 \</pre>
+<!--CRLF-->
+<pre><span id="lnum30" style="color: #606060;">  30:</span>                 --enable-ne2000 \</pre>
+<!--CRLF-->
+<pre><span id="lnum31" style="color: #606060;">  31:</span>                 --enable-all-optimizations \</pre>
+<!--CRLF-->
+<pre><span id="lnum32" style="color: #606060;">  32:</span>                 --enable-cpu-level=6 \</pre>
+<!--CRLF-->
+<pre><span id="lnum33" style="color: #606060;">  33:</span>                 --enable-x86-64 \</pre>
+<!--CRLF-->
+<pre><span id="lnum34" style="color: #606060;">  34:</span>                 --enable-vmx=2 \</pre>
+<!--CRLF-->
+<pre><span id="lnum35" style="color: #606060;">  35:</span>                 --enable-pci \</pre>
+<!--CRLF-->
+<pre><span id="lnum36" style="color: #606060;">  36:</span>                 --enable-clgd54xx \</pre>
+<!--CRLF-->
+<pre><span id="lnum37" style="color: #606060;">  37:</span>                 --enable-voodoo \</pre>
+<!--CRLF-->
+<pre><span id="lnum38" style="color: #606060;">  38:</span>                 --enable-usb \</pre>
+<!--CRLF-->
+<pre><span id="lnum39" style="color: #606060;">  39:</span>                 --enable-usb-ohci \</pre>
+<!--CRLF-->
+<pre><span id="lnum40" style="color: #606060;">  40:</span>                 --enable-es1370 \</pre>
+<!--CRLF-->
+<pre><span id="lnum41" style="color: #606060;">  41:</span>                 --enable-e1000 \</pre>
+<!--CRLF-->
+<pre><span id="lnum42" style="color: #606060;">  42:</span>                 --enable-show-ips \</pre>
+<!--CRLF-->
+<pre><span id="lnum43" style="color: #606060;">  43:</span>         --enable-debugger \</pre>
+<!--CRLF-->
+<pre><span id="lnum44" style="color: #606060;">  44:</span>         --enable-disasm</pre>
+<!--CRLF-->
+<pre><span id="lnum45" style="color: #606060;">  45:</span>                 ${CONFIGURE_ARGS}</pre>
+<!--CRLF-->
+<pre><span id="lnum46" style="color: #606060;">  46:</span>     ;;</pre>
+<!--CRLF-->
+<pre><span id="lnum47" style="color: #606060;">  47:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum48" style="color: #606060;">  48:</span>   plugins)</pre>
+<!--CRLF-->
+<pre><span id="lnum49" style="color: #606060;">  49:</span>     #######################################################################</pre>
+<!--CRLF-->
+<pre><span id="lnum50" style="color: #606060;">  50:</span>     # configuration 2 <span style="color: #0000ff;">for</span> release binary RPMs</pre>
+<!--CRLF-->
+<pre><span id="lnum51" style="color: #606060;">  51:</span>     # Include plugins, every possible gui.</pre>
+<!--CRLF-->
+<pre><span id="lnum52" style="color: #606060;">  52:</span>     #######################################################################</pre>
+<!--CRLF-->
+<pre><span id="lnum53" style="color: #606060;">  53:</span>     ./configure --enable-sb16 \</pre>
+<!--CRLF-->
+<pre><span id="lnum54" style="color: #606060;">  54:</span>                 --enable-ne2000 \</pre>
+<!--CRLF-->
+<pre><span id="lnum55" style="color: #606060;">  55:</span>                 --enable-all-optimizations \</pre>
+<!--CRLF-->
+<pre><span id="lnum56" style="color: #606060;">  56:</span>                 --enable-cpu-level=6 \</pre>
+<!--CRLF-->
+<pre><span id="lnum57" style="color: #606060;">  57:</span>                 --enable-x86-64 \</pre>
+<!--CRLF-->
+<pre><span id="lnum58" style="color: #606060;">  58:</span>                 --enable-vmx=2 \</pre>
+<!--CRLF-->
+<pre><span id="lnum59" style="color: #606060;">  59:</span>                 --enable-pci \</pre>
+<!--CRLF-->
+<pre><span id="lnum60" style="color: #606060;">  60:</span>                 --enable-clgd54xx \</pre>
+<!--CRLF-->
+<pre><span id="lnum61" style="color: #606060;">  61:</span>                 --enable-voodoo \</pre>
+<!--CRLF-->
+<pre><span id="lnum62" style="color: #606060;">  62:</span>                 --enable-usb \</pre>
+<!--CRLF-->
+<pre><span id="lnum63" style="color: #606060;">  63:</span>                 --enable-usb-ohci \</pre>
+<!--CRLF-->
+<pre><span id="lnum64" style="color: #606060;">  64:</span>                 --enable-usb-xhci \</pre>
+<!--CRLF-->
+<pre><span id="lnum65" style="color: #606060;">  65:</span>                 --enable-es1370 \</pre>
+<!--CRLF-->
+<pre><span id="lnum66" style="color: #606060;">  66:</span>                 --enable-e1000 \</pre>
+<!--CRLF-->
+<pre><span id="lnum67" style="color: #606060;">  67:</span>                 --enable-plugins \</pre>
+<!--CRLF-->
+<pre><span id="lnum68" style="color: #606060;">  68:</span>                 --enable-show-ips \</pre>
+<!--CRLF-->
+<pre><span id="lnum69" style="color: #606060;">  69:</span>                 --with-all-libs \</pre>
+<!--CRLF-->
+<pre><span id="lnum70" style="color: #606060;">  70:</span>         --enable-debugger \</pre>
+<!--CRLF-->
+<pre><span id="lnum71" style="color: #606060;">  71:</span>         --enable-disasm</pre>
+<!--CRLF-->
+<pre><span id="lnum72" style="color: #606060;">  72:</span>                 ${CONFIGURE_ARGS}</pre>
+<!--CRLF-->
+<pre><span id="lnum73" style="color: #606060;">  73:</span>     ;;</pre>
+<!--CRLF-->
+<pre><span id="lnum74" style="color: #606060;">  74:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum75" style="color: #606060;">  75:</span> esac</pre>
+<!--CRLF--></div>
+</div>
+<p>修改完后，执行sudo bash .conf.linux脚本进行配置</p>
+<p>安装</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo make</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> sudo make install</pre>
+<!--CRLF--></div>
+</div>
+<p>到<a title="http://bochs.sourceforge.net/diskimages.html" href="http://bochs.sourceforge.net/diskimages.html">http://bochs.sourceforge.net/diskimages.html</a>，下载一个已经配置好的img.</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo wget http:<span style="color: #008000;">//bochs.sourceforge.net/guestos/dlxlinux4.tar.gz</span></pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> sudo gzip -d dlxlinux4.tar.gz</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> sudo tar -xvf dlxlinux4.tar</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> cd dlxlinux4</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> bochs -q -f bochsrc.txt</pre>
+<!--CRLF--></div>
+</div>
+<p>就进入了调试状态</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~/linux-3.0/bochs/dlxlinux$ bochs -q -f dlxlinux.bxrc </pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> ========================================================================</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span>                      Bochs x86 Emulator 2.6.2.svn</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span>               Built from SVN snapshot after release 2.6.2</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span>                   Compiled on Feb 14 2014 at 01:21:35</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> ========================================================================</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 00000000000i[      ] LTDL_LIBRARY_PATH not set. <span style="color: #0000ff;">using</span> compile time <span style="color: #0000ff;">default</span> <span style="color: #006080;">'/usr/local/lib/bochs/plugins'</span></pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 00000000000i[      ] BXSHARE not set. <span style="color: #0000ff;">using</span> compile time <span style="color: #0000ff;">default</span> <span style="color: #006080;">'/usr/local/share/bochs'</span></pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 00000000000i[      ] lt_dlhandle is 0xa956340</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 00000000000i[PLUGIN] loaded plugin libbx_unmapped.so</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 00000000000i[      ] lt_dlhandle is 0xa9569d0</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 00000000000i[PLUGIN] loaded plugin libbx_biosdev.so</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 00000000000i[      ] lt_dlhandle is 0xa956fb0</pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 00000000000i[PLUGIN] loaded plugin libbx_speaker.so</pre>
+<!--CRLF-->
+<pre><span id="lnum15" style="color: #606060;">  15:</span> 00000000000i[      ] lt_dlhandle is 0xa9577d8</pre>
+<!--CRLF-->
+<pre><span id="lnum16" style="color: #606060;">  16:</span> 00000000000i[PLUGIN] loaded plugin libbx_extfpuirq.so</pre>
+<!--CRLF-->
+<pre><span id="lnum17" style="color: #606060;">  17:</span> 00000000000i[      ] lt_dlhandle is 0xa957d28</pre>
+<!--CRLF-->
+<pre><span id="lnum18" style="color: #606060;">  18:</span> 00000000000i[PLUGIN] loaded plugin libbx_parallel.so</pre>
+<!--CRLF-->
+<pre><span id="lnum19" style="color: #606060;">  19:</span> 00000000000i[      ] lt_dlhandle is 0xa959160</pre>
+<!--CRLF-->
+<pre><span id="lnum20" style="color: #606060;">  20:</span> 00000000000i[PLUGIN] loaded plugin libbx_serial.so</pre>
+<!--CRLF-->
+<pre><span id="lnum21" style="color: #606060;">  21:</span> 00000000000i[      ] lt_dlhandle is 0xa95c400</pre>
+<!--CRLF-->
+<pre><span id="lnum22" style="color: #606060;">  22:</span> 00000000000i[PLUGIN] loaded plugin libbx_gameport.so</pre>
+<!--CRLF-->
+<pre><span id="lnum23" style="color: #606060;">  23:</span> 00000000000i[      ] lt_dlhandle is 0xa95c9b8</pre>
+<!--CRLF-->
+<pre><span id="lnum24" style="color: #606060;">  24:</span> 00000000000i[PLUGIN] loaded plugin libbx_iodebug.so</pre>
+<!--CRLF-->
+<pre><span id="lnum25" style="color: #606060;">  25:</span> 00000000000i[      ] reading configuration from dlxlinux.bxrc</pre>
+<!--CRLF-->
+<pre><span id="lnum26" style="color: #606060;">  26:</span> 00000000000i[      ] lt_dlhandle is 0xa95cf28</pre>
+<!--CRLF-->
+<pre><span id="lnum27" style="color: #606060;">  27:</span> 00000000000i[PLUGIN] loaded plugin libbx_x.so</pre>
+<!--CRLF-->
+<pre><span id="lnum28" style="color: #606060;">  28:</span> 00000000000i[      ] installing x module as the Bochs GUI</pre>
+<!--CRLF-->
+<pre><span id="lnum29" style="color: #606060;">  29:</span> 00000000000i[      ] <span style="color: #0000ff;">using</span> log file bochsout.txt</pre>
+<!--CRLF-->
+<pre><span id="lnum30" style="color: #606060;">  30:</span> Next at t=0</pre>
+<!--CRLF-->
+<pre><span id="lnum31" style="color: #606060;">  31:</span> (0) [0x0000fffffff0] f000:fff0 (unk. ctxt): jmpf 0xf000:e05b          ; ea5be000f0</pre>
+<!--CRLF-->
+<pre><span id="lnum32" style="color: #606060;">  32:</span> &lt;bochs:1&gt; ^C</pre>
+<!--CRLF--></div>
+</div>
+<p>按下Ctrl+Z可以退出调试程序</p>
+<p>&nbsp;</p>
+<p>关于调试指令，可以参见<a title="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&amp;url=http://bochs.sourceforge.net/doc/docbook/user/index.html" href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&amp;url=http://bochs.sourceforge.net/doc/docbook/user/index.html">http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&amp;url=http://bochs.sourceforge.net/doc/docbook/user/index.html</a></p>
+<p>&nbsp;</p>
+<p>dlxlinux内核有一个缺点，就是内核太老了，是1.3版本。</p>
+<p>在Bochs img列表中，还有一项</p>
+<blockquote>
+<p><a href="http://bochs.sourceforge.net/guestos/linux.x86-64.bzImage">Linux kernel image for x86-64</a><span> from Andi Kleen at SuSE, which can be used as a boot floppy. </span><a href="http://bochs.sourceforge.net/guestos/linux.x86-64.bzImage.System.map.txt">Here</a><span> is the System.map file for it, which can be useful for debugging.</span></p>
+</blockquote>
+<p>这里只提供了一个linux内核映像，是bzImage格式，作为floppy挂载可以启动内核，但是提示找不到根文件系统。因此，我们需要自己搞定根文件系统。</p>
+<p>不想从头做一个根文件系统，就可以将dlxlinux的拷贝过来用。</p>
+<p>怎样将root.img挂载到当前的目录中？</p>
+<p>因为root.img里面包含着MBR以及第一个分区，而且第一个分区并不是紧跟在MBR后面，怎么能够知道第一个分区的位置呢？</p>
+<p>可以查看MBR中的分区表记录</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> dlxlinux $ hd root.img -s 446 | head</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 000001be  00 01 01 00 83 03 51 31 </pre>
+<span style="color: #ff0000;"> 11 00 00 00 37 51 00 00</span>
+<pre>  |......Q1....7Q..|</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 000001ce  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> *</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 000001fe  55 aa 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |U...............|</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 0000020e  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> *</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 000025fe  00 00 30 0a 00 00 9b 28  00 00 07 02 00 00 a6 1c  |..0....(........|</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 0000260e  00 00 b1 07 00 00 01 00  00 00 00 00 00 00 00 00  |................|</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 0000261e  00 00 00 20 00 00 00 20  00 00 18 05 00 00 b4 7a  |... ... .......z|</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 0000262e  ff 52 79 17 ff 52 1e 00  14 00 53 ef 00 00 01 00  |.Ry..R....S.....|</pre>
+<!--CRLF--></div>
+</div>
+</div>
+<p>红色部分分别代表第一个分区的起始扇区号为0x00000011，扇区个数为0x00005137。</p>
+<p>因此， 我们可以用下面命令将root.img挂载起来。</p>
+<div class="cnblogs_Highlighter">
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo mkdir root</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> sudo mount -o loop,offset=8704 root.img ./root</pre>
+<!--CRLF--></div>
+</div>
+</div>
+<p>其中，8704＝0x11 * 0x200</p>
+<p>自己创建一个img，并且将一个文件系统塞进去，并且制作分区表。</p>
+<p><a href="http://archive09.linux.com/forums/topic/1519">http://archive09.linux.com/forums/topic/1519</a></p>
+<p><a href="http://archive09.linux.com/forums/topic/1519">http://thestarman.pcministry.com/asm/mbr/PartTables.htm</a></p>
+<p><a href="http://archive09.linux.com/forums/topic/1519">http://aneeska.com/2011/04/07/how-to-create-a-partition-in-an-image-file/</a></p>
+<div class="cnblogs_Highlighter">
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> losetup /dev/loop0 root.img</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> mkfs.ext3 /dev/loop0 </pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> mount /dev/loop0 ./root</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> # copy files to ./root</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> umount ./root </pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> losetup -d /dev/loop0</pre>
+<!--CRLF--></div>
+</div>
+</div>
+<hr />
+<p>给img扩容</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo dd <span style="color: #0000ff;">if</span>=/dev/zero of=bigroot.img bs=1024 seek=10404 count=5120</pre>
+<!--CRLF--></div>
+</div>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> fdisk -u bigroot.img -c=dos</pre>
+<!--CRLF--></div>
+</div>
+<p>打造一个自己的根文件系统，使用指定的Linux内核文件，再加上Grub用于启动。</p>
+<p>参考：<a title="http://blog.csdn.net/deansrk/article/details/6661293" href="http://blog.csdn.net/deansrk/article/details/6661293">http://blog.csdn.net/deansrk/article/details/6661293</a></p>
+<p><a style="background-color: #ffffff; line-height: 1.5;" href="http://blog.chinaunix.net/uid-26207112-id-3332621.html">http://blog.chinaunix.net/uid-26207112-id-3332621.html</a></p>
+<p>但是无法进入</p>
+<p><a href="http://images.cnitblog.com/blog/580388/201402/171751251079193.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; margin-right: auto; padding-top: 0px; border-width: 0px;" title="linux" src="http://images.cnitblog.com/blog/580388/201402/171751263433138.png" alt="linux" width="646" height="362" border="0" /></a></p>
+<p>将linux.vdi文件作成linux.img文件，用Bochs进行调试，并且参考System.map中给出的线性地址进行断点设置，发现有执行到/sbin/init初始化任务</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> do_execve</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> do_execve_common</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> open_execve</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> do_filp_open</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> path_openat</pre>
+<!--CRLF--></div>
+</div>
+<p>返回了-1（#define&nbsp;&nbsp;&nbsp; EPERM&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&nbsp;&nbsp;&nbsp; /* Operation not permitted */）</p>
+<p>即操作不允许错误。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">struct</span> file *path_openat(<span style="color: #0000ff;">int</span> dfd, <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span> *pathname,</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span>         <span style="color: #0000ff;">struct</span> nameidata *nd, <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">struct</span> open_flags *op, <span style="color: #0000ff;">int</span> flags)</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> {</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span>     current-&gt;total_link_count = 0;</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span>     error = link_path_walk(pathname, nd);</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span>     <span style="color: #0000ff;">if</span> (unlikely(error))</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span>         <span style="color: #0000ff;">goto</span> out_filp;</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> }</pre>
+<!--CRLF--></div>
+</div></body>
+</html>

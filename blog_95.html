@@ -1,0 +1,44 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>qemu&#x7684;&#x52A8;&#x6001;&#x7FFB;&#x8BD1;&#x673A;&#x5236;</title>
+<body><p>qemu的作者在<a href="http://www.usenix.org/publications/library/proceedings/usenix05/tech/freenix/full_papers/bellard/bellard.pdf" target="_blank"><span>QEMU</span>, a&nbsp;<span>Fast</span>&nbsp;and Portable Dynamic Translator</a>一文提到了qemu的动态翻译机制，</p>
+<p>大致可以总结为如下过程：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:cpp;gutter:true;">目标代码中的一条指令
+    ｜
+    ｜－－（1）
+    ｜
+微操作(Micro Op)
+    ｜
+    ｜－－（2）
+    ｜
+主机代码
+</pre>
+</div>
+<p>&nbsp;</p>
+<h3>过程1：　　</h3>
+<p>qemu将目标代码的指令一条条地解释为微操作(Micro Op)。</p>
+<p>通常来说，一条目标指令，可能被解释成一条或者几条微操作，因此这个过程是会让目标代码的执行过程比原来慢的。</p>
+<p>微操作是精挑细选的，它们的组合基本上可以完整地表示不同体系下的所有指令。</p>
+<p>从目标代码中的指令，到微操作的转换过程是由qemu中手工编写的代码完成的。</p>
+<p>&nbsp;</p>
+<h3>过程2：</h3>
+<p>从微操作到主机系统的转换过程，不再像过程1那样需要很多手工编码操作，它实际上是复用了GNU C编译器的既有功能，</p>
+<p>因为微操作是用C语言编码的，所以直接将这些微操作通过GNU C编译器编译成主机系统的代码，这是一个很取巧的做法。</p>
+<p>事实上，当qemu在运行阶段，这个编译过程已经完成了，即每个微操作的主机代码已经生成了，就像是我们已经在手头上有</p>
+<p>了一大把的零件，只需要将这些零件按照目标文件的图纸组装在一起，就生成了一个可以在主机系统上运行的程序。这个过程</p>
+<p>应该就是qemu的核心设计了。</p>
+<p>&nbsp;</p>
+<p>总结起来就是，过程1是体力活，过程2是技术活。</p>
+<p>因为过程2中还有一些精妙的设计。</p>
+<p>1／ 每个微操作都被编写成一个C函数，一般都是很简短的C函数；</p>
+<p>2／ 微操作中如果有常数参数，比如jmp XXX，这XXX是我们动态生成的，要怎样让它能够作为&ldquo;常数&rdquo;形式写到主机代码中呢？</p>
+<p>答案是用到了GNU C编译器的relocate功能，C程序如果引用到了内存地址的话，因为无法编译时无法预计运行时的某个变量或者函数的地址，</p>
+<p>因此编译时并不能准确地解释这个地址具体是多少，编译时都会将这个对内存地址的引用位置用0x00000000（32位系统）代替，再通过维护一张</p>
+<p>重定位表(relocation table)，来指定代码中哪些位置应该到用哪些运行时的地址填充。</p>
+<p>qemu就是利用了这个机制，用对内存地址的引用给常数先占个位置，然后自己用常数的具体值再覆盖掉这个位置，反正这些代码qemu马上就要组装</p>
+<p>执行了，也不需要GNU C的链接器真正去做链接操作了。</p>
+<p>3／ 在组装过程中，qemu使用C函数memcpy将微操作的C函数生成的目标代码，去掉GNU C编译器生成的prologue/epilogue，直接拷贝到主机代码缓存gen_code_ptr中。</p>
+<p>而微操作的主机代码位于opc_ptr处，参数位于opparam_ptr位置。</p>
+<p>&nbsp;</p></body>
+</html>

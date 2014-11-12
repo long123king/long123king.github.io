@@ -1,0 +1,24 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x600E;&#x6837;&#x751F;&#x6210;VEX IR</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">bap_block_t* generate_vex_ir(asm_program_t *prog, address_t inst)
+{
+  bap_block_t *vblock = new bap_block_t;
+  VexArch guest = vexarch_of_prog(prog);
+
+  vblock-&gt;inst = inst;
+  // Skip the VEX translation of special instructions because these
+  // are also the ones that VEX does not handle
+  if ( !is_special( inst )) {
+      vblock-&gt;vex_ir = translate_insn(guest, asmir_get_ptr_to_instr(prog, inst), inst);
+  } else
+    vblock-&gt;vex_ir = NULL;
+
+  return vblock;
+}
+</pre>
+</div>
+<p>可以在Pin中，将每个Trace通过translate_insn来解析，因为IRSB按道理来说与Trace是相同概念的代码组合。</p>
+<p>&nbsp;</p></body>
+</html>

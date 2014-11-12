@@ -1,0 +1,19 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>normal use for autotools</title>
+<body><p>1. remove temporary files, only used for test purpose.</p>
+<div class="cnblogs_code">
+<pre> ls | sed -e <span style="color: #800000;">"</span><span style="color: #800000;">/^term.sh$/d</span><span style="color: #800000;">"</span> | sed -e <span style="color: #800000;">"</span><span style="color: #800000;">/^test.cpp$/d</span><span style="color: #800000;">"</span> | sed -e <span style="color: #800000;">"</span><span style="color: #800000;">/^Makefile.am$/d</span><span style="color: #800000;">"</span> | sed -e <span style="color: #800000;">"</span><span style="color: #800000;">/^autogen.sh$/d</span><span style="color: #800000;">"</span> | xargs -n <span style="color: #800080;">1</span> rm -rf</pre>
+</div>
+<p>&nbsp;</p>
+<p>2. edit autogen.sh</p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">echo "automatic generating configure.scan ......"<br />autoscan<br /><br />echo "modifing configure.scan to configure.ac ......" <br />sed -e "/AC_INIT/a\<br />&nbsp;&nbsp;&nbsp; AM_INIT_AUTOMAKE" configure.scan &gt; configure.ac<br /><br />echo "automatic generating config.in.h ......"<br />autoheader<br /><br />echo "aclocal ......"<br />aclocal<br /><br />echo "creating files: README, AUTHORS, NEWS, ChangLog ......"<br />touch README AUTHORS NEWS ChangeLog <br /><br />echo "Daniel King(long123king@163.com)" &gt; AUTHORS<br />echo "0.0.1" &gt; ChangeLog<br />echo -e "\tAutomatic make" &gt;&gt; ChangeLog<br />echo -e "\tNeed to edit Makefile.am manually first" &gt;&gt; ChangeLog<br /><br />echo "automake ......"<br />automake --add-missing --copy<br /><br />echo "autoconf ......"<br />autoconf<br /><br />echo "./configure"<br />./configure<br /><br />echo "make"<br />echo "##############################################################################"<br />make<br />echo "##############################################################################"</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>3. run autogen.sh</p>
+<div class="cnblogs_code">
+<pre>bash autogen.sh</pre>
+</div>
+<p>&nbsp;</p></body>
+</html>

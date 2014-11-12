@@ -1,0 +1,46 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Device Drivers</title>
+<body><h2>Types of Device Drivers</h2>
+<p>Windows可能会有User-mode的驱动，但是我们只关注Kernel-Mode的驱动。</p>
+<h3>WDM Drivers</h3>
+<p>WDM是一种驱动模型，是比较常用的驱动模型。</p>
+<p>WDM可以分为以下几类：</p>
+<ul>
+<li><strong>Bus Drivers</strong></li>
+</ul>
+<p>负责检测到连接到该总线的设备的与PnP/Power相关的事件，并且通知IO Manager, PnP Manager, Power Manager。</p>
+<ul>
+<li><strong>Function Drivers</strong></li>
+</ul>
+<p>负责某一具体设备的driver，是狭义上的driver。</p>
+<p>Function Driver是唯一了解某类硬件特性，并且与这类硬件直接(通过调用HAL提供的接口)打交道的driver。</p>
+<ul>
+<li><strong>Filter Drivers</strong></li>
+</ul>
+<p>过滤驱动，负责修改或者补充某些特定driver的功能。</p>
+<h3>Layered Drivers</h3>
+<hr />
+<p>&nbsp;</p>
+<h2>Structure of a Driver</h2>
+<p>由各种routine构成</p>
+<hr />
+<p>&nbsp;</p>
+<h2>Driver Objects and Device Objects</h2>
+<p>加载driver，会调用init routine。</p>
+<p>&nbsp;</p>
+<p>对于PnP driver，新的设备plug到系统上时，driver的add device routine会被调用，此时driver可以创建一个Device Object;</p>
+<p>对于其他driver，通常driver在init routine时调用IoCreateDevice/IoCreateDeviceSecure创建Device Object;</p>
+<p>&nbsp;</p>
+<p>对于应用程序来说，它要操作的是Device，它并不知道该Device相对应的Driver。应用程序如果要操作Device，只能按照文件模型来进行操作，比如Read/Write/IOControl。</p>
+<p>而打开文件，必须知道文件的路径，对于Device来说，它们的路径是\Device目录下，这个路径是不能被应用程序访问到的，因此需要创建软链接到\Global??目录下，这样就可以被应用程序打开了。</p>
+<p>对于PnP设备来说，它们的路径名是动态生成的GUID表示。</p>
+<p>&nbsp;</p>
+<p>Device Object与Driver Object是互相通过指针关联在一起的。</p>
+<p>Device Object里面保存device queue，里面保存所有发送到该设备上的IRP数据包；</p>
+<p>IO System会将Device Object的device queue中的IRP按照一定的顺序取出，连同Device Object的指针一同传递给Driver Object，由Driver调用相应的routine完成对于IRP的操作。</p>
+<h2>Opening Devices</h2>
+<p>因为底层设备对于各个用户态的进程来说，属于&ldquo;临界区&rdquo;资源，需要同步各个进程的访问。</p>
+<p>所以如果是要向某个设备write数据时，最好是使用exclusive write的权限打开，这样可以阻止别的进程打开这个文件。</p>
+<p>但是这样就把整个文件的内容都锁住了，也可以使用LockFile，可以只锁住文件的一部分，而文件的其他部分是允许其他进程访问的。</p></body>
+</html>

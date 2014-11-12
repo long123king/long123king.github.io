@@ -1,0 +1,25 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Makefile.am&#x6A21;&#x677F;&#x53C2;&#x8003;&#xFF0C;&#x6765;&#x81EA;bap&#x9879;&#x76EE;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">1 bin_PROGRAMS = \
+  2         print-ir \
+  3         lifttrace
+  4 
+  5 # these executables should depend on libasmir, since they link it in
+  6 # statically.
+  7 #print-ir_DEPENDENCIES = ../src/libasmir.a
+  8 #lifttrace_DEPENDENCIES = ../src/libasmir.a
+  9 
+ 10 print_ir_SOURCES = print-ir.cpp ir_printer.cpp
+ 11 lifttrace_SOURCES = lifttrace.cpp
+ 12 LDADD = @ASMIR_DIR@/src/libasmir.a @VEX_DIR@/libvex.a -lbfd -ldl -lopcodes
+ 13 AM_CXXFLAGS = \
+ 14               -g -O3\
+ 15               -I../include \
+ 16               -I../src/traces \
+ 17               -I@VEX_DIR@/pub
+</pre>
+</div>
+<p>　　</p></body>
+</html>

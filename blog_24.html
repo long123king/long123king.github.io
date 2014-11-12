@@ -1,0 +1,247 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Windows&#x64CD;&#x4F5C;&#x7CFB;&#x7EDF;&#x67B6;&#x6784;</title>
+<body><p><img style="vertical-align: baseline; display: block; margin-left: auto; margin-right: auto;" src="http://images.cnitblog.com/i/580388/201406/111705562494985.png" alt="" /></p>
+<p><img style="vertical-align: middle; display: block; margin-left: auto; margin-right: auto;" src="http://images.cnitblog.com/i/580388/201406/120954433747641.png" alt="" /></p>
+<p>&nbsp;</p>
+<h1>用户态</h1>
+<p>用户态有四类组件，这四类组件都是以进程形式存在的，也就是说，它们都有自己的进程地址空间（其实就是一套页表）。</p>
+<h2>1. System Support Processes</h2>
+<p>这些是固化的进程，也就是说是操作系统结合在一起的进程。</p>
+<p>比如logon process(winlogon.exe)，Session manager（smss.exe）。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Session Manager　　　　　　　　　　[smss.exe]
+Local Session Manager　　　　　　 [lsm.exe]
+Service Control Manager　　　　　[services.exe]
+Local Security Authority　　　 　[lsass.exe]
+Winlogon　　　　　　　　　　　　　　[winlogon.exe]
+Wininit　　　　　　　　　　　　　　 [wininit.exe]
+</pre>
+</div>
+<p>　　</p>
+<p><span style="text-decoration: line-through;">它们都不属于service，因为它们都不是由SCM(Service Control Manager)启动的。</span></p>
+<p>lsass.exe和lsm.exe就是service。</p>
+<h2>2. Service Processes</h2>
+<p>Service进程是由SCM启动的，它们与user logon是独立的，因为有些service的启动时机比winlogon.exe还早。</p>
+<p>Task Scheduler和Print Spooler都是services。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Service Host    [svchost.exe]
+</pre>
+</div>
+<p>　　</p>
+<h2>3. User Applications</h2>
+<p>就是常说的应用程序。</p>
+<h2>4. Environment Subsystem Server Processes</h2>
+<p>就是常说的&ldquo;环境子系统&rdquo;，也就是&ldquo;Win32子系统&rdquo;。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">[csrss.exe]
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p>
+<h2>Subsystem Dynamic Libraries</h2>
+<p>由四个dll组成：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Kernel32.dll
+Advapi32.dll
+User32.dll
+Gdi32.dll
+</pre>
+</div>
+<p>它们实际上是Service Processes和User Applications的一部分，以dll的形式加载到它们的进程地址空间中去的。</p>
+<p>它们的作用是向Service Processes和User Applications提供Win32 API接口。</p>
+<p>&nbsp;</p>
+<p>Win32 API在实现上分为三类：</p>
+<p><strong>1. 完全在这四个dll的内部实现。</strong></p>
+<p><strong>2. 通过这四个dll，调用更加底层的(内核态，比如内核或者驱动)实现。</strong></p>
+<p><strong>3. 这四个dll与Environment Subsystem Server Processes建立C/S通信模型，dll作为client请求Win32子系统的server进程（用户态进程）来提供相应的实现。</strong></p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<h1>内核态</h1>
+<p>内核态组件分为以下几类：</p>
+<h2>1. Windows Executive</h2>
+<p>可以理解为内核态的管理程序，其实就是各个模块子系统。</p>
+<p>比如内存管理模块，进程与线程管理模块，安全模块，IO模块，网络模块，以及进程间通信模块。</p>
+<p>&nbsp;</p>
+<h2>2. Windows Kernel</h2>
+<p>狭义上的内核，提供内核态中的核心操作，比如线程调度与切换，中断和异常的分发与处理，以及多处理的同步等等。</p>
+<p>它其实就是一组函数的集合。</p>
+<p>&nbsp;</p>
+<h2>3. Device Driver</h2>
+<p>内核态驱动。</p>
+<p>&nbsp;</p>
+<h2>4. HAL</h2>
+<p>Hardware Abstract Layer</p>
+<p>用来隐藏与平台相关的细节，并且向上提供统一的API接口。</p>
+<p>&nbsp;</p>
+<h2>5. Windowing and Graphics System</h2>
+<p>窗口与绘图系统。用来提供GUI相关功能。</p>
+<p>&nbsp;</p>
+<p>这5个组件大部分都存在于一个Ntoskrnl.exe中，当然一些第三方的driver除外。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<h1>Windows Subsystem</h1>
+<p>Windows子系统包含两部分：</p>
+<p>即上面所描述的用户态的<strong>Environment Subsystem Service Processes</strong>和内核态的<strong>Windowing and Graphics System</strong>。</p>
+<p>&nbsp;</p>
+<h2>用户态的Win32子系统服务进程</h2>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">[csrss.exe]
+
+Basesrv.dll
+Winsrv.dll
+Csrsrv.dll
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>向Win32 Subsystem dll代表的client提供以下功能支持：</p>
+<p><strong>1. Console Windows（命令行窗口，即不带GUI功能，不涉及到Win32k.sys）</strong></p>
+<p><strong>2. 创建和删除Process/Thread</strong></p>
+<p><strong>3. Side-by-Side（Sxs）支持</strong></p>
+<p>等等。</p>
+<p>&nbsp;</p>
+<h2>内核态的Win32k.sys驱动</h2>
+<p>提供以下功能：</p>
+<p>1. 窗口管理器，以及与GUI相关的输入输出设备，消息传递等机制。</p>
+<p>2. 提供GDI绘图库。</p>
+<p>3. DirectX的支持(在另一个驱动Dxgkrnl.sys中实现)</p>
+<hr />
+<h1>Ntdll</h1>
+<p>与Subsystem dll不同，Ntdll是所有用户态进程与内核态进行交互的必经之路。</p>
+<p>ntdll包含两类函数：</p>
+<h2>1. System Service Stub</h2>
+<p>这些函数是调用内核Executive组件提供的系统服务的入口函数。</p>
+<p>函数内部包含与平台相关的代码，使代码的执行由用户态转入内核态执行，比如int 80H或者sysenter等等。</p>
+<p>&nbsp;</p>
+<p>在内核中与Stub对应的是SSDT，System Service Dispatch Table，根据ntdll的stub函数传入的系统调用号，从SSDT表中选择对应的service routine执行。</p>
+<h2>2. Operating System Internal Support Functions</h2>
+<p>这部分不是给应用程序使用的，而是给用户态的操作系统组件，比如System Support Processes和Environment Subsystem Service Processes来使用。</p>
+<p>包括下面几类：</p>
+<ul>
+<li><strong>Image Loader functions, <span style="color: #800000;">Ldr[XXXX]</span></strong></li>
+<li><strong>Heap Manager</strong></li>
+<li><strong>Windows Subsystem Process Communication functions, <span style="color: #800000;">Csr[XXXX]</span></strong></li>
+<li><strong>Runtime Library Routines, <span style="color: #800000;">Rtl[XXXX]</span></strong></li>
+<li><strong>User-mode Debugging, <span style="color: #800000;">DbgUi[XXXX]</span></strong></li>
+<li><strong>Event Tracing for Windows,<span style="color: #800000;"> Etw[XXXX]</span></strong></li>
+<li><strong>User-mode Asynchronous Procedure Call(APC) Dispatcher</strong></li>
+<li><strong>Exception Dispatcher</strong></li>
+<li><strong>subset of C Run-time(CRT)</strong></li>
+</ul>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>Executive</h1>
+<p>executive，可以理解为内核的表现层</p>
+<p>包含以下几类函数集合：</p>
+<h2>1. System Services</h2>
+<p>导出给用户态进程使用的函数，其中大部分通过API向普通应用程序开放，而少部分则只能给用户态的操作系统组件使用。</p>
+<h2>2. Device Driver</h2>
+<h2>3. WDK Interface Functions</h2>
+<p>可以被内核态的驱动调用的函数，比如Zw[XXXX]</p>
+<h2>4. WDK未导出的函数</h2>
+<p>内核态的驱动也不能够调用</p>
+<p>比如Inbv[XXXX]</p>
+<h2>5. 未导出的全局变量</h2>
+<p>Internal IO manager support functions, Iop[XXXX]</p>
+<p>Internal Memory management support functions, Mi[XXXX]</p>
+<h2>6. 各个模块内部的函数，没有被定义为全局符号</h2>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<h1>&nbsp;</h1>
+<h1>Kernel</h1>
+<p>Kernel里面实现的是操作系统最基本的功能，比如线程调度和同步等等。</p>
+<p>Kernel的代码是平台相关的，用来处理与平台相关的一些功能，比如中断和异常分发。</p>
+<p>Kernel也会通过WDK接口向驱动导出一些函数，比如Ke[XXXX]</p>
+<p>&nbsp;</p>
+<p>kernel与executive的区别在于，kernel几乎不做任何决策，只是提供基础的支持功能。</p>
+<p>kernel唯一自己做决策的是线程的调度与分发。</p>
+<p>&nbsp;</p>
+<h2>kernel objects</h2>
+<p>kernel提供的object是最基本的对象，方便进行创建和管理。</p>
+<p>而executive用到的objects大都是特化的object，里面包含不同的overhead，因此往往一个executive object，包含几个的kernel objects.</p>
+<p>kernel objects分为几类：</p>
+<h3>1. Control Objects</h3>
+<p>APC objects, DPC objects, Interrupt objects</p>
+<h3>2. Dispatcher Objects</h3>
+<p>kernel thread, mutex, event, kernel event pair, semaphore, timer, waitable timer</p>
+<p>&nbsp;</p>
+<h2>Kernel Processor Control Region（KPCR）</h2>
+<p>用来保存与processor相关的信息，也可以理解为与平台相关的信息。</p>
+<p>比如：</p>
+<ul>
+<li><strong>Interrupt Dispatcher Table(IDT)</strong></li>
+<li><strong>Task-State Segment(TSS)</strong></li>
+<li><strong>Global Descriptor Table(GDT)</strong></li>
+</ul>
+<p>&nbsp;</p>
+<p>在32位Windows操作系统中，fs:[0]可以索引到KPCR；</p>
+<p>在x64 Windows操作系统中， gs:[0]可以索引到KPCR；</p>
+<p>在IA64 Windows操作系统中， 0xE0000000FFFF0000可以索引到KPCR；</p>
+<p>&nbsp;</p>
+<p>在KPCR中有一个内嵌的结构体叫KPRCB（Kernel Processor Control Block）</p>
+<p>里面保存的是不公开的内容，主要是与Processor相关的信息，比如Nonpaged pool和paged pool的lookaside list就保存在KPRCB中。</p>
+<hr />
+<h1>&nbsp;</h1>
+<h1>HAL&nbsp;</h1>
+<hr />
+<h1>&nbsp;</h1>
+<h1>Device Driver</h1>
+<hr />
+<h1>&nbsp;</h1>
+<h1>System Processes</h1>
+<p>系统进程</p>
+<h2>1. Idle Processes</h2>
+<p>Idle 和 System是两个比较特殊的进程，因为这们不是完整意义的进程，没有实际的映像文件。</p>
+<p>Idle Process是0号进程。</p>
+<h2>2. Interrupts and DPCs</h2>
+<p>这两个不是进程，而是中断发生时，内核提供的异步处理机制。</p>
+<p>但是这两种全程会消耗CPU，因此为了提供更多的关于CPU使用情况的细节，许多系统监视器都会将二者列出来。</p>
+<h2>3. System Process and System Threads</h2>
+<p>4号进程。</p>
+<p>提供了一个供内核线程运行的进程空间，但是注意，这个进程只包含内核地址空间，而不包含用户地址空间。</p>
+<p>&nbsp;</p>
+<p>内核和驱动可以调用PsCreateSystemThread来创建System Thread，通常只在需要Thread Context的情况下才会创建System Thread，比如</p>
+<p>ISR和DPC就不是System Thread。</p>
+<h2>4. Session Manager (Smss.exe)</h2>
+<p>负责初始化最后阶段的内核态进程创建了smss.exe这个进程，这是用户态的第一个进程。</p>
+<p>&nbsp;</p>
+<p>Session Manager还有很多特殊的任务，比如完成delayed rename/delete file operation。</p>
+<p>&nbsp;</p>
+<p>Session Manager会创建Subsystem server processes（csrss.exe），csrss.exe进程会创建剩余的system processes。</p>
+<p>&nbsp;</p>
+<p>对于Session 0，smss.exe会创建wininit.exe进程，除此之外，smss.exe会为每个session创建一个Winlogon.exe进程。</p>
+<h2>5. Winlogon, LogonUI, LSASS和Userinit</h2>
+<p>SAS（Control + Alt + Delete）， Secure Attention Sequence，是用来保证用户会调用到正确的Winlogon进程，因为这三个键的组合是不允许在用户态被拦截的。</p>
+<p>Winlogon进程会在需要的情况下，创建LogonUI，用来提供用户登陆界面。</p>
+<p>&nbsp;</p>
+<p>LSASS服务进程会提供认证的功能，认证成功后，lsass会创建一个access token，对于UAC情况下，对于拥有管理员权限的用户，还会创建一个权限受限的access token，并且让用户在正常情况下使用这个受限的access token。</p>
+<p>&nbsp;</p>
+<h2>6. Service Control Manager （SCM）</h2>
+<p>services，也就是用户态的无界面进程，和Linux的Daemon Process一样。</p>
+<p>service进程通常不与logon user产生任何互动。</p>
+<p>&nbsp;</p>
+<p>services也是正常的进程，只是它们的生命周期是通过特殊的API与SCM通信来控制的。</p>
+<p>services可以拥有自己的执行映像，比如lsass.exe，也可以只提供一个dll，而借用通用的svchost.exe来启动进程。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p></body>
+</html>

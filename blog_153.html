@@ -1,0 +1,46 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Mint&#x4E0B;&#x7F16;&#x8BD1;Linux&#x5185;&#x6838;&#x6A21;&#x5757;&#x7684;&#x9519;&#x8BEF;</title>
+<body><div class="cnblogs_code">
+<pre>daniel@linuxmint /mod/daniel $ <span style="color: #0000ff;">sudo</span> <span style="color: #0000ff;">make</span> -C /usr/src/linux-headers-<span style="color: #800080;">3.8</span>.<span style="color: #800080;">0</span>-<span style="color: #800080;">19</span> M=/mod/daniel/<span style="color: #000000;"> modules
+</span><span style="color: #0000ff;">make</span>: Entering directory `/usr/src/linux-headers-<span style="color: #800080;">3.8</span>.<span style="color: #800080;">0</span>-<span style="color: #800080;">19</span><span style="color: #800000;">'
+</span><span style="color: #000000;">
+  WARNING: Symbol version dump </span>/usr/src/linux-headers-<span style="color: #800080;">3.8</span>.<span style="color: #800080;">0</span>-<span style="color: #800080;">19</span>/<span style="color: #000000;">Module.symvers
+           is missing; modules will have no dependencies and modversions.
+
+  CC [M]  </span>/mod/daniel/<span style="color: #000000;">daniel.o
+In </span><span style="color: #0000ff;">file</span> included from include/linux/gfp.h:<span style="color: #800080;">4</span>:<span style="color: #800080;">0</span><span style="color: #000000;">,
+                 from include</span>/linux/kmod.h:<span style="color: #800080;">22</span><span style="color: #000000;">,
+                 from include</span>/linux/module.h:<span style="color: #800080;">13</span><span style="color: #000000;">,
+                 from </span>/mod/daniel/daniel.c:<span style="color: #800080;">2</span><span style="color: #000000;">:
+include</span>/linux/mmzone.h:<span style="color: #800080;">18</span>:<span style="color: #800080;">30</span>: fatal error: generated/bounds.h: No such <span style="color: #0000ff;">file</span><span style="color: #000000;"> or directory
+compilation terminated.
+</span><span style="color: #0000ff;">make</span>[<span style="color: #800080;">1</span>]: *** [/mod/daniel/daniel.o] Error <span style="color: #800080;">1</span>
+<span style="color: #0000ff;">make</span>: *** [_module_/mod/daniel] Error <span style="color: #800080;">2</span>
+<span style="color: #0000ff;">make</span>: Leaving directory `/usr/src/linux-headers-<span style="color: #800080;">3.8</span>.<span style="color: #800080;">0</span>-<span style="color: #800080;">19</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>如果直接使用Makefile进行编译，提示如下错误</p>
+<div class="cnblogs_code">
+<pre>daniel@linuxmint /mod/daniel $ <span style="color: #0000ff;">sudo</span> <span style="color: #0000ff;">make</span>
+<span style="color: #0000ff;">make</span>: Nothing to be <span style="color: #0000ff;">done</span> <span style="color: #0000ff;">for</span> `all<span style="color: #800000;">'</span><span style="color: #800000;">.</span></pre>
+</div>
+<p>其中的Makefile如下所示：</p>
+<div class="cnblogs_code">
+<pre>obj-m +=<span style="color: #000000;"> daniel.o
+#generate the path
+CURRENT_PATH:</span>=$(shell <span style="color: #0000ff;">pwd</span><span style="color: #000000;">)
+#the current kernel version number
+LINUX_KERNEL:</span>=$(shell <span style="color: #0000ff;">uname</span> -<span style="color: #000000;">r)
+#the absolute path
+LINUX_KERNEL_PATH:</span>=/usr/src/linux-headers-<span style="color: #000000;">$(LINUX_KERNEL)
+#complie </span><span style="color: #0000ff;">object</span><span style="color: #000000;">
+all:
+     </span><span style="color: #0000ff;">make</span> -C $(LINUX_KERNEL_PATH) M=<span style="color: #000000;">$(CURRENT_PATH) modules
+#clean
+clean:
+     </span><span style="color: #0000ff;">make</span> -C $(LINUX_KERNEL_PATH) M=$(CURRENT_PATH) clean</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p></body>
+</html>

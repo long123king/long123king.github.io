@@ -1,0 +1,186 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>sed &amp; awk</title>
+<body><p>看到过的最好的一个讲解sed &amp; awk的PPT</p>
+<p><a title="http://www.cs.nyu.edu/~mohri/unix08/lect5.pdf" href="http://www.cs.nyu.edu/~mohri/unix08/lect5.pdf">http://www.cs.nyu.edu/~mohri/unix08/lect5.pdf</a></p>
+<p>&nbsp;</p>
+<p>现在制作一个自己的版本的ls</p>
+<p>sed_ls_fmt</p>
+<div id="codeSnippetWrapper">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>s/^d/dir  /1</pre>
+<!--CRLF-->
+<pre>s/^-/file /1</pre>
+<!--CRLF-->
+<pre>s/\([rwxs-]\{3\}\)\([rwxs-]\{3\}\)\([rwxs-]\{3\}\)/\1 \2 \3/</pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<p>awk_ls_fmt</p>
+<div id="codeSnippetWrapper">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>NR != 1{</pre>
+<!--CRLF-->
+<pre>    size = 0</pre>
+<!--CRLF-->
+<pre>    unit = <span style="color: #006080;">"B"</span></pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF-->
+<pre>    <span style="color: #0000ff;">if</span> ($8 &lt; 1024)</pre>
+<!--CRLF-->
+<pre>        size = $8</pre>
+<!--CRLF-->
+<pre>    <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span>($8 &lt; 1024 * 1024)</pre>
+<!--CRLF-->
+<pre>    {</pre>
+<!--CRLF-->
+<pre>        size = $8/1024 </pre>
+<!--CRLF-->
+<pre>        unit = <span style="color: #006080;">"KB"</span></pre>
+<!--CRLF-->
+<pre>    }</pre>
+<!--CRLF-->
+<pre>    <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span>($8 &lt; 1024 * 1024 * 1024)</pre>
+<!--CRLF-->
+<pre>    {</pre>
+<!--CRLF-->
+<pre>        size = $8/1024/1024 </pre>
+<!--CRLF-->
+<pre>        unit = <span style="color: #006080;">"MB"</span></pre>
+<!--CRLF-->
+<pre>    }</pre>
+<!--CRLF-->
+<pre>    <span style="color: #0000ff;">else</span></pre>
+<!--CRLF-->
+<pre>    {</pre>
+<!--CRLF-->
+<pre>        size = $8/1024/1024/1024 </pre>
+<!--CRLF-->
+<pre>        unit = <span style="color: #006080;">"GB"</span></pre>
+<!--CRLF-->
+<pre>    }</pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF-->
+<pre>    printf(<span style="color: #006080;">"%6s\tlink:%s\towner:%6s[%s]\tgroup:%6s[%s]\tothers:[%s]\t%6.2f %s\tmtime:[%2s %2s %5s] %s\n"</span>, </pre>
+<!--CRLF-->
+<pre>        $1, </pre>
+<!--CRLF-->
+<pre>        $5, </pre>
+<!--CRLF-->
+<pre>        $6, </pre>
+<!--CRLF-->
+<pre>        $2, </pre>
+<!--CRLF-->
+<pre>        $7, </pre>
+<!--CRLF-->
+<pre>        $3, </pre>
+<!--CRLF-->
+<pre>        $4, </pre>
+<!--CRLF-->
+<pre>        size, </pre>
+<!--CRLF-->
+<pre>        unit,</pre>
+<!--CRLF-->
+<pre>        $9,</pre>
+<!--CRLF-->
+<pre>        $10,</pre>
+<!--CRLF-->
+<pre>        $11,</pre>
+<!--CRLF-->
+<pre>        $12);</pre>
+<!--CRLF-->
+<pre>}</pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<p>ls.sh</p>
+<div id="codeSnippetWrapper">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>ls -l $1 | sed -f sed_ls_fmt | awk -f awk_ls_fmt</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<p>效果如下：</p>
+<div id="codeSnippetWrapper">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>bash ls.sh ~</pre>
+<!--CRLF--></div>
+</div>
+<div id="codeSnippetWrapper">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>file    link:1    owner:daniel[rw-]    group:daniel[r--]    others:[r--]     32.62 MB    mtime:[3月 28 17:33] pin-2.13-62732-gcc.4.4.7-linux.tar.gz</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[2月 12 20:01] 公共的</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[2月 12 20:01] 模板</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[2月 12 20:01] 视频</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[3月  7 15:00] 图片</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[2月 12 20:01] 文档</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[5月 22 17:50] 下载</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[2月 12 20:01] 音乐</pre>
+<!--CRLF-->
+<pre>dir    link:2    owner:daniel[rwx]    group:daniel[r-x]    others:[r-x]      4.00 KB    mtime:[3月  8 16:26] 桌面<br /><br /><span style="color: #800000; font-size: 15px;">add color theme to output:</span></pre>
+<div class="cnblogs_code">
+<pre>NR != <span style="color: #800080;">1</span><span style="color: #000000;">{
+    size </span>= <span style="color: #800080;">0</span><span style="color: #000000;">
+    unit </span>= <span style="color: #800000;">"</span><span style="color: #800000;">B</span><span style="color: #800000;">"</span>
+
+    <span style="color: #0000ff;">if</span> ($<span style="color: #800080;">8</span> &lt; <span style="color: #800080;">1024</span><span style="color: #000000;">)
+        size </span>= $<span style="color: #800080;">8</span>
+    <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span>($<span style="color: #800080;">8</span> &lt; <span style="color: #800080;">1024</span> * <span style="color: #800080;">1024</span><span style="color: #000000;">)
+    {
+        size </span>= $<span style="color: #800080;">8</span>/<span style="color: #800080;">1024</span><span style="color: #000000;"> 
+        unit </span>= <span style="color: #800000;">"</span><span style="color: #800000;">KB</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    }
+    </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span>($<span style="color: #800080;">8</span> &lt; <span style="color: #800080;">1024</span> * <span style="color: #800080;">1024</span> * <span style="color: #800080;">1024</span><span style="color: #000000;">)
+    {
+        size </span>= $<span style="color: #800080;">8</span>/<span style="color: #800080;">1024</span>/<span style="color: #800080;">1024</span><span style="color: #000000;"> 
+        unit </span>= <span style="color: #800000;">"</span><span style="color: #800000;">\033[;31mMB\033[0m</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    }
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+    {
+        size </span>= $<span style="color: #800080;">8</span>/<span style="color: #800080;">1024</span>/<span style="color: #800080;">1024</span>/<span style="color: #800080;">1024</span><span style="color: #000000;"> 
+        unit </span>= <span style="color: #800000;">"</span><span style="color: #800000;">\033[;34mGB\033[0m</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    }
+
+    </span><span style="color: #0000ff;">if</span> ($<span style="color: #800080;">1</span> == <span style="color: #800000;">"</span><span style="color: #800000;">file</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    {
+        $</span><span style="color: #800080;">1</span> = <span style="color: #800000;">"</span><span style="color: #800000;">\033[;34mfile\033[0m</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    }
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+    {
+        $</span><span style="color: #800080;">1</span> = <span style="color: #800000;">"</span><span style="color: #800000;">folder</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    }
+
+    printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%6s\tlink:%s\towner:%6s[%s]\tgroup:%6s[%s]\tothers:[%s]\t%6.2f %s\tmtime:[%2s %2s %5s] %s\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">1</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">5</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">6</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">2</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">7</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">3</span><span style="color: #000000;">, 
+        $</span><span style="color: #800080;">4</span><span style="color: #000000;">, 
+        size, 
+        unit,
+        $</span><span style="color: #800080;">9</span><span style="color: #000000;">,
+        $</span><span style="color: #800080;">10</span><span style="color: #000000;">,
+        $</span><span style="color: #800080;">11</span><span style="color: #000000;">,
+        $</span><span style="color: #800080;">12</span><span style="color: #000000;">);
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<pre><br /><br /></pre>
+<!--CRLF--></div>
+</div></body>
+</html>

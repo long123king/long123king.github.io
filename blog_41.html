@@ -1,0 +1,17 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>centos&#x5B89;&#x88C5;virtualbox</title>
+<body><p>参考：<a href="http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/">&nbsp;http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/</a></p>
+<p>如果需要wget设置proxy，参考：&nbsp;<a href="http://www.satwe.com/archives/355.html">http://www.satwe.com/archives/355.html</a></p>
+<p>参考：<a href="https://www.virtualbox.org/wiki/Linux_Downloads">https://www.virtualbox.org/wiki/Linux_Downloads</a></p>
+<p>安装Oracle VirtualBox的Public Key，然后使用rpm安装*.rpm包</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">wget http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc
+sudo rpm --import oracle_vbox.asc
+sudo rpm --checksig VirtualBox-4.3-4.3.12_93733_el5-1.i386.rpm 
+sudo rpm -i VirtualBox-4.3-4.3.12_93733_el5-1.i386.rpm 
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p></body>
+</html>

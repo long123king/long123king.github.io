@@ -1,0 +1,5 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>VirtualBox&#x7684;&#x6E90;&#x7801;&#x5B66;&#x4E60;</title>
+<body><h3>VMM重要的组件</h3> <ul> <li>TRPM (Trap Manager)</li> <li>PGM (Page Manager)</li> <li>REM (Recompiled Execution Manager)</li> <li>EM (Execution Manager)</li> <li>HWACCM (Hardware Acceleration Manager)</li> <li>SSM (Saved State Manager)</li></ul> <h3>接口</h3> <p>Main是VMM对外的接口，所以Client进程都通过调用Main提供的API来请求VMM内部各个组件的服务，而不是直接调用各个组件。</p> <p>&nbsp;</p> <h3>软件虚拟化</h3> <p>VirtualBox让Guest中的Ring 3的应用程序像普通应用程序一样运行在Ring 3层，而让Guest OS运行在Ring 1层，Ring 1层不能执行特权指令，因此遇到特权指令会trap到Ring 0层的VMM里。</p> <p>&nbsp;</p> <p>但是这种工作模式有很多限制，为了解决这些限制，VirtualBox通过CSAM（Code Scanning and Analyzing Manager)反汇编Guest的代码，并且通过PATM（Patch Manager）把问题指令通过in-situ(原地替换)的方式进行替换，以便进行有效的处理。</p></body>
+</html>

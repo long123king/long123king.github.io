@@ -1,0 +1,41 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Pin&#x7684;&#x529F;&#x80FD;&#x6D4B;&#x8BD5;</title>
+<body><h3>1. 通过XXX_AddInstrumentFunction增加的回调函数</h3> <p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">INS_AddInstrumentFunction (INSCALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">TRACE_AddInstrumentFunction (TRACECALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">RTN_AddInstrumentFunction (RTNCALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">IMG_AddInstrumentFunction (IMGCALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">PIN_AddFiniFunction (FINICALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">PIN_AddDetachFunction (DETACHCALLBACK fun, VOID *val)</pre><!--CRLF--></div></div></p>
+<p>&nbsp;</p>
+<p>可以定义为Callback_XXX， 为了意义更加明确，可以将Callback_XXX定义成Enconter_XXX</p>
+<p>这些回调函数是在Pin线程内运行的，只有检测到新出现的情况时，才会被调用。</p>
+<p>或者说，一条相同的指令（即指令内容和地址都相同）只会在这里触发一次，而不管它在Application中实际运行时被执行了多少次。</p>
+<p>&nbsp;</p>
+<p>很显然，这些Callback中不适合统计应用程序的动态运行数据。</p>
+<p>&nbsp;</p>
+<p>这里面只适合通过InsertCall添加Instrument回调函数。</p>
+<p>&nbsp;</p>
+<h3>2. 在Callback_XXX中通过InsertCall添加的回调函数</h3>
+<p>可以定义为Instrument_XXX</p>
+<p>&nbsp;</p>
+<p>这些回调函数是在Application实际运行时，会动态地Invoke到的，是在Application线程内运行的。</p>
+<p>应用程序每执行了一次指令，就会调用一下这些回调函数。</p>
+<p>&nbsp;</p>
+<p>对于应用程序的运行数据，可以在这些函数中进行统计。</p>
+<p>&nbsp;</p>
+<h3>3. 粒度</h3>
+<p>RTN ---&gt; TRACE ---&gt; INS</p>
+<p>代表着从大到小的粒度级别。</p>
+<p>&nbsp;</p>
+<p>每一种级别的Instrument都可以代表程序被实际执行的路径。</p>
+<p>&nbsp;</p>
+<p>粒度越大，需要添加的Instrument就越少，因此，监控程序的额外开销就越小。</p>
+<p>粒度越小，需要添加的Instrument就越多，开销也就越大，但是对于程序的运行情况的掌握就越精确。</p>
+<p>&nbsp;</p>
+<p>对于符号信息比较少的Release版本应用程序来说，使用RTN显然不合适，会漏掉大部分甚至全部的应用程序例程。</p>
+<p>对于包含符号信息的系统dll库及语言运行时库来说，使用RTN可以有效地利用公开的、有意义的API定义，从而大幅提高插桩效率。</p>
+<p>&nbsp;</p>
+<p>对于应用程序来说，TRACE级别的粒度监控是比较合适的，即不会漏掉细节，也可以提高监控效率。</p>
+<p>&nbsp;</p>
+<p>在实际操作过程中，可以以IMG为单位，进行信息收集，以确定使用哪种粒度进行监控。</p>
+<p>&nbsp;</p>
+<h3>批处理文件</h3>
+<div id="codeSnippetWrapper">
+<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">copy /y F:\pintools\Coverit.dll C:\pintools\Coverit.dll</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">call run.bat Coverit.dll target_r.exe</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">copy /y *.clg F:\clgs\</pre><!--CRLF--></div></div></body>
+</html>

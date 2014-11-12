@@ -1,0 +1,51 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>let export can be used by sudo commands</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework $ sudo chmod 0640 /etc/sudoers
+daniel@daniel-mint ~/msf/metasploit-framework $ sudo vim /etc/sudoers
+daniel@daniel-mint ~/msf/metasploit-framework $ sudo chmod 0440 /etc/sudoers
+daniel@daniel-mint ~/msf/metasploit-framework $ cat /etc/sudoers
+cat: /etc/sudoers: Permission denied
+daniel@daniel-mint ~/msf/metasploit-framework $ sudo cat /etc/sudoers
+#
+# This file MUST be edited with the 'visudo' command as root.
+#
+# Please consider adding local content in /etc/sudoers.d/ instead of
+# directly modifying this file.
+#
+# See the man page for details on how to write a sudoers file.
+#
+Defaults	env_keep="ftp_proxy http_proxy"
+Defaults	env_reset
+Defaults	mail_badpass
+Defaults	secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+# Host alias specification
+
+# User alias specification
+
+# Cmnd alias specification
+
+# User privilege specification
+root	ALL=(ALL:ALL) ALL
+
+# Members of the admin group may gain root privileges
+%admin ALL=(ALL) ALL
+
+# Allow members of group sudo to execute any command
+%sudo	ALL=(ALL:ALL) ALL
+
+# See sudoers(5) for more information on "#include" directives:
+
+#includedir /etc/sudoers.d
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework $ export http_proxy=cnnjproxy-ha.tw.trendnet.org:8080
+daniel@daniel-mint ~/msf/metasploit-framework $ sudo gem install bundler
+</pre>
+</div>
+<p>　　</p></body>
+</html>

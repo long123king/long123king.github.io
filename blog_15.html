@@ -1,0 +1,151 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x5C06;libvex&#x79FB;&#x690D;&#x5230;Visual Studio&#x7F16;&#x8BD1;&#x5E73;&#x53F0;&#x4E0B;&#x7684;&#x7ECF;&#x9A8C;&#x603B;&#x7ED3;</title>
+<body><h1>1. 两难</h1>
+<p>将libvex从Linux移植到Windows，移植工作聚集于Cross-Compiler，而不是预料的Cross-Platform。</p>
+<p>&nbsp;</p>
+<p>VC++ Compiler到目前为止只支持C89标准，而这个标准规定，变量必须在代码块(即通过大括号包围起来的代码块)的最前面声明，参考</p>
+<p><a href="http://stackoverflow.com/questions/13308944/how-to-simulate-c99-in-visual-studio-for-variables-declaration">http://stackoverflow.com/questions/13308944/how-to-simulate-c99-in-visual-studio-for-variables-declaration</a></p>
+<p>可以将*.c改成*.cpp，但是新的问题又出现了，在C代码中的类型转换是不需要显式写明的，但是C++却不允许这样做。</p>
+<p>&nbsp;</p>
+<p>因此，在下面的选项之间两难：</p>
+<p>1. 维持原来的*.c代码，将没有在代码块头部声明的变量，都移到代码块头部声明；</p>
+<p>2. 修改为*.cpp代码，显式添加所有的类型转换；</p>
+<p>&nbsp;</p>
+<p>二者都是很枯燥的工作，我最后选择的后者。</p>
+<p>&nbsp;</p>
+<h1>2. 怎样通过预定义的宏来判断当前的编译器是不是VC++</h1>
+<p>&nbsp;参考：<a href="http://stackoverflow.com/questions/5850358/is-there-a-preprocessor-define-that-is-defined-if-the-compiler-is-msvc">http://stackoverflow.com/questions/5850358/is-there-a-preprocessor-define-that-is-defined-if-the-compiler-is-msvc</a></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">#if _MSC_VER &amp;&amp; !__INTEL_COMPILER
+#else
+#endif
+</pre>
+</div>
+<p>　　</p>
+<h1>3. 需要做哪些移植修改</h1>
+<h2>1. 带变长参数的宏</h2>
+<p>Gcc支持带变长参数的宏，就如printf一样；但VC++不支持；</p>
+<p>修改方法：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">#if _MSC_VER &amp;&amp; !__INTEL_COMPILER
+#define DIP vex_printf
+#define DIS vex_sprintf
+#else
+#define DIP(format, args...)           \
+	if (vex_traceflags &amp; VEX_TRACE_FE)  \
+	vex_printf(format, ## args)
+
+#define DIS(buf, format, args...)      \
+	if (vex_traceflags &amp; VEX_TRACE_FE)  \
+	vex_sprintf(buf, format, ## args)
+#endif
+</pre>
+</div>
+<p>　　</p>
+<h2>2. 带自动补全中间值的case项目</h2>
+<p>Gcc支持自动补全范围的case项目，但是VC++不支持</p>
+<p>修改方法：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">//case 0xC0 ... 0xC7: /* FADD %st(?),%st(0) */
+			case 0xC0:
+			case 0xC1:
+			case 0xC2:
+			case 0xC3:
+			case 0xC4:
+			case 0xC5:
+			case 0xC6:
+			case 0xC7:
+</pre>
+</div>
+<p>　　</p>
+<h2>3. 数据结构成员的初始化</h2>
+<p>C支持，C++不支持</p>
+<p>修改方法：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">#if _MSC_VER &amp;&amp; !__INTEL_COMPILER
+VexGuestLayout
+   armGuest_layout 
+      = { 
+          /* Total size of the guest state, in bytes. */
+          sizeof(VexGuestARMState),
+
+          /* Describe the stack pointer. */
+          offsetof(VexGuestARMState,guest_R13),
+          4,
+
+		  0,
+		  0,
+
+          /* Describe the instruction pointer. */
+          offsetof(VexGuestARMState,guest_R15T),
+          4,
+
+          /* Describe any sections to be regarded by Memcheck as
+             'always-defined'. */
+          10,
+
+          /* flags thunk: OP is always defd, whereas DEP1 and DEP2
+             have to be tracked.  See detailed comment in gdefs.h on
+             meaning of thunk fields. */
+          { /* 0 */ ALWAYSDEFD(guest_R15T),
+                 /* 1 */ ALWAYSDEFD(guest_CC_OP),
+                 /* 2 */ ALWAYSDEFD(guest_CC_NDEP),
+                 /* 3 */ ALWAYSDEFD(guest_EMWARN),
+                 /* 4 */ ALWAYSDEFD(guest_TISTART),
+                 /* 5 */ ALWAYSDEFD(guest_TILEN),
+                 /* 6 */ ALWAYSDEFD(guest_NRADDR),
+                 /* 7 */ ALWAYSDEFD(guest_IP_AT_SYSCALL),
+                 /* 8 */ ALWAYSDEFD(guest_TPIDRURO),
+                 /* 9 */ ALWAYSDEFD(guest_ITSTATE)
+               }
+        };
+#else
+VexGuestLayout
+   armGuest_layout 
+      = { 
+          /* Total size of the guest state, in bytes. */
+          .total_sizeB = sizeof(VexGuestARMState),
+
+          /* Describe the stack pointer. */
+          .offset_SP = offsetof(VexGuestARMState,guest_R13),
+          .sizeof_SP = 4,
+
+          /* Describe the instruction pointer. */
+          .offset_IP = offsetof(VexGuestARMState,guest_R15T),
+          .sizeof_IP = 4,
+
+          /* Describe any sections to be regarded by Memcheck as
+             'always-defined'. */
+          .n_alwaysDefd = 10,
+
+          /* flags thunk: OP is always defd, whereas DEP1 and DEP2
+             have to be tracked.  See detailed comment in gdefs.h on
+             meaning of thunk fields. */
+          .alwaysDefd
+             = { /* 0 */ ALWAYSDEFD(guest_R15T),
+                 /* 1 */ ALWAYSDEFD(guest_CC_OP),
+                 /* 2 */ ALWAYSDEFD(guest_CC_NDEP),
+                 /* 3 */ ALWAYSDEFD(guest_EMWARN),
+                 /* 4 */ ALWAYSDEFD(guest_TISTART),
+                 /* 5 */ ALWAYSDEFD(guest_TILEN),
+                 /* 6 */ ALWAYSDEFD(guest_NRADDR),
+                 /* 7 */ ALWAYSDEFD(guest_IP_AT_SYSCALL),
+                 /* 8 */ ALWAYSDEFD(guest_TPIDRURO),
+                 /* 9 */ ALWAYSDEFD(guest_ITSTATE)
+               }
+        };
+#endif
+</pre>
+</div>
+<p>　　</p>
+<h2>4. 隐式类型转换</h2>
+<p>C支持， c++不支持</p>
+<p>修改方法：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">*arr = (HReg *)LibVEX_Alloc(*nregs * sizeof(HReg));
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p></body>
+</html>

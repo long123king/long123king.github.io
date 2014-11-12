@@ -1,0 +1,5 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x5185;&#x5B58;&#x8D44;&#x6E90;&#x7684;&#x865A;&#x62DF;&#x5316;</title>
+<body><h3>1 影子页表</h3> <p>在Guest OS中本身就有页表的概念，用于将其中每个进程的虚拟地址(VA)转换成实际地址(RA)，因为Guest OS本身不是运行在物理机器上，中间还有一层VMM，所以实际地址并不等于物理地址(PA)。</p> <p>&nbsp;</p> <p>物理内存是由VMM进行管理的，它会把物理内存中的某一页分配给某个Guest中的某个进程使用，因此VMM维护一组影子页表，这组表格保存的是某个进程中VA到PA的转换关系。</p> <p>&nbsp;</p> <h3>2 缺页异常的处理</h3> <ol> <li>当发生缺页异常时，先由Guest OS进行检查，如果是Guest OS中已经从它的实际内存中分配了相应的页表项，那么就交给VMM进行调页；</li> <li>如果Guest OS中没有分配相应的页表项，就由Guest OS先进行缺页异常的处理，处理中会要求分配物理内存页，这个操作会被trap到VMM中，由VMM进行相应的物理内存页的分配。</li></ol></body>
+</html>

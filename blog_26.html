@@ -1,0 +1,99 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Process Hacker&#x6E90;&#x7801;&#x4E2D;&#x7684;&#x7528;&#x6237;&#x6001;hook&#x7684;&#x505A;&#x6CD5;</title>
+<body><p>processhacker-code-5632\1.x\trunk\NProcessHacker\hook.h</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">typedef struct _PH_HOOK
+{
+    PVOID Function;
+    PVOID Target;
+    BOOLEAN Hooked;
+    CHAR Bytes[5];
+} PH_HOOK, *PPH_HOOK;
+</pre>
+</div>
+<p>这个结构体用来保存每个Hook的信息，Function是hook点的地址， Target是Trampoline的地址，Bytes用来备份Function点处原来的5个字节。</p>
+<p>processhacker-code-5632\1.x\trunk\NProcessHacker\hook.c</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">VOID PHAPI PhInitializeHook(
+    PPH_HOOK Hook,
+    PVOID Function,
+    PVOID Target
+    )
+{
+    memset(Hook, 0, sizeof(PH_HOOK));
+    Hook-&gt;Function = Function;
+    Hook-&gt;Target = Target;
+}
+</pre>
+</div>
+<p>初始化Hook结构体，指定hook点与Trampoline的地址。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">NTSTATUS PHAPI PhHook(
+    PPH_HOOK Hook
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    ULONG oldProtection;
+    PCHAR function;
+
+    /* Change the page protection of the target page so we can write to it. */
+    if (!VirtualProtect(Hook-&gt;Function, 5, PAGE_EXECUTE_READWRITE, &amp;oldProtection))
+        return STATUS_ACCESS_VIOLATION;
+
+    __try
+    {
+        function = (PCHAR)Hook-&gt;Function;
+        /* Copy the original five bytes for unhooking. */
+        memcpy(Hook-&gt;Bytes, function, 5);
+        /* Hook the function by writing a jump instruction. */
+        Hook-&gt;Hooked = TRUE;
+        /* jmp Target */
+        *function = 0xe9;
+        *(PULONG_PTR)(function + 1) = (ULONG_PTR)Hook-&gt;Target - (ULONG_PTR)Hook-&gt;Function - 5;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = GetExceptionCode();
+    }
+
+    /* Restore the old page protection. */
+    VirtualProtect(Hook-&gt;Function, 5, oldProtection, NULL);
+
+    return status;
+}
+</pre>
+</div>
+<p>用于完成对Hook点的5个字节的替换，替换成<span style="color: #ff0000;">e9 XXXXXXXX</span>[Trampoline与Hook点之间的偏移距离]。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">NTSTATUS PHAPI PhUnhook(
+    PPH_HOOK Hook
+    )
+{
+    NTSTATUS status = STATUS_SUCCESS;
+    ULONG oldProtection;
+
+    /* Change the page protection of the target page so we can write to it. */
+    if (!VirtualProtect(Hook-&gt;Function, 5, PAGE_EXECUTE_READWRITE, &amp;oldProtection))
+        return STATUS_ACCESS_VIOLATION;
+
+    __try
+    {
+        /* Unpatch the function by restoring the original first 5 bytes. */
+        memcpy(Hook-&gt;Function, Hook-&gt;Bytes, 5);
+        Hook-&gt;Hooked = FALSE;
+    }
+    __except (EXCEPTION_EXECUTE_HANDLER)
+    {
+        status = GetExceptionCode();
+    }
+
+    /* Restore the old page protection. */
+    VirtualProtect(Hook-&gt;Function, 5, oldProtection, NULL);
+
+    return status;
+}
+</pre>
+</div>
+<p>Unhook的过程恰好相反，用备份的5个字节恢复Hook点。</p></body>
+</html>

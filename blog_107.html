@@ -1,0 +1,11 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x5728;64&#x4F4D;linux&#x4E0B;&#x7F16;&#x8BD1;32&#x4F4D;&#x7A0B;&#x5E8F;</title>
+<body><p>1. 安装相应的库</p>
+<p><span>sudo apt-get install <span>libc6-dev-i386</span>&nbsp;gcc-multilib&nbsp;g++-multilib&nbsp;</span></p>
+<p>&nbsp;</p>
+<p>2. 在Makefile中添加</p>
+<p>CFLAGS += -m32</p>
+<p>LDFLAGS += -m32</p>
+<p>CPPFLAGS += -m32</p></body>
+</html>

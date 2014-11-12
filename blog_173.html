@@ -1,0 +1,5 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>ISA&#x865A;&#x62DF;&#x5316;&#x7684;&#x6761;&#x4EF6;</title>
+<body><h3>ISA(Instruction Set Architecture)</h3> <p>指令集体系结构，是硬件与软件层之间的接口。</p> <p>&nbsp;</p> <h3>本地系统虚拟机</h3> <p>本地系统虚拟机，就是Bare-Metal虚拟机，直接运行在硬件上，在它上面可以同时安装多个操作系统。</p> <p>&nbsp;</p> <h3>虚拟机的基本要求</h3> <p>运行在VMM上的OS，不能影响到其他的OS，即不能修改资源配置（Resource Configuration）。</p> <p>&nbsp;</p> <h3>敏感指令</h3> <ul> <li>Control Sensitive Instruction,&nbsp; 它的执行会修改资源配置</li> <li>Behavior Sensitive Instruction，它的执行依赖于资源配置</li></ul> <p>&nbsp;</p> <h3>ISA虚拟化的条件</h3> <ol> <li>高效性</li> <li>资源控制</li> <li>等效性</li></ol> <p>&nbsp;</p> <h3>高效性的必要条件</h3> <p>敏感指令是特权指令的一个子集，即敏感指令都是特权指令。</p> <p>或者理解成，所有的敏感指令都要被VMM进行处理，因为VMM运行在特权级，所有的敏感指令都是特权指令，就保证了运行用户级别的Guest OS无法执行到敏感指令，即Guest OS中执行的指令都是无害的，不会影响到其他的OS。</p></body>
+</html>

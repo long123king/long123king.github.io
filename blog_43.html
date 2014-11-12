@@ -1,0 +1,15 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>centos&#x4E3A;&#x7528;&#x6237;&#x6DFB;&#x52A0;sudo&#x529F;&#x80FD;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">su
+chmod a+w /etc/sudoers
+vim /etc/sudoers
+[找到root    ALL=(ALL)       ALL这行]
+复制出新的一行，并且将root改为daniel（当前用户名）
+chmod 0440 /etc/sudoers
+exit
+</pre>
+</div>
+<p>　　</p></body>
+</html>

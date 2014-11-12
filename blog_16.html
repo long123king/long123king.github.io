@@ -1,0 +1,48 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>expand gcc case variable length</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/vex $ bash gen.sh 0x10 0x1F
+			case 10:
+			case 11:
+			case 12:
+			case 13:
+			case 14:
+			case 15:
+			case 16:
+			case 17:
+			case 18:
+			case 19:
+			case 1A:
+			case 1B:
+			case 1C:
+			case 1D:
+			case 1E:
+			case 1F:
+daniel@daniel-mint ~/vex $ cat gen.sh
+lower=$(($1))
+upper=$(($2))
+
+it=$lower
+while [ $it -le $upper ]
+do
+	printf "\t\t\tcase %2X:\n" $it
+	let it=$it+1 
+done
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">lower=$(($1))
+upper=$(($2))
+
+it=$lower
+while [ $it -le $upper ]
+do
+	printf "\t\t\tcase %2X:\n" $it
+	let it=$it+1 
+done
+</pre>
+</div>
+<p>　　</p></body>
+</html>

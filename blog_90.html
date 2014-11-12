@@ -1,0 +1,16 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Linux&#x5173;&#x95ED;&#x7AEF;&#x53E3;</title>
+<body><p>1. &nbsp;查看哪些端口被占用</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:cpp;gutter:true;">$ netstat -anp | grep 2042
+tcp        0      0 192.168.56.1:2042       0.0.0.0:*               LISTEN      8974/python
+</pre>
+</div>
+<p>2. 删除占用端口的进程</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:cpp;gutter:true;">sudo kill 8974
+</pre>
+</div>
+<p>　　</p></body>
+</html>

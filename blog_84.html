@@ -1,0 +1,85 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>pefile&#x89E3;&#x6790;PE&#x683C;&#x5F0F;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:cpp;gutter:true;">import os,sys
+import pefile
+import pydasm
+import struct
+
+#print sys.argv
+
+def show_section(pe):
+    print "[sections layout:]"
+    print "#"*45
+    print "%10s %10s %10s %10s" % ("section", "addr", "real_size", "alloc_size" )
+    print "-"*45
+    for section in pe.sections:
+        print "%10s %10x %10x %10x" % (section.Name.strip('\x00'), section.VirtualAddress, section.Misc_VirtualSize, section.SizeOfRawData)
+    print "\n"
+    
+
+def show_imports(pe):
+    pe.parse_data_directories()
+
+    print "[imports:]"
+    print "#"*45
+    for entry in pe.DIRECTORY_ENTRY_IMPORT:
+        print "%s" % entry.dll.center(45, "-")
+        print "%10s %30s" % ("addr", "function")
+        print "-"*45
+        for imp in entry.imports:
+            print "%10x %30s" % (imp.address, imp.name)
+    print "\n"
+
+def show_exports(pe):
+    pe.parse_data_directories()
+
+    print "[exports:]"
+    print "#"*45
+    print "%10s %30s" % ("addr", "function")
+    print "-"*45
+    for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
+        print "%10x %30s" % (pe.OPTIONAL_HEADER.ImageBase + exp.address, exp.name)
+    print "\n"
+
+def show_disasm(pe, off_img, count):
+    print "[disasm %08x - %08x]" % (off_img, off_img + count)
+    print "-"*45
+    image_base = pe.OPTIONAL_HEADER.ImageBase
+    data = pe.get_memory_mapped_image()[off_img:off_img+count]
+    offset = 0
+    while offset &lt; len(data):
+        i = pydasm.get_instruction(data[offset:], pydasm.MODE_32)
+        raw = ""
+        for k in range(0,i.length):
+            raw += "%2X " % (struct.unpack("B", data[offset+k])[0])
+        print "%25s   %-20s" % ( raw, pydasm.get_instruction_string(i, pydasm.FORMAT_INTEL, image_base+off_img))
+        offset += i.length
+    
+def show_entry(pe):
+    print "[entry]"
+    print "#"*45
+
+    off_entry = pe.OPTIONAL_HEADER.AddressOfEntryPoint
+    show_disasm(pe, off_entry, 100)
+    
+if __name__ == "__main__":
+    try:
+        filename = sys.argv[1]
+    except:
+        sys.exit(1)
+       
+    pe = pefile.PE(filename)
+
+    show_section(pe)
+    
+    show_imports(pe)
+
+    show_exports(pe)
+    
+    show_entry(pe)
+</pre>
+</div>
+<p>　　</p></body>
+</html>

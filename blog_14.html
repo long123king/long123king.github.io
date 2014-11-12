@@ -1,0 +1,110 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>VEX IR&#x8BED;&#x8A00;&#x8BED;&#x6CD5;</title>
+<body><p>/*---------------------------------------------------------------*/<br />/*--- High-level IR description                               ---*/<br />/*---------------------------------------------------------------*/</p>
+<p>/* Vex IR is an architecture-neutral intermediate representation.<br />   Unlike some IRs in systems similar to Vex, it is not like assembly<br />   language (ie. a list of instructions).  Rather, it is more like the<br />   IR that might be used in a compiler.</p>
+<h2><span style="color: #800000;">相对汇编语言，VEX IR更像是Compiler的中间语言</span></h2>
+<p>   Code blocks<br />   ~~~~~~~~~~~<br />   The code is broken into small code blocks ("superblocks", type:<br />   'IRSB').  Each code block typically represents from 1 to perhaps 50<br />   instructions.  IRSBs are single-entry, multiple-exit code blocks.<br />   Each IRSB contains three things:</p>
+<h2><span style="color: #800000;">单入口，多出口的代码块，与Intel Pin中的Trace级别相仿</span></h2>
+<p>  - a type environment, which indicates the type of each temporary<br />     value present in the IRSB</p>
+<p>【实例：】</p>
+<div class="cnblogs_code">
+<p>(*ir_block).tyenv<br />　　　　-types<br />　　　　　　-[0]    Ity_I32<br />　　　　　　-[1]    Ity_I32<br />　　　　-types_size    0x00000008<br />　　　　-types_used    0x00000002</p>
+
+
+
+</div>
+<p>&nbsp;</p>
+<h2><span style="color: #800000;">types_used提示有多少个Temp变量被使用，types数组里面分别保存着每个Temp变量的类型</span></h2>
+<p>&nbsp;</p>
+<p> - a list of statements, which represent code<br />【实例：】</p>
+<div class="cnblogs_code">
+<pre>stmts_size    <span style="color: #800080;">0x00000003</span>    <span style="color: #0000ff;">int</span><span style="color: #000000;">
+stmts_used    </span><span style="color: #800080;">0x00000003</span>    <span style="color: #0000ff;">int</span>
+-     (*ir_block).stmts[<span style="color: #800080;">0</span>]  <br />　　　　<span style="color: #000000;">tag    Ist_IMark
+</span>-     (*ir_block).stmts[<span style="color: #800080;">1</span>]    <br />　　　　<span style="color: #000000;">tag    Ist_WrTmp
+</span>-     (*ir_block).stmts[<span style="color: #800080;">2</span>]<br />　　　　<span style="color: #000000;">tag    Ist_Put</span></pre>
+</div>
+<p>&nbsp;</p>
+<h2><span style="color: #800000;">Statements也是保存在stmts数组中，stmts_used代表实际上使用的Statements的数目</span></h2>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p> - a jump that exits from the end the IRSB<br />【实例：】　　</p>
+<div class="cnblogs_code">
+<pre>jumpkind    Ijk_Boring</pre>
+</div>
+<p>&nbsp;</p>
+<h2><span style="color: #800000;">最后打印出来的结果如下</span></h2>
+<div class="cnblogs_code">
+<pre><span style="color: #800080;">0x77D699A0</span>: movl %esi,%<span style="color: #000000;">esp
+
+IRSB {
+　　t0:I32 　　t1:I32 　　　　　　　　　　【2个Temp变量】
+
+</span>------ IMark(<span style="color: #800080;">0x77D699A0</span>, <span style="color: #800080;">2</span>, <span style="color: #800080;">0</span>) ------<span style="color: #000000;"> 【3个Statements，包含IMark，但是没有包含最后一条，因为它是对于IP寄存器操作的，是自动的】
+　　t0 </span>= GET:I32(<span style="color: #800080;">32</span>)　　　　　　　　　　 【整条是一个Statements，而GET:I32(<span style="color: #800080;">32</span><span style="color: #000000;">)是Expression】
+　　PUT(</span><span style="color: #800080;">24</span>) =<span style="color: #000000;"> t0
+　　PUT(</span><span style="color: #800080;">68</span>) = <span style="color: #800080;">0x77D699A2</span>:I32; exit-Boring</pre>
+</div>
+<p>&nbsp;</p>
+<h2><span style="color: #800000;">其中， 第二条Statements可以继续分解</span></h2>
+<div class="cnblogs_code">
+<pre>-     (*ir_block).stmts[<span style="color: #800080;">1</span>]<span style="color: #000000;">
+　　　　tag    Ist_WrTmp
+</span><span style="color: #000000;">　　　　　　　　.tmp    </span><span style="color: #800080;">0　　</span>
+<span style="color: #000000;">　　　　　　　　　　　　.tag    Iex_Get
+</span><span style="color: #000000;">　　　　　　　　　　　　　　　　.offset    </span><span style="color: #800080;">32</span><span style="color: #000000;">
+　　　　　　　　　　　　　　　　.ty    Ity_I32</span></pre>
+</div>
+<p><span style="line-height: 1.5;">&nbsp;</span></p>
+<p> Because the blocks are multiple-exit, there can be additional<br />   conditional exit statements that cause control to leave the IRSB<br />   before the final exit.  Also because of this, IRSBs can cover<br />   multiple non-consecutive sequences of code (up to 3).  These are<br />   recorded in the type VexGuestExtents (see libvex.h).</p>
+<p>   Statements and expressions<br />   ~~~~~~~~~~~~~~~~~~~~~~~~~~<br />   Statements (type 'IRStmt') represent operations with side-effects,<br />   eg.  guest register writes, stores, and assignments to temporaries.<br />   Expressions (type 'IRExpr') represent operations without<br />   side-effects, eg. arithmetic operations, loads, constants.<br />   Expressions can contain sub-expressions, forming expression trees,<br />   eg. (3 + (4 * load(addr1)).</p>
+<h2><span style="color: #800000;">Statements可以有Side-Effects，但是Expressions是Pure的，没有副作用的。</span></h2>
+<p><strong><span style="color: #800000; font-size: 1.5em; line-height: 1.5;">ST代表从寄存器到内存的数据转移， LD代表从内存到寄存器转移数据</span></strong></p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<p><strong><span style="color: #800000; font-size: 1.5em; line-height: 1.5;">Expression的类型</span></strong></p>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">typedef
+   </span><span style="color: #0000ff;">enum</span><span style="color: #000000;"> { 
+      Iex_Binder</span>=<span style="color: #800080;">0x15000</span><span style="color: #000000;">,
+      Iex_Get,
+      Iex_GetI,
+      Iex_RdTmp,
+      Iex_Qop,
+      Iex_Triop,
+      Iex_Binop,
+      Iex_Unop,
+      Iex_Load,
+      Iex_Const,
+      Iex_Mux0X,
+      Iex_CCall
+   }
+   IRExprTag;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2><strong><span style="color: #800000;">&nbsp;Statements的类型</span></strong></h2>
+<div class="cnblogs_code">
+<pre><span style="color: #000000;">typedef 
+   </span><span style="color: #0000ff;">enum</span><span style="color: #000000;"> {
+      Ist_NoOp</span>=<span style="color: #800080;">0x19000</span><span style="color: #000000;">,
+      Ist_IMark,     </span><span style="color: #008000;">/*</span><span style="color: #008000;"> META </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+      Ist_AbiHint,   </span><span style="color: #008000;">/*</span><span style="color: #008000;"> META </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+      Ist_Put,
+      Ist_PutI,
+      Ist_WrTmp,
+      Ist_Store,
+      Ist_CAS,
+      Ist_LLSC,
+      Ist_Dirty,
+      Ist_MBE,       </span><span style="color: #008000;">/*</span><span style="color: #008000;"> META (maybe) </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+      Ist_Exit
+   } 
+   IRStmtTag;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>　　</p></body>
+</html>

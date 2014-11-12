@@ -1,0 +1,106 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>boost::shared_ptr</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">    element_type * px;                 // contained pointer
+    boost::detail::shared_count pn;    // reference counter
+</pre>
+</div>
+<p>　　两个重要的成员：</p>
+<p>px， 保存被包裹的指针</p>
+<p>pn， 保存引用计数，pn._pi是类型为sp_counted_base的对象</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">class sp_counted_base
+{
+private:
+
+    sp_counted_base( sp_counted_base const &amp; );
+    sp_counted_base &amp; operator= ( sp_counted_base const &amp; );
+
+    long use_count_;        // #shared
+    long weak_count_;       // #weak + (#shared != 0)
+
+public:
+
+    sp_counted_base(): use_count_( 1 ), weak_count_( 1 )
+    {
+    }
+
+    virtual ~sp_counted_base() // nothrow
+    {
+    }
+
+    // dispose() is called when use_count_ drops to zero, to release
+    // the resources managed by *this.
+
+    virtual void dispose() = 0; // nothrow
+
+    // destroy() is called when weak_count_ drops to zero.
+
+    virtual void destroy() // nothrow
+    {
+        delete this;
+    }
+
+    virtual void * get_deleter( sp_typeinfo const &amp; ti ) = 0;
+    virtual void * get_untyped_deleter() = 0;
+
+    void add_ref_copy()
+    {
+        BOOST_INTERLOCKED_INCREMENT( &amp;use_count_ );
+    }
+
+    bool add_ref_lock() // true on success
+    {
+        for( ;; )
+        {
+            long tmp = static_cast&lt; long const volatile&amp; &gt;( use_count_ );
+            if( tmp == 0 ) return false;
+
+#if defined( BOOST_MSVC ) &amp;&amp; BOOST_WORKAROUND( BOOST_MSVC, == 1200 )
+
+            // work around a code generation bug
+
+            long tmp2 = tmp + 1;
+            if( BOOST_INTERLOCKED_COMPARE_EXCHANGE( &amp;use_count_, tmp2, tmp ) == tmp2 - 1 ) return true;
+
+#else
+
+            if( BOOST_INTERLOCKED_COMPARE_EXCHANGE( &amp;use_count_, tmp + 1, tmp ) == tmp ) return true;
+
+#endif
+        }
+    }
+
+    void release() // nothrow
+    {
+        if( BOOST_INTERLOCKED_DECREMENT( &amp;use_count_ ) == 0 )
+        {
+            dispose();
+            weak_release();
+        }
+    }
+
+    void weak_add_ref() // nothrow
+    {
+        BOOST_INTERLOCKED_INCREMENT( &amp;weak_count_ );
+    }
+
+    void weak_release() // nothrow
+    {
+        if( BOOST_INTERLOCKED_DECREMENT( &amp;weak_count_ ) == 0 )
+        {
+            destroy();
+        }
+    }
+
+    long use_count() const // nothrow
+    {
+        return static_cast&lt;long const volatile &amp;&gt;( use_count_ );
+    }
+};
+</pre>
+</div>
+<p>　　</p></body>
+</html>
