@@ -1,15 +1,15 @@
-<p>nsert<em>inode</em>hash - hash an inode
-     *  @inode: unhashed inode
-     *  @hashval: unsigned long value used to locate this object in the
-     *      inode<em>hashtable.
-     *
-     *  Add an inode to the inode hash for this superblock.
-     */
-     void _</em>insert<em>inode</em>hash(struct inode *inode, unsigned long hashval)
-     {
-         struct hlist<em>head *b = inode</em>hashtable + hash(inode->i_sb, hashval);</p>
+<pre><code> /* __insert_inode_hash - hash an inode
+ *  @inode: unhashed inode
+ *  @hashval: unsigned long value used to locate this object in the
+ *      inode_hashtable.
+ *
+ *  Add an inode to the inode hash for this superblock.
+ */
+ void __insert_inode_hash(struct inode *inode, unsigned long hashval)
+ {
+     struct hlist_head *b = inode_hashtable + hash(inode-&gt;i_sb, hashval);
 
-<pre><code>     spin_lock(&amp;inode_hash_lock);
+     spin_lock(&amp;inode_hash_lock);
      spin_lock(&amp;inode-&gt;i_lock);
      hlist_add_head(&amp;inode-&gt;i_hash, b);
      spin_unlock(&amp;inode-&gt;i_lock);

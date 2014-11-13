@@ -1,4 +1,4 @@
-nsert_inode_hash - hash an inode
+     /* __insert_inode_hash - hash an inode
      *	@inode: unhashed inode
      *	@hashval: unsigned long value used to locate this object in the
      *		inode_hashtable.
