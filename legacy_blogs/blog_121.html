@@ -1,25 +1,46 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Xen&#x7684;&#x6982;&#x51B5;</title>
-<body><h3>1. Xen Live CD</h3> <p>xen也有Live CD的形式，当然是少不了Dom 0的，有Apline Linux和Debian两种。</p> <p>参见<a title="http://wiki.xen.org/wiki/LiveCD" href="http://wiki.xen.org/wiki/LiveCD">http://wiki.xen.org/wiki/LiveCD</a></p> <h3>2. Xen简介</h3> <p>参考<a title="http://wiki.xenproject.org/wiki/Xen_Overview#Introduction_to_Xen_Architecture" href="http://wiki.xenproject.org/wiki/Xen_Overview#Introduction_to_Xen_Architecture">http://wiki.xenproject.org/wiki/Xen_Overview#Introduction_to_Xen_Architecture</a></p> <p><a href="http://images.cnitblog.com/blog/580388/201402/071653113514901.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; border-top: 0px; margin-right: auto; border-right: 0px; padding-top: 0px" title="Xen_Arch_Diagram" border="0" alt="Xen_Arch_Diagram" src="http://long123king.github.io/legacy_blogs/img/blog_121_071653152844470.png" width="646" height="478"></a></p> <p>这张图概括了xen的各个组件：</p> <h4>1. xen hypervisor</h4> <p>直接负责CPU, Memory, Interrupt管理，但是hypervisor本身并不知晓IO的相关内容。</p> <p>hypervisor是bootloader运行结束后，第一个执行的程序。</p> <p>&nbsp;</p> <h4>2. Guest Domain</h4> <p>也就是非Dom 0的虚拟机，可以运行在以下两种模式下：</p> <div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #606060" id="lnum1">   1:</span><font color="#ff0000"> <strong>PV:</strong></font> 半虚拟化,Paravirtualization,要想运行在此模式下，Guest OS的内核要进行相应的修改。现在的Linux内核都支持运行在PV模式下。</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #606060" id="lnum2">   2:</span><font color="#ff0000"> <strong>HVM：</strong></font>硬件虚拟化，也叫全虚拟化，是在硬件支持的情况下的虚拟化。如果想要安装Windows操作系统，比如Windows XP，就需要运行在HVM模式下。</pre><!--CRLF--></div></div>
-<blockquote>
-<p>Xen guests are totally isolated from the hardware: in other words, they have no privilege to access hardware or I/O functionality. Thus, they are also called unprivileged domain (or DomU).</p></blockquote>
-<p>DomU对于硬件和IO功能都完全不了解，对于硬件的访问交给xen hypervisor来处理，而IO功能则由Dom0来负责。</p>
-<h4>3. Domain 0</h4>
-<p>也被称作Control Domain，它有权限可以访问部分硬件，比如处理系统的IO功能，但是核心的对于CPU、Memory、Interrupt的访问还是要交给xen hypervisor来处理。</p>
-<p>Domain 0是系统中必需的，没有它，xen hyperviosr自己是玩不转的。</p>
+<title>Windows IO System</title>
+<body><p>Windows IO System是由一些executive components组成，这些component可以认为是ntoskrnl.exe中相对独立的一些module。</p>
+<p>整个IO System是由IRP数据包驱动的， IRP(IO Request Packet)是IO请求数据包，是多个IO系统组件之间进行通信的数据包。</p>
+<p>IRP可以完全理解为与网络数据包相同的概念。</p>
+<hr />
 <p>&nbsp;</p>
-<h4>4. Control Stack</h4>
-<p>也叫Tool Stack, 是安装在Domain 0上面的，用于管理虚拟机的创建，删除以及配置的接口工具。</p>
-<blockquote>
-<p>allows a user to manage virtual machine creation, destruction, and configuration</p>
-<p>The toolstack exposes an interface that is either driven by a command line console, by a graphical interface or by a cloud orchestration【为管弦乐配器；和谐的安排[组织,结合]】 stack such as OpenStack or CloudStack.</p>
-<p>&nbsp;</p></blockquote>
-<p>它向外暴露接口，允许通过Console， GUI程序，以及云框架比如OpenStack来使用。</p>
-<p>简单介绍一下OpenStack</p>
-<p>参考</p>
-<p><a title="http://zh.wikipedia.org/wiki/OpenStack" href="http://zh.wikipedia.org/wiki/OpenStack">http://zh.wikipedia.org/wiki/OpenStack</a></p>
-<p><a title="http://baike.baidu.com/view/4924215.htm" href="http://baike.baidu.com/view/4924215.htm">http://baike.baidu.com/view/4924215.htm</a></p>
-<p><a title="http://www.csdn.net/article/2012-06-12/2806594" href="http://www.csdn.net/article/2012-06-12/2806594">http://www.csdn.net/article/2012-06-12/2806594</a></p>
-<p>OpenStack是一族管理云平台的软件的集合，以Python语言编写，可以简单地将其形容为云平台上的操作系统。</p></body>
+<h2>IO Manager</h2>
+<p>IO Manager是整个IO System的心脏。</p>
+<p><strong>1. 负责创建、回收IRP数据包，以及对IRP数据进行队列缓存、同步</strong></p>
+<p><strong>2. 封装一些driver常用的代码，供driver调用</strong></p>
+<p>&nbsp;</p>
+<p>但是IO Manager不管IRP的内容细节，这些由具体的Device Driver负责解析并且完成IRP请求的操作。</p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<h2>Device Driver</h2>
+<p>Driver接收IRP，并且按照IRP的指示，完成相应的操作。</p>
+<p>完成操作之后，Driver可以把IRP交给IO Manager回收，或者交由IO Manager转发给其他的Driver进行处理。</p>
+<hr />
+<p>&nbsp;</p>
+<h2>PnP Manager</h2>
+<p>Plug and Play，可以管理那些支持&ldquo;热插拔&rdquo;方式工作的硬件。</p>
+<hr />
+<p>&nbsp;</p>
+<h2>Power Manager</h2>
+<p>可以向各个driver改善电源相关的事件，比如笔记本电脑的在电池供电和有线电源供电之间进行转换时，显卡驱动可以作出相应的状态转换。</p>
+<hr />
+<p>&nbsp;</p>
+<h2>WMI support routines</h2>
+<p>WMI： Windows Management Instrumentation</p>
+<p>用户态的程序可以获取WMI的事件，这些事件是由WMI子系统产生。</p>
+<p>Windows允许驱动间接地作为WMI事件的providers，或者说过滤相应的事件。</p>
+<hr />
+<p>&nbsp;</p>
+<h2>与Driver相关的文件</h2>
+<p><strong>.inf　　安装文件</strong></p>
+<p><strong>.cat　　数字签名文件</strong></p>
+<hr />
+<p>&nbsp;</p>
+<h2><strong>HAL</strong></h2>
+<p>Hardware Abstraction Layer</p>
+<p>将driver从那些与平台相关的操作中解放出来，具体来说，由HAL来直接处理in/out指令，抽象driver与CPU Processor以及中断处理器之间的交互。</p>
+<p>HAL提供平台无关的API供driver使用。</p></body>
 </html>

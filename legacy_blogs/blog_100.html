@@ -1,67 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>vim&#x4E0E;ctags/cscope&#x7684;&#x5B8C;&#x7F8E;&#x7ED3;&#x5408;</title>
-<body><p>1. 安装vim/ctags/cscope</p>
-<h3>ctag</h3>
-<p>2. 在源码根目录下执行</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>sudo ctags -R .</pre>
-<!--CRLF-->
-<pre>&nbsp;</pre>
-<!--CRLF--></div>
+<title>switch gnome-terminal tabs</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Ctrl+Page Down (forward) and Ctrl+Page Up (backward).
+</pre>
 </div>
-<p>会生成tags文件，里面包含着整个源码目录下的符号信息。</p>
-<p>3. 直接到达某个符号（比如函数）的定义处</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>sudo vim -t main</pre>
-<!--CRLF--></div>
-</div>
-<p>就会直接到达main的定义处，如果有多个同名定义，可以在vim下面输入：</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>:ts</pre>
-<!--CRLF--></div>
-</div>
-<p>然后选择列出来的其中的某一个定义。</p>
-<p>4. 在vim文件中跳转到符号定义处</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>Ctrl + ]</pre>
-<!--CRLF--></div>
-</div>
-<p>跳转回来</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>Ctrl + T<br /><br /></pre>
-<!--CRLF--></div>
-</div>
-<h3>cscope</h3>
-<p>参考：<a href="http://blog.163.com/tlost_heaven/blog/static/79246122201073001957690/">http://blog.163.com/tlost_heaven/blog/static/79246122201073001957690/</a></p>
-<p>5. 在源文件目录执行</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>sudo cscope -Rb</pre>
-<!--CRLF--></div>
-</div>
-<p>会生成scope.out等文件</p>
-<p>6. 在vim中，添加cscope文件</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>:cs add cscope.out</pre>
-<!--CRLF--></div>
-</div>
-<p>7. 查找对某个函数的引用</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>:cs find c start_kernel</pre>
-<!--CRLF--></div>
-</div>
-<p>8. 查找某个函数的定义</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>:cs find g start_kernel</pre>
-<!--CRLF--></div>
-</div></body>
+<p>　<a href="http://unix.stackexchange.com/a/67963">http://unix.stackexchange.com/a/67963</a></p></body>
 </html>

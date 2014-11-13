@@ -1,16 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>centos&#x5B89;&#x88C5;vbox addition</title>
-<body><p>在centos下安装vbox addition需要下载当前内核的头文件</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">yum install kernel-devel
-</pre>
-</div>
-<p>但是下载了头文件后，仍然失败，原来是下载的头文件与当前的内核版本不对应，</p>
-<p>于是，只好，更新内核</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">yum install kernel
-</pre>
-</div>
-<p>重启，使用新版本内核启动，再安装vbox addition.</p></body>
+<title>enum processes&#x7684;&#x65B9;&#x6CD5;&#x53CA;&#x5176;&#x8C03;&#x7528;&#x7684;&#x5E95;&#x5C42;&#x4EE3;&#x7801;</title>
+<body><p>1.&nbsp;PSAPI导出函数EnumProcesses</p>
+<p>最终调用的是NtQuerySystemInformation</p>
+<p>&nbsp;</p></body>
 </html>

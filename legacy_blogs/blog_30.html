@@ -1,9 +1,83 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>how to catch error in make error message</title>
+<title>shell&#x67E5;&#x8BCD;&#x5178;</title>
 <body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">make 2&gt;&amp;1 | grep error -C 10 -n
+<pre class="brush:python;gutter:true;">curl http://cn.bing.com/dict/search?q=spawn -s | sed -e '{s/&lt;\/span&gt;/&amp;\n/g}' | sed -n '{/&lt;span class="def"&gt;/p}' | sed -e '{s/&lt;span class="def"&gt;&lt;span&gt;//g}' | sed -e '{s/&lt;\/span&gt;//g}'
 </pre>
 </div>
-<p>&nbsp;</p></body>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">产卵；导致；引发；引起
+（鱼、蛙等的）卵
+再生侠；闪灵悍将；产生
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~ $ cat bing_dict.sh 
+ curl http://cn.bing.com/dict/search?q=$1 -s | sed -e '{s/&lt;\/span&gt;/&amp;\n/g}' | sed -n '{/&lt;span class="def"&gt;/p}' | sed -e '{s/&lt;span class="def"&gt;&lt;span&gt;//g}' | sed -e '{s/&lt;\/span&gt;//g}'
+</pre>
+</div>
+<p>　　</p>
+<p>下面是测试结果：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~ $ bash bing_dict.sh Daniel
+丹尼尔；(旧约圣经)《但以理书》；有名法官；【男名】男子名
+吴彦祖；陈晓东；达尼尔<br />
+daniel@daniel-mint ~ $ bash bing_dict.sh King
+国王；大王；君主；&hellip;之王
+统治；做国王；立&hellip;为王
+金；王者；金恩<br />
+daniel@daniel-mint ~ $ bash bing_dict.sh is
+是
+(=
+冰岛；在；印度标准(Indian Standard)<br />
+daniel@daniel-mint ~ $ bash bing_dict.sh a
+一
+英文字母表的第一字母；【乐】A音
+冠以不定冠词主要表示类别
+从；按；一个<br />
+daniel@daniel-mint ~ $ bash bing_dict.sh software
+软件
+软体；应用软件；计算机软件<br />
+daniel@daniel-mint ~ $ bash bing_dict.sh engineer
+工程师；技师；工兵；技工
+密谋策划；设计制造；改变&hellip;的基因（或遗传）结构
+工程技术人员；轮机员；工程兵
+</pre>
+</div>
+<p>　　</p>
+<p>缺点是查中文结果莫名其妙。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~ $ bash bing_dict.sh 文学
+毛郁金根茎的水提取物；鞋子；一个自动对焦
+daniel@daniel-mint ~ $ bash bing_dict.sh 文
+Scot
+【摄】自动曝光
+自动曝光(Auto Exposure)；声发射(acoustic emission)；客户主管(Account Executive)
+daniel@daniel-mint ~ $ bash bing_dict.sh %E6%96%87%E5%AD%A6
+&lt;span class="def"&gt;&lt;a href="/dict/search?q=literature&amp;FORM=BDVSP6" h="ID=Dictionary,5010.1"&gt;literature&lt;/a&gt;
+&lt;span class="def"&gt;&lt;a href="/dict/search?q=literary&amp;FORM=BDVSP6" h="ID=Dictionary,5011.1"&gt;literary&lt;/a&gt;&lt;span&gt;; 
+</pre>
+</div>
+<p>　　</p>
+<p>需要转成Unicode码，并且重新设置过滤pattern。</p>
+<p>&nbsp;</p>
+<p>加上音标的版本</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~ $ cat bing_dict.sh 
+ curl http://cn.bing.com/dict/search?q=$1 -s | sed -e '{s/&lt;\/span&gt;/&amp;\n/g}' | sed -n '{/&lt;span class="def"&gt;/p
+/&lt;div class="hd_pr/p}' | sed -e '{s/&lt;span class="def"&gt;&lt;span&gt;//g}' | sed -e '{s/&lt;\/span&gt;//g}' | sed -e '{s/.*\[/\[/g}' | sed -e '{s/\].*/\]/g}'
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~ $ bash bing_dict.sh orchestrate
+['ɔː(r)kɪ.streɪt]
+精心安排；编配（或创作管弦乐曲）；策划；密谋
+编管弦乐曲；组织；精心策划
+</pre>
+</div>
+<p>　　</p></body>
 </html>

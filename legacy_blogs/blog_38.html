@@ -1,19 +1,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>calculate VmData delta</title>
+<title>Windows Driver&#x83B7;&#x53D6;&#x5230;symbolic link&#x7684;&#x771F;&#x5B9E;&#x6307;&#x5411;&#x8BBE;&#x5907;</title>
 <body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">less memory_summary | grep VmData | awk 'BEGIN{delta=0}{printf("%s\t\t %8d , %8d , [ %8d ]\n", $0, $3, delta, $3-delta); delta=$3 }' &gt; summary_delta
+<pre class="brush:python;gutter:true;">char szNtDeviceName[MAX_PATH];
+
+if (QueryDosDevice ("C:", szNtDeviceName, MAX_PATH))
+{
+   printf ("C: is linked to %s\n", szNtDeviceName);
+}
+	
 </pre>
 </div>
-<p>　</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">less memory_summary | grep VmData | awk 'BEGIN{delta=0}{if ($3 &gt;= delta) printf("%4d: %s\t\t %8d , %8d , [ %8d ]\n", NR, $0, $3, delta, $3-delta);else printf("%4d: %s\t\t %8d , %8d , [ \033[0;34m%8d\033[0m ]\n", NR, $0, $3, delta, $3-delta); delta=$3;}' &gt; summary_delta 
-</pre>
-</div>
-<p>　　</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">less memory_summary | grep VmData | awk 'BEGIN{delta=0}{if ($3 &gt;= delta) printf("%4d:\t%s\t\t %8d , %8d , [ %8d ]\n", NR, $0, $3, delta, $3-delta);else printf("%4d:\t%s\t\t %8d , %8d , [ \033[0;34m%8d\033[0m ]\n", NR, $0, $3, delta, $3-delta); delta=$3;}' &gt; summary_delta 
-</pre>
-</div>
-<p>　　</p></body>
+<p>　　参考：<a href="http://support.microsoft.com/kb/235128">http://support.microsoft.com/kb/235128</a></p></body>
 </html>

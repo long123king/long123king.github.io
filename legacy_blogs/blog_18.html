@@ -1,74 +1,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>libVEX&#x5B66;&#x4E60;</title>
-<body><p>VEX IR是一种更加接近于compiler使用的中间语言/中间表示，它是不依赖于特定体系架构的。</p>
-<p>&nbsp;</p>
-<h1>1. Code Blocks</h1>
-<p>code blocks是VEX处理代码的一个单元，使用IRSB结构体表示：</p>
+<title>latex&#x7684;&#x8D44;&#x6599;ftp</title>
+<body><p><a href="ftp://ftp.tex.ac.uk/ctan/tex-archive/" target="_blank">ftp://ftp.tex.ac.uk/ctan/tex-archive/</a></p>
 <div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">/* Code blocks, which in proper compiler terminology are superblocks
-   (<span style="color: #800080;">single entry, multiple exit</span> code sequences) contain:<br /><span style="color: #800080;">　　【与Intel Pin中的概念trace是相似的】</span>
+<pre class="brush:csharp;gutter:true;">ftp ftp.tex.ac.uk
+anonymous
 
-   - A table giving a type for each temp (the "type environment")
-   - An expandable array of statements
-   - An expression of type 32 or 64 bits, depending on the
-     guest's word size, indicating the next destination if the block 
-     executes all the way to the end, without a side exit
-   - An indication of any special actions (JumpKind) needed
-     for this final jump.
-   
-   "IRSB" stands for "IR Super Block".
-*/
-typedef
-   struct {
-      IRTypeEnv* tyenv;
-      IRStmt**   stmts;
-      Int        stmts_size;
-      Int        stmts_used;
-      IRExpr*    next;
-      IRJumpKind jumpkind;
-   }
-   IRSB;
+ls
 </pre>
 </div>
-<p>　　</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;"> Each IRSB contains three things:
-   - a type environment, which indicates the type of each temporary
-     value present in the IRSB
-   - a list of statements, which represent code
-   - a jump that exits from the end the IRSB
-</pre>
-</div>
-<p>　</p>
-<h1>2. Statements and Expressions</h1>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">Statements (type 'IRStmt') represent operations with side-effects,
-   eg.  guest register writes, stores, and assignments to temporaries.
-   Expressions (type 'IRExpr') represent operations without
-   side-effects, eg. arithmetic operations, loads, constants.
-   Expressions can contain sub-expressions, forming expression trees,
-   eg. (3 + (4 * load(addr1)).
-</pre>
-</div>
-<h2>Statements： IRStmt</h2>
-<p>代表着有side-effect的操作；</p>
-<h2>Expressions: IRExpr</h2>
-<p>代表着没有side-effect的操作；</p>
-<p>&nbsp;</p>
-<h1>3.&nbsp;Storage of guest state</h1>
-<p>guest state，其实就是代表目标机器寄存器的一片连续的缓存。</p>
-<p>在这片缓存上可以进行Put/Get操作。</p>
-<p>&nbsp;</p>
-<p>Put/Get操作需要提供两个参数：</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">在代表guest state的缓存中的offset
-
-代表操作数长度的type
-</pre>
-</div>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
 <p>&nbsp;</p></body>
 </html>

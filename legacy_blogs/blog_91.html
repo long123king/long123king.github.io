@@ -1,39 +1,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x5728;Windows&#x4E0A;&#x5B89;&#x88C5;&#x90E8;&#x7F72;Cuckoo</title>
-<body><h3>1. Cuckoo使用的第三方工具及库</h3>
-<p>Yara:<a title="http://plusvic.github.io/yara/" href="http://plusvic.github.io/yara/">http://plusvic.github.io/yara/</a></p>
-<p>Pydeep:<a title="https://github.com/kbandla/pydeep" href="https://github.com/kbandla/pydeep">https://github.com/kbandla/pydeep</a></p>
-<p>&nbsp;</p>
-<p>Yara是用来扫描文件的Pattern的工具；</p>
-<p>Pydeep是用来计算一段缓存或者一个文件的摘要，以及根据摘要来分析两个文件的相似度的工具。</p>
-<p>Pydeep是根据ssdeep项目改写的Python版本，而ssdeep是根据下面的论文开发的：</p>
-<p><a title="http://dfrws.org/2006/proceedings/12-Kornblum.pdf" href="http://dfrws.org/2006/proceedings/12-Kornblum.pdf">http://dfrws.org/2006/proceedings/12-Kornblum.pdf</a></p>
-<p>&nbsp;</p>
-<blockquote>
-<ul>
-<li><a href="http://code.google.com/p/dpkt/">Dpkt</a> (Highly Recommended): for extracting relevant information from PCAP files.</li>
-<li><a href="http://jinja.pocoo.org/docs/">Jinja2</a> (Highly Recommended): for rendering the HTML reports and the web interface.</li>
-<li><a href="http://www.darwinsys.com/file/">Magic</a> (Optional): for identifying files&rsquo; formats (otherwise use &ldquo;file&rdquo; command line utility)</li>
-<li><a href="https://github.com/kbandla/pydeep">Pydeep</a> (Optional): for calculating ssdeep fuzzy hash of files.</li>
-<li><a href="http://pypi.python.org/pypi/pymongo/">Pymongo</a> (Optional): for storing the results in a MongoDB database.</li>
-<li><a href="http://code.google.com/p/yara-project/">Yara</a> and Yara Python (Optional): for matching Yara signatures (use release 1.7 or above or the svn version).</li>
-<li><a href="http://www.libvirt.org/">Libvirt</a> (Optional): for using the KVM machine manager.</li>
-<li><a href="http://www.bottlepy.org/">Bottlepy</a> (Optional): for using the <tt>api.py</tt> or <tt>web.py</tt> utility (use release 0.10 or above).</li>
-<li><a href="https://www.djangoproject.com/">Django</a> (Optional): for using the web interface (use release 1.5 or above).</li>
-<li><a href="http://code.google.com/p/pefile/">Pefile</a> (Optional): used for static analysis of PE32 binaries.</li>
-<li><a href="http://code.google.com/p/volatility/">Volatility</a> (Optional): used for forensic analysis on memory</li>
-<li><a href="https://pypi.python.org/pypi/maec">MAEC Python bindings</a> (Optional): used for MAEC reporting (use release 4.0 or above).</li>
-<li><a href="https://pypi.python.org/pypi/chardet">Chardet</a> (Optional): used for detecting string encoding.</li>
-<li>来自:<a title="http://docs.cuckoosandbox.org/en/latest/installation/host/requirements/" href="http://docs.cuckoosandbox.org/en/latest/installation/host/requirements/">http://docs.cuckoosandbox.org/en/latest/installation/host/requirements/</a></li>
-</ul>
-</blockquote>
-<h3>2. 在Windows上安装Cuckoo Host</h3>
-<p>参考：<a href="http://www.cnblogs.com/long123king/p/3494011.html">http://www.cnblogs.com/long123king/p/3494011.html</a>中使用pip的教程</p>
-<p><a href="http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip">http://www.lfd.uci.edu/~gohlke/pythonlibs/#pip</a></p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre>pip install sqlalchemy bson</pre>
-<!--CRLF--></div>
-</div></body>
+<title>bash arithmatic</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Arithmetic in bash is done with $ and double parentheses:
+
+echo "$(($num1+$num2))"
+Or $ and square brackets:
+
+echo "$[$num1+$num2]"
+You can assign from that (sans echo). There is also expr:
+
+echo `expr "$num1" + "$num2"`
+</pre>
+</div>
+<p>　　<a href="http://unix.stackexchange.com/a/93030">http://unix.stackexchange.com/a/93030</a></p></body>
 </html>

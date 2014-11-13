@@ -1,52 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>LaTex&#x5165;&#x95E8;</title>
-<body><h3>LaTex的安装与使用</h3>  <p>在Windows平台下，安装MikTex是比较好的选择，下载地址<a href="http://miktex.org/download">http://miktex.org/download</a>。</p>  <p>下载完成后，将安装目录</p>  <div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; width: 97.5%; background-color: #f4f4f4">   <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; line-height: 12pt; padding-right: 0px; width: 100%; background-color: #f4f4f4">     <pre style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; line-height: 12pt; padding-right: 0px; width: 100%; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> C:\Program Files (x86)\MiKTeX 2.9\miktex\bin</pre>
-<!--CRLF--></div>
-</div>
-
-
-
-<p>添加到PATH环境变量中，以后就可以的命令行中调用latex命令了：</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; width: 97.5%; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; line-height: 12pt; padding-right: 0px; width: 100%; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; line-height: 12pt; padding-right: 0px; width: 100%; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> pdflatex Intel_Protection_Mode.tex</pre>
-<!--CRLF--></div>
-</div>
-
-<h3>支持中文</h3>
-
-<p>之前在Tex Maker环境下按教材上的例子，却不显示正确的中文，原因是tex文件的编码问题。</p>
-
-<p>如果是以中文输入的话，可以在</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; width: 97.5%; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; line-height: 12pt; padding-right: 0px; width: 100%; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; line-height: 12pt; padding-right: 0px; width: 100%; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> <span style="color: #006080">&quot;配置Texmaker&quot;</span>-&gt;<span style="color: #006080">&quot;编辑器&quot;</span>-&gt;<span style="color: #006080">&quot;编辑器字体编码&quot;</span></pre>
-<!--CRLF--></div>
-</div>
-里选择“GBK”编码，“GBK”是“GB2312”编码的一个扩展，是ANSI格式中的一个，即常说的多字节字符集（MBCS），由于LaTex会把输入的文件按照ANSI方式进行处理，如果在编辑时是按UTF格式保存的话就会显示不正确。
-
-<h3>设置布局</h3>
-
-<p>首先，设置页面为A4纸张</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; width: 97.5%; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; line-height: 12pt; padding-right: 0px; width: 100%; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; line-height: 12pt; padding-right: 0px; width: 100%; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> \documentclass[a4paper]{article}</pre>
-<!--CRLF--></div>
-</div>
-
-
-
-
-
-<p>然后，设置显示内容的区域大小</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; width: 97.5%; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; line-height: 12pt; padding-right: 0px; width: 100%; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; border-left-style: none; font-family: &#39;Courier New&#39;, courier, monospace; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; line-height: 12pt; padding-right: 0px; width: 100%; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> \usepackage[text={180mm,257mm}, centering]{geometry}</pre>
-<!--CRLF--></div>
-</div></body>
+<title>ollydbg&#x8C03;&#x8BD5;PE&#x6587;&#x4EF6;</title>
+<body><p>ollydbg项目地址：<a title="http://www.ollydbg.de/" href="http://www.ollydbg.de/">http://www.ollydbg.de/</a></p> <p>将exe文件打开到ollydbg项目中，就会直接停到“入口点”地址处，通过View-&gt;Memory Map可以清楚地看到用户空间的各个内存区域的用途。</p> <p>&nbsp;</p> <p>找到我们的目标文件映射到地址空间的区域，选择PE Header跟进去看AddressOfEntryPoint，再加上PE Header映射基地址，我们就得到了一开始的“入口点”地址。</p> <p>&nbsp;</p> <p>在View中有好几个窗口，对于调试，最常用的就是CPU窗口。</p> <p>将一个exe按F8(相当于F10)，F7(相当于F11)有选择地跑下来，最直观的感觉就是，对于CALL指令的支持与解释对于分析程序有很大帮助：</p> <p><a href="http://images.cnitblog.com/blog/580388/201403/101350203672461.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: block; float: none; border-top-width: 0px; border-bottom-width: 0px; margin-left: auto; border-left-width: 0px; margin-right: auto; padding-top: 0px" title="image" border="0" alt="image" src="http://long123king.github.io/legacy_blogs/img/blog_186_blog_186_101350208674375.png" width="644" height="87"></a></p> <p>如上图红色字体内容。</p> <p>&nbsp;</p> <p>FS:[0]里面存放的是什么呢，FS指向与当前线程有关的数据，FS一般为0x7FFDF000。</p> <p><a href="http://images.cnitblog.com/blog/580388/201403/111137068224277.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; border-top: 0px; margin-right: auto; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="http://long123king.github.io/legacy_blogs/img/blog_186_blog_186_111137074538919.png" width="644" height="402"></a></p></body>
 </html>

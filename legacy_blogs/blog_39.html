@@ -1,9 +1,27 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x67E5;&#x770B;&#x8FDB;&#x7A0B;&#x5185;&#x5B58;&#x60C5;&#x51B5;</title>
+<title>Windows&#x5185;&#x6838;&#x4E2D;&#x5B8C;&#x6574;&#x8DEF;&#x5F84;&#x793A;&#x4F8B;</title>
 <body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">cat /proc/$(pgrep helloworld)/status | grep Vm
+<pre class="brush:python;gutter:true;">kd&gt; db poi(pBuffer)+0x8 L200
+8633fda8  5c 00 44 00 65 00 76 00-69 00 63 00 65 00 5c 00  \.D.e.v.i.c.e.\.
+8633fdb8  48 00 61 00 72 00 64 00-64 00 69 00 73 00 6b 00  H.a.r.d.d.i.s.k.
+8633fdc8  56 00 6f 00 6c 00 75 00-6d 00 65 00 31 00 5c 00  V.o.l.u.m.e.1.\.
+8633fdd8  50 00 72 00 6f 00 67 00-72 00 61 00 6d 00 20 00  P.r.o.g.r.a.m. .
+8633fde8  46 00 69 00 6c 00 65 00-73 00 5c 00 53 00 79 00  F.i.l.e.s.\.S.y.
+8633fdf8  73 00 74 00 65 00 6d 00-20 00 45 00 78 00 70 00  s.t.e.m. .E.x.p.
+8633fe08  6c 00 6f 00 72 00 65 00-72 00 5c 00 73 00 65 00  l.o.r.e.r.\.s.e.
+8633fe18  72 00 76 00 69 00 63 00-65 00 5c 00 53 00 79 00  r.v.i.c.e.\.S.y.
+8633fe28  73 00 74 00 65 00 6d 00-45 00 78 00 70 00 6c 00  s.t.e.m.E.x.p.l.
+8633fe38  6f 00 72 00 65 00 72 00-53 00 65 00 72 00 76 00  o.r.e.r.S.e.r.v.
+8633fe48  69 00 63 00 65 00 2e 00-65 00 78 00 65 00 00 00  i.c.e...e.x.e...
+8633fe58  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+8633fe68  00 00 00 00 00 00 00 00                          ........
+kd&gt; du poi(pBuffer)+0x8
+8633fda8  "\Device\HarddiskVolume1\Program "
+8633fde8  "Files\System Explorer\service\Sy"
+8633fe28  "stemExplorerService.exe"
 </pre>
 </div>
-<p>　　</p></body>
+<p>　　</p>
+<p>在一台设备上通过这样的完整路径可以唯一定位一个文件。</p></body>
 </html>

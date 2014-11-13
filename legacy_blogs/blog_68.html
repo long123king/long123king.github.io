@@ -1,22 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Profiler&#x6B7B;&#x9501;</title>
-<body><p>如果在Finalize回调函数中，执行</p> <p>&nbsp;</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">m_thread-&gt;interrupt();</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">m_thread-&gt;join();    </pre><!--CRLF--></div></div>
-<p>就会发生死锁</p>
-<p>&nbsp;</p>
-<p>首先Finalize的回调函数是处于一个特殊的时机，这时线程正要被结束掉，或者说pin本身是想去控制线程的，因此，如果我们在Finalize回调中想要结束线程，就可能因为与pin争抢thread而发生死锁。</p>
-<p>&nbsp;</p>
-<p>但是这个线程是pintool本身的线程，而不是目标程序的线程。</p>
-<p>&nbsp;</p>
-<p>
-<hr>
-</p>
-<p>第二个问题</p>
-<p>如果Profiler运行时间太长，就会无法到达Finalize回调函数。</p>
-<p>&nbsp;</p>
-<p>第二个问题网上也有人遇到，我怀疑是pin本身的bug.</p>
-<p>&nbsp;</p>
-<p>这两个问题看起来都与Finalize回调函数有关。</p>
-<p>&nbsp;</p>
-<p>是否要考虑转向DynamoRIO</p></body>
+<title>STAY AWAY from Lisp and Emacs</title>
+<body><p>Haskell and Vim is good enough for you.</p></body>
 </html>

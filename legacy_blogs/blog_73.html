@@ -1,14 +1,303 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>setjmp&#x4E0E;longjmp&#x7684;&#x5206;&#x6790;</title>
-<body><div id="codeSnippetWrapper"> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #cc6633">#include</span> &lt;setjmp.h&gt;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #0000ff">int</span> main(<span style="color: #0000ff">int</span> argc, <span style="color: #0000ff">const</span> <span style="color: #0000ff">char</span>* argv[])</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">{</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">&nbsp;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    jmp_buf buf = {0,};</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    <span style="color: #0000ff">int</span> k = 0;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    setjmp(buf);</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">&nbsp;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    k = 1;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">&nbsp;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    longjmp(buf, 1);</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">}</pre><!--CRLF--></div></div>
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><h3>测试代码如上所示， 看一下Disassemble的代码</h3><h3></h3><p>__setjmp3:</p></pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC38  mov         edx,dword ptr [esp+4] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC3C  mov         dword ptr [edx],ebp </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC3E  mov         dword ptr [edx+4],ebx </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC41  mov         dword ptr [edx+8],edi </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC44  mov         dword ptr [edx+0Ch],esi </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC47  mov         dword ptr [edx+10h],esp </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC4A  mov         eax,dword ptr [esp] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC4D  mov         dword ptr [edx+14h],eax </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC50  mov         dword ptr [edx+20h],56433230h </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC57  mov         dword ptr [edx+24h],0 </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC5E  mov         eax,dword ptr fs:[00000000h] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC64  mov         dword ptr [edx+18h],eax </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC67  cmp         eax,0FFFFFFFFh </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC6A  jne         _s3_get_count (69CDFC75h) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC6C  mov         dword ptr [edx+1Ch],0FFFFFFFFh </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC73  jmp         _s3_done (69CDFCB0h) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">_s3_get_count:</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC75  mov         ecx,dword ptr [esp+8] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC79  or          ecx,ecx </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC7B  je          _s3_default_trylevel (69CDFC87h) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC7D  mov         eax,dword ptr [esp+0Ch] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC81  mov         dword ptr [edx+24h],eax </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC84  dec         ecx  </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC85  jne         _s3_save_trylevel (69CDFC8Fh) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">_s3_default_trylevel:</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC87  mov         eax,dword ptr [eax+0Ch] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC8A  mov         dword ptr [edx+1Ch],eax </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC8D  jmp         _s3_done (69CDFCB0h) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">_s3_save_trylevel:</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC8F  mov         eax,dword ptr [esp+10h] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC93  mov         dword ptr [edx+1Ch],eax </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC96  dec         ecx  </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC97  je          _s3_done (69CDFCB0h) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC99  push        esi  </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC9A  push        edi  </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC9B  lea         esi,[esp+1Ch] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFC9F  lea         edi,[edx+28h] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCA2  cmp         ecx,6 </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCA5  jbe         _s3_save_data (69CDFCACh) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCA7  mov         ecx,6 </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">_s3_save_data:</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCAC  rep movs    dword ptr es:[edi],dword ptr [esi] </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCAE  pop         edi  </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCAF  pop         esi  </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">_s3_done:</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB0  sub         eax,eax </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB2  ret              </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB3  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB4  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB5  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB6  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB7  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB8  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCB9  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCBA  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCBB  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCBC  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCBD  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCBE  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">69CDFCBF  <span style="color: #0000ff">int</span>         3    </pre><!--CRLF--></div></div>
+<title>haskell&#x76EE;&#x5F55;&#x5C42;&#x6B21;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint /usr/lib/ghc/haskell2010-1.1.1.0 $ tree
+.
+├── Control
+│&nbsp;&nbsp; └── Monad.hi
+├── Data
+│&nbsp;&nbsp; ├── Array.hi
+│&nbsp;&nbsp; ├── Bits.hi
+│&nbsp;&nbsp; ├── Char.hi
+│&nbsp;&nbsp; ├── Complex.hi
+│&nbsp;&nbsp; ├── Int.hi
+│&nbsp;&nbsp; ├── Ix.hi
+│&nbsp;&nbsp; ├── List.hi
+│&nbsp;&nbsp; ├── Maybe.hi
+│&nbsp;&nbsp; ├── Ratio.hi
+│&nbsp;&nbsp; └── Word.hi
+├── Foreign
+│&nbsp;&nbsp; ├── C
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Error.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── String.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Types.hi
+│&nbsp;&nbsp; ├── C.hi
+│&nbsp;&nbsp; ├── ForeignPtr.hi
+│&nbsp;&nbsp; ├── Marshal
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Alloc.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Array.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Error.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Utils.hi
+│&nbsp;&nbsp; ├── Marshal.hi
+│&nbsp;&nbsp; ├── Ptr.hi
+│&nbsp;&nbsp; ├── StablePtr.hi
+│&nbsp;&nbsp; └── Storable.hi
+├── Foreign.hi
+├── HShaskell2010-1.1.1.0.o
+├── libHShaskell2010-1.1.1.0.a
+├── Numeric.hi
+├── Prelude.hi
+└── System
+    ├── Environment.hi
+    ├── Exit.hi
+    ├── IO
+    │&nbsp;&nbsp; └── Error.hi
+    └── IO.hi
+</pre>
+</div>
+<p>　　</p>
+<p>这个层次，与import相关联。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint /usr/lib/ghc/base-4.6.0.1 $ tree
+.
+├── Control
+│&nbsp;&nbsp; ├── Applicative.hi
+│&nbsp;&nbsp; ├── Arrow.hi
+│&nbsp;&nbsp; ├── Category.hi
+│&nbsp;&nbsp; ├── Concurrent
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Chan.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── MVar.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── QSem.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── QSemN.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── SampleVar.hi
+│&nbsp;&nbsp; ├── Concurrent.hi
+│&nbsp;&nbsp; ├── Exception
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Base.hi
+│&nbsp;&nbsp; ├── Exception.hi
+│&nbsp;&nbsp; ├── Monad
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Fix.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Instances.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── ST
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Imp.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Lazy
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Imp.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Safe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └── Unsafe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Lazy.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Safe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Strict.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └── Unsafe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── ST.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Zip.hi
+│&nbsp;&nbsp; └── Monad.hi
+├── Data
+│&nbsp;&nbsp; ├── Bits.hi
+│&nbsp;&nbsp; ├── Bool.hi
+│&nbsp;&nbsp; ├── Char.hi
+│&nbsp;&nbsp; ├── Complex.hi
+│&nbsp;&nbsp; ├── Data.hi
+│&nbsp;&nbsp; ├── Dynamic.hi
+│&nbsp;&nbsp; ├── Either.hi
+│&nbsp;&nbsp; ├── Eq.hi
+│&nbsp;&nbsp; ├── Fixed.hi
+│&nbsp;&nbsp; ├── Foldable.hi
+│&nbsp;&nbsp; ├── Function.hi
+│&nbsp;&nbsp; ├── Functor.hi
+│&nbsp;&nbsp; ├── HashTable.hi
+│&nbsp;&nbsp; ├── Int.hi
+│&nbsp;&nbsp; ├── IORef.hi
+│&nbsp;&nbsp; ├── Ix.hi
+│&nbsp;&nbsp; ├── List.hi
+│&nbsp;&nbsp; ├── Maybe.hi
+│&nbsp;&nbsp; ├── Monoid.hi
+│&nbsp;&nbsp; ├── Ord.hi
+│&nbsp;&nbsp; ├── Ratio.hi
+│&nbsp;&nbsp; ├── STRef
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Lazy.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Strict.hi
+│&nbsp;&nbsp; ├── STRef.hi
+│&nbsp;&nbsp; ├── String.hi
+│&nbsp;&nbsp; ├── Traversable.hi
+│&nbsp;&nbsp; ├── Tuple.hi
+│&nbsp;&nbsp; ├── Typeable
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Internal.hi
+│&nbsp;&nbsp; ├── Typeable.hi
+│&nbsp;&nbsp; ├── Unique.hi
+│&nbsp;&nbsp; ├── Version.hi
+│&nbsp;&nbsp; └── Word.hi
+├── Debug
+│&nbsp;&nbsp; └── Trace.hi
+├── Foreign
+│&nbsp;&nbsp; ├── C
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Error.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── String.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Types.hi
+│&nbsp;&nbsp; ├── C.hi
+│&nbsp;&nbsp; ├── Concurrent.hi
+│&nbsp;&nbsp; ├── ForeignPtr
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Imp.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Safe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Unsafe.hi
+│&nbsp;&nbsp; ├── ForeignPtr.hi
+│&nbsp;&nbsp; ├── Marshal
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Alloc.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Array.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Error.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Pool.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Safe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Unsafe.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Utils.hi
+│&nbsp;&nbsp; ├── Marshal.hi
+│&nbsp;&nbsp; ├── Ptr.hi
+│&nbsp;&nbsp; ├── Safe.hi
+│&nbsp;&nbsp; ├── StablePtr.hi
+│&nbsp;&nbsp; └── Storable.hi
+├── Foreign.hi
+├── GHC
+│&nbsp;&nbsp; ├── Arr.hi
+│&nbsp;&nbsp; ├── Base.hi
+│&nbsp;&nbsp; ├── Char.hi
+│&nbsp;&nbsp; ├── Conc
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── IO.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Signal.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Sync.hi
+│&nbsp;&nbsp; ├── Conc.hi
+│&nbsp;&nbsp; ├── ConsoleHandler.hi
+│&nbsp;&nbsp; ├── Constants.hi
+│&nbsp;&nbsp; ├── Desugar.hi
+│&nbsp;&nbsp; ├── Enum.hi
+│&nbsp;&nbsp; ├── Environment.hi
+│&nbsp;&nbsp; ├── Err.hi
+│&nbsp;&nbsp; ├── Event
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Array.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Clock.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Control.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── EPoll.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Internal.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── IntMap.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── KQueue.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Manager.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Poll.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── PSQ.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Thread.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Unique.hi
+│&nbsp;&nbsp; ├── Event.hi
+│&nbsp;&nbsp; ├── Exception.hi
+│&nbsp;&nbsp; ├── Exts.hi
+│&nbsp;&nbsp; ├── Fingerprint
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Type.hi
+│&nbsp;&nbsp; ├── Fingerprint.hi
+│&nbsp;&nbsp; ├── Float
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── ConversionUtils.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── RealFracMethods.hi
+│&nbsp;&nbsp; ├── Float.hi
+│&nbsp;&nbsp; ├── Foreign.hi
+│&nbsp;&nbsp; ├── ForeignPtr.hi
+│&nbsp;&nbsp; ├── Generics.hi
+│&nbsp;&nbsp; ├── GHCi.hi
+│&nbsp;&nbsp; ├── Handle.hi
+│&nbsp;&nbsp; ├── Int.hi
+│&nbsp;&nbsp; ├── IO
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── BufferedIO.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Buffer.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Device.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Encoding
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── CodePage.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Failure.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Iconv.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Latin1.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Types.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── UTF16.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── UTF32.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └── UTF8.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Encoding.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Exception.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── FD.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Handle
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── FD.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Internals.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; ├── Text.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; │&nbsp;&nbsp; └── Types.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Handle.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── IOMode.hi
+│&nbsp;&nbsp; ├── IOArray.hi
+│&nbsp;&nbsp; ├── IOBase.hi
+│&nbsp;&nbsp; ├── IO.hi
+│&nbsp;&nbsp; ├── IORef.hi
+│&nbsp;&nbsp; ├── IP.hi
+│&nbsp;&nbsp; ├── List.hi
+│&nbsp;&nbsp; ├── MVar.hi
+│&nbsp;&nbsp; ├── Num.hi
+│&nbsp;&nbsp; ├── Pack.hi
+│&nbsp;&nbsp; ├── PArr.hi
+│&nbsp;&nbsp; ├── Ptr.hi
+│&nbsp;&nbsp; ├── Read.hi
+│&nbsp;&nbsp; ├── Real.hi
+│&nbsp;&nbsp; ├── Show.hi
+│&nbsp;&nbsp; ├── Stable.hi
+│&nbsp;&nbsp; ├── Stack.hi
+│&nbsp;&nbsp; ├── Stats.hi
+│&nbsp;&nbsp; ├── ST.hi
+│&nbsp;&nbsp; ├── Storable.hi
+│&nbsp;&nbsp; ├── STRef.hi
+│&nbsp;&nbsp; ├── TopHandler.hi
+│&nbsp;&nbsp; ├── TypeLits.hi
+│&nbsp;&nbsp; ├── Unicode.hi
+│&nbsp;&nbsp; ├── Weak.hi
+│&nbsp;&nbsp; └── Word.hi
+├── HSbase-4.6.0.1.o
+├── include
+│&nbsp;&nbsp; ├── consUtils.h
+│&nbsp;&nbsp; ├── EventConfig.h
+│&nbsp;&nbsp; ├── HsBaseConfig.h
+│&nbsp;&nbsp; ├── HsBase.h
+│&nbsp;&nbsp; ├── Typeable.h
+│&nbsp;&nbsp; └── WCsubst.h
+├── libHSbase-4.6.0.1.a
+├── Numeric.hi
+├── Prelude.hi
+├── System
+│&nbsp;&nbsp; ├── Console
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── GetOpt.hi
+│&nbsp;&nbsp; ├── CPUTime.hi
+│&nbsp;&nbsp; ├── Environment
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── ExecutablePath.hi
+│&nbsp;&nbsp; ├── Environment.hi
+│&nbsp;&nbsp; ├── Exit.hi
+│&nbsp;&nbsp; ├── Info.hi
+│&nbsp;&nbsp; ├── IO
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Error.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Unsafe.hi
+│&nbsp;&nbsp; ├── IO.hi
+│&nbsp;&nbsp; ├── Mem
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── StableName.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Weak.hi
+│&nbsp;&nbsp; ├── Mem.hi
+│&nbsp;&nbsp; ├── Posix
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── Internals.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Types.hi
+│&nbsp;&nbsp; └── Timeout.hi
+├── Text
+│&nbsp;&nbsp; ├── ParserCombinators
+│&nbsp;&nbsp; │&nbsp;&nbsp; ├── ReadP.hi
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── ReadPrec.hi
+│&nbsp;&nbsp; ├── Printf.hi
+│&nbsp;&nbsp; ├── Read
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Lex.hi
+│&nbsp;&nbsp; ├── Read.hi
+│&nbsp;&nbsp; ├── Show
+│&nbsp;&nbsp; │&nbsp;&nbsp; └── Functions.hi
+│&nbsp;&nbsp; └── Show.hi
+└── Unsafe
+    └── Coerce.hi
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Text.PrettyPrint Data.Char Data.Bits&gt; import System.Environments
 
-<p>&nbsp;</p>
-<p>将刚刚压入栈中的buf[esp + 4]赋值给edx，然后分别将线程相关的Context的各个register，以及TEB中的某些字段fs:[00000000h]放到该结构体中。</p>
-<p>&nbsp;</p>
-<p>fs:[00000000h]保存的是与SEH相关的信息，参考：<a title="http://www.mouseos.com/windows/SEH3.html" href="http://www.mouseos.com/windows/SEH3.html">http://www.mouseos.com/windows/SEH3.html</a></p>
-<p>参考：<a title="http://blog.csdn.net/zhongyh/article/details/1467654" href="http://blog.csdn.net/zhongyh/article/details/1467654">http://blog.csdn.net/zhongyh/article/details/1467654</a></p>
-<p>&nbsp;</p>
-<p>总之，一旦调用longjmp，那么包括esp在内的Context可能都会被改变</p></body>
+&lt;no location info&gt;:
+    Could not find module `System.Environments'
+    Perhaps you meant
+      System.Environment (from base)
+      System.Environment (needs flag -package haskell2010-1.1.1.0)
+Prelude Text.PrettyPrint Data.Char Data.Bits&gt; import System.Environment
+Prelude Text.PrettyPrint Data.Char Data.Bits System.Environment&gt; import System.Environment -package haskell2010-1.1.1.0
+
+&lt;interactive&gt;:1:27: parse error on input `-'
+Prelude Text.PrettyPrint Data.Char Data.Bits System.Environment&gt; import System.Environment --package haskell2010-1.1.1.0
+</pre>
+</div>
+<p>　　</p></body>
 </html>

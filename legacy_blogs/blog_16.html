@@ -1,48 +1,31 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>expand gcc case variable length</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/vex $ bash gen.sh 0x10 0x1F
-			case 10:
-			case 11:
-			case 12:
-			case 13:
-			case 14:
-			case 15:
-			case 16:
-			case 17:
-			case 18:
-			case 19:
-			case 1A:
-			case 1B:
-			case 1C:
-			case 1D:
-			case 1E:
-			case 1F:
-daniel@daniel-mint ~/vex $ cat gen.sh
-lower=$(($1))
-upper=$(($2))
-
-it=$lower
-while [ $it -le $upper ]
-do
-	printf "\t\t\tcase %2X:\n" $it
-	let it=$it+1 
-done
-</pre>
-</div>
-<p>　　</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">lower=$(($1))
-upper=$(($2))
-
-it=$lower
-while [ $it -le $upper ]
-do
-	printf "\t\t\tcase %2X:\n" $it
-	let it=$it+1 
-done
-</pre>
-</div>
-<p>　　</p></body>
+<title>Windows&#x4E0B;&#x7684;Mount Manager</title>
+<body><blockquote>
+<h1><a href="http://msdn.microsoft.com/en-us/library/windows/hardware/ff556757(v=vs.85).aspx" target="_blank">Storage Volumes</a></h1>
+<p>A <em>volume</em> is a storage device, such as a fixed disk, floppy disk, or CD-ROM, that is formatted to store directories and files. A large volume can be divided into more than one <em>logical volume</em>, also called a <em>partition</em>. Each logical volume is formatted for use by a particular media-based file system, such as NTFS, FAT, or CDFS.</p>
+<p>A <em>storage volume</em>, or <em>storage device object</em>, is a device object &minus; usually a physical device object (PDO) &minus; that represents a logical volume to the system. The storage device object resides in the storage device stack, but it is not necessarily the topmost device object in the stack.</p>
+<p>When a file system is mounted on a storage volume, it creates a file system volume device object (VDO) to represent the volume to the file system. The file system VDO is mounted on the storage device object by means of a shared object called a <em>volume parameter block</em> (VPB).</p>
+<h3>Mount Manager</h3>
+<p>The <em>Mount Manager</em> is the part of the I/O system that is responsible for managing storage volume information such as volume names, drive letters, and volume mount points. When a new storage volume is added to the system, the Mount Manager is notified of its arrival in either of the following ways:</p>
+<ul type="disc">
+<li>The class driver that created the storage volume calls <strong>IoRegisterDeviceInterface</strong> to register a new interface in the MOUNTDEV_MOUNTED_DEVICE_GUID interface class. When this happens, the Plug and Play device interface notification mechanism alerts the Mount Manager of the volume's arrival in the system.</li>
+<li>The driver for the storage volume sends the Mount Manager an IRP_MJ_DEVICE_CONTROL request, specifying IOCTL_MOUNTMGR_VOLUME_ARRIVAL_NOTIFICATION for the I/O control code. This request can be created by calling <strong>IoBuildDeviceIoControlRequest</strong>.</li>
+</ul>
+<h3>Unique Volume Name</h3>
+<p>The Mount Manager responds to the arrival of a new storage volume by querying the volume driver for the following information:</p>
+<ul type="disc">
+<li>The volume's nonpersistent device object name (or target name), located in the <strong>Device</strong> directory of the system object tree (for example: "\Device\HarddiskVolume1")</li>
+<li>The volume's globally unique identifier (GUID), also called the <em>unique volume name</em></li>
+<li>A suggested persistent symbolic link name for the volume, such as a drive letter (for example, "\DosDevices\D:")</li>
+</ul>
+<p>For more information about the interaction between storage drivers and the Mount Manager, see Supporting Mount Manager Requests in a Storage Class Driver.&nbsp;</p>
+</blockquote>
+<p>&nbsp;</p>
+<p>Windows操作系统对于mount的操作，管理得比Linux严格。</p>
+<p>当一个新的存储设备(Storage Volume)注册到Mount Manager后，会在Device目录下创建一个临时的名称，比如\Device\HarddiskVolume1;&nbsp;</p>
+<p>这个Volume的GUID是它的唯一标识；</p>
+<p>此外，该设备会在\DosDevices\C:处理创建一个符号链接。</p>
+<p>这就是各个盘符的由来，它们只不过是到\Device\HarddiskVolume1的符号链接而已，而\Device\HarddiskVolume1也并不是这个Storage Volume的固定名称，而只是这次启动临时赋予的名称，可能下次启动时就变成了\Device\HarddiskVolume2。</p>
+<p>&nbsp;</p></body>
 </html>

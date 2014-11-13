@@ -1,51 +1,50 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>let export can be used by sudo commands</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework $ sudo chmod 0640 /etc/sudoers
-daniel@daniel-mint ~/msf/metasploit-framework $ sudo vim /etc/sudoers
-daniel@daniel-mint ~/msf/metasploit-framework $ sudo chmod 0440 /etc/sudoers
-daniel@daniel-mint ~/msf/metasploit-framework $ cat /etc/sudoers
-cat: /etc/sudoers: Permission denied
-daniel@daniel-mint ~/msf/metasploit-framework $ sudo cat /etc/sudoers
-#
-# This file MUST be edited with the 'visudo' command as root.
-#
-# Please consider adding local content in /etc/sudoers.d/ instead of
-# directly modifying this file.
-#
-# See the man page for details on how to write a sudoers file.
-#
-Defaults	env_keep="ftp_proxy http_proxy"
-Defaults	env_reset
-Defaults	mail_badpass
-Defaults	secure_path="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+<title>Font and PDF</title>
+<body><h1>1. 独立存在的Font文件</h1>
+<p>有三类：</p>
+<p style="margin-left: 30px;"><strong>Type 1 Font</strong></p>
+<p style="margin-left: 30px;"><strong>TrueType Font</strong></p>
+<p style="margin-left: 30px;"><strong>OpenType Font</strong></p>
+<h2>Type 1</h2>
+<p>是由Adobe开发的，它是基于PostScript的Font，它通常由两个分开的文件来描述：</p>
+<h3 style="margin-left: 30px;">1. Adobe Font Metrics[Adobe]/Printer Font Metrics[Microsoft]</h3>
+<p style="margin-left: 30px;">用来描述每个Glyph占用的空间大小</p>
+<h3 style="margin-left: 30px;">2. PostScript Font Binary</h3>
+<p style="margin-left: 30px;">用来完成每个Glyph的绘制工作</p>
+<p>&nbsp;</p>
+<p>有14个特殊的Type 1字体被选择出来作为PDF默认支持的字体，它们被称为<strong>Standard Type1 Fonts</strong>，每个PDF viewer都应该默认提供这14个字体，因此使用这些字体的PDF文件无需将字体文件内嵌到PDF文件中，减少了PDF文件的尺寸。</p>
+<p>&nbsp;</p>
+<h2>TrueType</h2>
+<p>就由Apple开发，用来对抗Type 1字体的，不过这种字体类型刚刚发布，Type 1的标准也公开了。</p>
+<p>TrueType是Windows操作系统的标准字体文件。</p>
+<p>关于Type 1与TrueType字体优劣的比较，参考：<a href="http://www.pdf-tech.com/?p=981" target="_blank">http://www.pdf-tech.com/?p=981</a></p>
+<blockquote>
+<p><span style="font-family: 黑体;">Type1使用三次贝塞尔曲线来描述字形，TrueType则使用二次贝塞尔曲线来描述字形。所以Type1的字体比TrueType字体更加 精确美观。一个误解是：Type1字体比TrueType字体占用空间多。这是因为同样描述一个圆形，二次贝塞尔曲线只需要8个关键点和7段二次曲线；而 三次贝塞尔曲线则需要12个关键点和11段三次曲线。然而实际情况是一般来说 Type1比TrueType要小10%左右。这是因为对于稍微复杂的字形，为了保持平滑，TrueType必须使用更多的关键点。由于现代大部分打印机 都是使用PDL作为打印描述语言，所以True1字体打印的时候不会产生形变，速度快；而TrueType则需要翻译成PDL，由于曲线方程的变化，还会 产生一定的形变，不如Type1美观。</span><br /><span style="font-family: 黑体;">这么说来，Type1应该比TrueType更具有优势，为什么如今的计算机上TrueType反而比Type1使用更广泛呢？</span><br /><span style="font-family: 黑体;">这是因为第一：Type1由于字体方程的复杂，所以在屏幕上渲染的时候，花费的时间多，解决方案是大部分Type1字体嵌入了点阵字体，这样渲染快， 但是边缘不光滑，比较难看。很多PS文档和PS转换的PDF文档都是这样，在计算机上浏览的时候字体很难看，但是打印出来很美观。TrueType则渲染 比较快，可以平滑的显示在屏幕上，看上去很美观。</span><br /><span style="font-family: 黑体;">第二个原因是Type1的高额使用费，使得Type1没有被所有的操作系统所支持。Windows家族只有OS/2和windows 2000及之后的版本从操作系统级别开始支持Type1。由于这个问题，Adobe只好在其所有的产品中嵌入Adobe Type Manager(ATM)作为渲染引擎。</span></p>
 
-# Host alias specification
 
-# User alias specification
+</blockquote>
+<p>总结一下，就是Type 1字体更加精细准确，非常适合支持PDL的打印机设备； TrueType则更加适合在屏幕上渲染，快而且漂亮。</p>
+<p>&nbsp;</p>
+<h2>OpenType Font</h2>
+<blockquote>
+<p><span style="font-family: 黑体;">OpenType则是Type1与TrueType之争的最终产物。1995年，Adobe公司和Microsoft公司开始联手开发一种兼容 Type1和TrueType，并且真正支持Unicode的字体，后来在发布的时候，正式命名为OpenType。OpenType可以嵌入Type1 和TrueType，这样就兼有了二者的特点，无论是在屏幕上察看还是打印，质量都非常优秀。</span></p>
 
-# Cmnd alias specification
 
-# User privilege specification
-root	ALL=(ALL:ALL) ALL
-
-# Members of the admin group may gain root privileges
-%admin ALL=(ALL) ALL
-
-# Allow members of group sudo to execute any command
-%sudo	ALL=(ALL:ALL) ALL
-
-# See sudoers(5) for more information on "#include" directives:
-
-#includedir /etc/sudoers.d
-</pre>
-</div>
-<p>　　</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework $ export http_proxy=cnnjproxy-ha.tw.trendnet.org:8080
-daniel@daniel-mint ~/msf/metasploit-framework $ sudo gem install bundler
-</pre>
-</div>
-<p>　　</p></body>
+</blockquote>
+<p>OpenType是一种更加兼容的方式，兼容上面两种字体；除此之外，支持Unicode也是其最大的亮点。</p>
+<p>&nbsp;</p>
+<p>包含Type 1的OpenType文件为.otf后缀；包含TrueType的OpenType文件为.ttf后缀。</p>
+<p>OpenType还可以包含TrueType字体的集合，即.ttc文件。</p>
+<h1>2. PDF支持的Font类型</h1>
+<p>PDF除了支持Type 1和TrueType类型字体外，还支持一种由PDF自己的Graphics Operator描述的字体类型，命名为Type 3。</p>
+<p>此外，为了支持超大字符集的语言，比如中文字符集，PDF还支持一种Type 0字体，称为Composite Font。</p>
+<p>Simple Font只支持0-255这个范围的character encoding，而Composite Font的CMap可以支持0-65535这个范围的character encoding。</p>
+<p>Composite Font包含两部分组件： CIDFont和CMap。</p>
+<h3 style="margin-left: 30px;">CIDFont： Character Identifier Font</h3>
+<p>　　　　描述Glyph绘制参数的字体文件</p>
+<h3 style="margin-left: 30px;">CMap：Character Map, aka Character Encoding, aka Code Page</h3>
+<p>　　　　Character与Glyph之间的映射关系</p>
+<p>CMap是一种很有效的方式，它相当于提供了一种临时的，小型的code page，以建立真正在PDF文件中用到的字符与字体文件之间的关系，比如WinAnsi，以及Identity_H都是一种character encoding，但是使用Indentity_H，就可以有效地减小内嵌字体的尺寸。</p>
+<p>&nbsp;</p></body>
 </html>

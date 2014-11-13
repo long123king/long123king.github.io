@@ -1,21 +1,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>VisualStudio&#x4E0B;std::string&#x7684;&#x5185;&#x5B58;&#x5E03;&#x5C40;</title>
-<body><p>主要成员</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">	union _Bxty
-		{	// storage for small buffer or pointer to larger one
-		_Elem _Buf[_BUF_SIZE];
-		_Elem *_Ptr;
-		} _Bx;
-
-	size_type _Mysize;	// current length of string
-	size_type _Myres;	// current storage reserved for string
-</pre>
-</div>
-<p>其中，_Bx保存着string的真正成员，如果string长度在16以内，可以直接存放到string对象的内部；</p>
-<p>否则，_Bx._Ptr保存存放真正内容的指针；</p>
-<p>&nbsp;</p>
-<p>当string长度增长时，会重新分配更大的内存空间，并且将原来的字符串拷贝至新分配的空间中去。</p>
-<p>在Visual Studio下，sizeof(str1) = 0x00000020 = 32个字节</p></body>
+<title>BIOS 10&#x670D;&#x52A1;</title>
+<body><p>参考：<a href="http://www.itzhai.com/assembly-int-10h-description.html">http://www.itzhai.com/assembly-int-10h-description.html</a></p>
+<p><a href="http://en.wikipedia.org/wiki/BIOS_interrupt_call">http://en.wikipedia.org/wiki/BIOS_interrupt_call</a></p>
+<p><a href="http://home.educities.edu.tw/wanker742126/asm/ap07.html">http://home.educities.edu.tw/wanker742126/asm/ap07.html</a></p></body>
 </html>

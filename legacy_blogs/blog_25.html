@@ -1,34 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x9A71;&#x52A8;&#x4E2D;PAGED_CODE&#x7684;&#x4F5C;&#x7528;</title>
-<body><p>参考：<a href="http://blog.csdn.net/broadview2006/article/details/4171397">http://blog.csdn.net/broadview2006/article/details/4171397</a></p>
-<p>里面的内容出自&lt;Windows内核情景分析&gt;</p>
-<p>&nbsp;</p>
-<p>简而言之，Windows并没有将运行在Ring 0的代码全部视为内核，而是区分为Kernel和Executive，Executive可以理解为&ldquo;管理层&rdquo;的意思，解释为&ldquo;执行体&rdquo;不合理。</p>
-<p>其中，Kernel是狭义的内核，里面的代码包括用到的数据，都是常驻在物理内存中的，不支持分页机制。</p>
-<p>而除此之外的代码和数据，是支持分页机制的，并且可以被交换到pagefile中，即并非总是在物理内存中的。</p>
-<p>&nbsp;</p>
-<p>对于驱动来说，应该属于后者，因此在驱动中的函数的头部都会使用PAGED_CODE来判断一下，</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">#define PAGED_CODE() PAGED_ASSERT(KeGetCurrentIrql() &lt;= APC_LEVEL);
-</pre>
-</div>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">#define PASSIVE_LEVEL 0             // Passive release level
-#define LOW_LEVEL 0                 // Lowest interrupt level
-#define APC_LEVEL 1                 // APC interrupt level
-#define DISPATCH_LEVEL 2            // Dispatcher level
-#define CMCI_LEVEL 5                // CMCI handler level
-
-#define PROFILE_LEVEL 27            // timer used for profiling.
-#define CLOCK1_LEVEL 28             // Interval clock 1 level - Not used on x86
-#define CLOCK2_LEVEL 28             // Interval clock 2 level
-#define IPI_LEVEL 29                // Interprocessor interrupt level
-#define POWER_LEVEL 30              // Power failure level
-#define HIGH_LEVEL 31               // Highest interrupt level
-
-#define CLOCK_LEVEL                 (CLOCK2_LEVEL)
-</pre>
-</div>
-<p>如果当前的中断请求级别(IRQL)太高（DPC以上），那么很可能属于Kernel部分，因此需要避免这种情况。</p></body>
+<title>PDF&#x624B;&#x518C;</title>
+<body><p>参考：<a href="http://www.adobe.com/cn/devnet/pdf/pdf_reference.html" target="_blank">http://www.adobe.com/cn/devnet/pdf/pdf_reference.html</a></p></body>
 </html>

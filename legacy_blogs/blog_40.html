@@ -1,5 +1,32 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>centos&#x65E0;&#x6CD5;&#x88AB;&#x8FDE;&#x63A5;</title>
-<body><p>安装了centos之后，建立server，但是却无法被连接，最后发现是FireEye给挡住了，于是将FireEye以及SELinux都给Disable后，就恢复了。</p></body>
+<title>Python&#x5F02;&#x6216;&#x52A0;&#x5BC6;&#x5B57;&#x7B26;&#x4E32;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">import os
+import sys
+import struct
+
+def enc(path, key):
+    path_ret = ""
+    for i in range(0, len(path)/4):
+        path_ret += struct.pack("&lt;L", struct.unpack("&lt;L", path[i*4 : (i*4)+4])[0] ^ key)
+
+    return path_ret
+
+print enc("daniel King ", 0x0)
+print enc("daniel King ", 0xFFFFFFFF)
+print enc(enc("daniel King ", 0xFFFFFFFF), 0xFFFFFFFF)
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; ================================ RESTART ================================
+&gt;&gt;&gt; 
+daniel King 
+洖憱殦叽枒樳
+daniel King 
+&gt;&gt;&gt; 
+</pre>
+</div>
+<p>　　</p></body>
 </html>

@@ -1,10 +1,107 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>ROP&#x5B66;&#x4E60;</title>
-<body><h1>DEP</h1>
-<p>DEP是利用了硬件提供的机制，即对于Page的保护，对于一些保存数据的内存Page，是不允许执行的。</p>
-<p>DEP保护了stack/heap，即使其中包含了溢出的shellcode，但是没有执行权限。</p>
+<title>&#x5982;&#x4F55;&#x4F7F;&#x7528;iText&#x5236;&#x4F5C;&#x4E2D;&#x6587;PDF</title>
+<body><p>1. 下载itextpdf.jar</p>
+<p>基础包：<a href="http://jaist.dl.sourceforge.net/project/itext/iText/iText5.5.2/itext-5.5.2.zip" target="_blank">http://jaist.dl.sourceforge.net/project/itext/iText/iText5.5.2/itext-5.5.2.zip</a></p>
+<p>附加包：<a href="http://cznic.dl.sourceforge.net/project/itext/extrajars/extrajars-2.3.zip" target="_blank">http://cznic.dl.sourceforge.net/project/itext/extrajars/extrajars-2.3.zip</a></p>
 <p>&nbsp;</p>
-<p>克服DEP的方法有return-to-libc和ROP。</p>
-<p>&nbsp;</p></body>
+<p>我们只下载基础包就可以</p>
+<p>2. 创建工作文件夹</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ ls
+daniel.java  fonts  itextpdf-5.5.2.jar  run.sh
+</pre>
+</div>
+<p>　　</p>
+<p>其中fonts是一个目录，用来存放我们用到的字体文件。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ cat run.sh 
+javac -cp .:itextpdf-5.5.2.jar $1.java
+java -cp .:itextpdf-5.5.2.jar $1 
+rm $1.class
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ cat daniel.java 
+import java.io.FileOutputStream;
+import java.io.IOException;
+ 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Rectangle;
+
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.BaseFont;
+ 
+public class daniel 
+{
+ 
+    public static final String RESULT = "daniel.pdf";
+ 
+    public static void main(String[] args)
+         throws DocumentException, IOException 
+    {
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, new FileOutputStream(RESULT));
+        document.open();
+
+	BaseFont noto_hans_bold  = BaseFont.createFont("./fonts/kaiti.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+	Font noto_hans_bold_24  = new Font(noto_hans_bold, 24);
+
+        Paragraph par1 = new Paragraph(20);
+
+	Chunk chk1 = new Chunk("Daniel King is a software engineer", noto_hans_bold_24);
+	par1.add(chk1);
+
+	Chunk chk2 = new Chunk("\u8FD9\u4E2A\u4EBA\u662F\u4E2A\u7A0B\u5E8F\u5458\u554A", noto_hans_bold_24);
+	par1.add(chk2);
+
+	document.add(par1);
+        document.close();
+    }
+}
+</pre>
+</div>
+<p>　　</p>
+<p>3. 可以编写一个shell用来编码Unicode</p>
+<p>首先下载 unicode工具</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">sudo apt-get install unicode
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ cat tounicode.sh 
+unicode -s $1 | grep 'Uppercase' | sed -re 's/^U.*: U\+/\\u/g' | awk '{printf("%s", $1);}END{print ""}'
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ bash tounicode.sh 这个人是个程序员啊
+\u8FD9\u4E2A\u4EBA\u662F\u4E2A\u7A0B\u5E8F\u5458\u554A
+</pre>
+</div>
+<p>　　</p>
+<p>4. 执行脚本生成PDF文件</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ bash run.sh daniel
+daniel@daniel-mint ~/itext $ ls
+daniel.java  daniel.pdf  fonts  itextpdf-5.5.2.jar  run.sh  tounicode.sh
+</pre>
+</div>
+<p>　　</p>
+<p>5. 添加源码目录</p>
+<p>将itextpdf-5.5.2-sources.jar解压到src目录下</p>
+<p>然后创建ctags文件，这样就可以在源码中方便来回浏览了。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ ls
+daniel.java  daniel.pdf  fonts  itextpdf-5.5.2.jar  run.sh  src  tags  tounicode.sh
+</pre>
+</div>
+<p>　　</p></body>
 </html>

@@ -1,10 +1,256 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Microsoft specification</title>
-<body><p><a title="http://msdn.microsoft.com/en-US/" href="http://msdn.microsoft.com/en-US/">http://msdn.microsoft.com/en-US/</a></p> <p>搜索</p> <p>specification</p> <p>&nbsp;</p> <p>搜索“PE COFF specification”，得到一篇Microsoft官方的PE格式文档：</p> <p><a title="http://download.microsoft.com/download/9/c/5/9c5b2167-8017-4bae-9fde-d599bac8184a/pecoff_v83.docx" href="http://download.microsoft.com/download/9/c/5/9c5b2167-8017-4bae-9fde-d599bac8184a/pecoff_v83.docx">http://download.microsoft.com/download/9/c/5/9c5b2167-8017-4bae-9fde-d599bac8184a/pecoff_v83.docx</a></p> <p>这是我读过的讲解最清晰的关于PE格式的文档。</p> <p>&nbsp;</p> <h3>1. export、import与符号链接</h3> <p>关于dll的好处，这里不再详述，总之，dll机制带来了空间与时间上的效率提升。</p> <p>dll是一种shared library机制，是一个封装“代码、数据和资源”的模块，现在几乎没有不依赖于dll的应用程序了。</p> <p>&nbsp;</p> <p>当一个可执行文件（exe）被用来创建一个进程时，该exe文件会被Windows操作系统的组件“加载器”加载到进程的内存地址空间中；如果应用程序引用到了其他dll模块中的符号（函数或者变量），就需要将这些dll也加载到进程的地址空间中，由于ASLR等等客观原因影响，exe中引用外部符号的代码块无法提前预知dll中的某个符号被加载到内存地址空间的什么位置上，因此它需要一种提示机制来指导加载器在加载的过程中解析引用符号的真正地址。</p> <p>&nbsp;</p> <p>这种机制可以被称为是“符号链接”，或者说是“加载时的符号链接”，它依赖于exe中的import table以及dll中的export table给出的提示信息。</p> <p>&nbsp;</p> <p>import table提供以下信息：</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">[dll name] + [symbol ordinal that index into dll's <span style="color: #0000ff">export</span> table entry]</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">[dll name] + [symbol name]</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">&nbsp;</pre><!--CRLF--></div></div>
-<p>而export table则提供symbol name到symbol ordinal的映射关系，然后以symbol ordinal作为index到export table中找到符号的真正地址（dll被加载到内存地址空间后，符号的内存地址）</p>
+<title>Windows&#x7F16;&#x5199;driver</title>
+<body><h1>1. 编译</h1>
+<p>Pspeek.cpp</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">#include &lt;ntddk.h&gt;
+
+
+#define DANIEL_LIST_PROCESS 0x8001
+
+PDRIVER_OBJECT daniel_DriverObject;
+PDEVICE_OBJECT daniel_DeviceObject;
+
+
+NTSTATUS daniel_DispatchCreate(
+	__in PDEVICE_OBJECT DeviceObject,
+	__in PIRP Irp
+	)
+{
+	NTSTATUS status = STATUS_SUCCESS;
+	PIO_STACK_LOCATION stackLocation;
+	PIO_SECURITY_CONTEXT securityContext;
+
+	stackLocation = IoGetCurrentIrpStackLocation(Irp);
+	securityContext = stackLocation-&gt;Parameters.Create.SecurityContext;
+
+	DbgPrint("###############\n");
+	DbgPrint("Daniel PsPeek daniel_DispatchCreate\n");
+	DbgPrint("###############\n");
+
+	Irp-&gt;IoStatus.Status = status;
+	Irp-&gt;IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	return status;
+}
+
+NTSTATUS KphDispatchDeviceControl(
+	__in PDEVICE_OBJECT DeviceObject,
+	__in PIRP Irp
+	)
+{
+	NTSTATUS status;
+	PIO_STACK_LOCATION stackLocation;
+	PVOID originalInput;
+	ULONG inputLength;
+	ULONG ioControlCode;
+	KPROCESSOR_MODE accessMode;
+	UCHAR capturedInput[16 * sizeof(ULONG_PTR)];
+	PVOID capturedInputPointer;
+
+	stackLocation = IoGetCurrentIrpStackLocation(Irp);
+	originalInput = stackLocation-&gt;Parameters.DeviceIoControl.Type3InputBuffer;
+	inputLength = stackLocation-&gt;Parameters.DeviceIoControl.InputBufferLength;
+	ioControlCode = stackLocation-&gt;Parameters.DeviceIoControl.IoControlCode;
+	accessMode = Irp-&gt;RequestorMode;
+
+
+	// Probe and capture the input buffer.
+	if (accessMode != KernelMode)
+	{
+		__try
+		{
+			ProbeForRead(originalInput, inputLength, sizeof(UCHAR));
+			memcpy(capturedInput, originalInput, inputLength);
+		}
+		__except (EXCEPTION_EXECUTE_HANDLER)
+		{
+			status = GetExceptionCode();
+			goto ControlEnd;
+		}
+	}
+	else
+	{
+		memcpy(capturedInput, originalInput, inputLength);
+	}
+
+	capturedInputPointer = capturedInput; // avoid casting below
+
+	switch (ioControlCode)
+	{
+	case DANIEL_LIST_PROCESS:
+		{
+			status = STATUS_SUCCESS;
+		}
+		break;
+	default:
+		status = STATUS_INVALID_DEVICE_REQUEST;
+		break;
+	}
+
+ControlEnd:
+	Irp-&gt;IoStatus.Status = status;
+	Irp-&gt;IoStatus.Information = 0;
+	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	return status;
+}
+
+VOID daniel_DriverUnload(
+	__in PDRIVER_OBJECT DriverObject
+	)
+{
+	PAGED_CODE();
+
+	IoDeleteDevice(daniel_DeviceObject);
+}
+
+
+extern "C" NTSTATUS DriverEntry(
+	__in PDRIVER_OBJECT DriverObject,
+	__in PUNICODE_STRING RegistryPath)
+{
+	NTSTATUS status;
+	UNICODE_STRING deviceName;
+	PDEVICE_OBJECT deviceObject;
+
+	PAGED_CODE();
+
+	DbgPrint("###############\n");
+	DbgPrint("Daniel PsPeek DriverEntry\n");
+	
+
+	DbgPrint("Current Pid: %d\n", PsGetCurrentProcessId());
+	DbgPrint("###############\n");
+
+	daniel_DriverObject = DriverObject;
+
+	// Create the device.
+
+	RtlInitUnicodeString(&amp;deviceName, L"\\Device\\DanielPsPeekDriver");
+
+	status = IoCreateDevice(
+		DriverObject,
+		0,
+		&amp;deviceName,
+		FILE_DEVICE_UNKNOWN,
+		FILE_DEVICE_SECURE_OPEN,
+		FALSE,
+		&amp;deviceObject
+		);
+
+	if (!NT_SUCCESS(status))
+		return status;
+
+	daniel_DeviceObject = deviceObject;
+
+	// Set up I/O.
+
+	DriverObject-&gt;MajorFunction[IRP_MJ_CREATE] = daniel_DispatchCreate;
+	DriverObject-&gt;MajorFunction[IRP_MJ_DEVICE_CONTROL] = KphDispatchDeviceControl;
+	DriverObject-&gt;DriverUnload = daniel_DriverUnload;
+
+	deviceObject-&gt;Flags &amp;= ~DO_DEVICE_INITIALIZING;
+
+	return status;
+}
+</pre>
+</div>
+<p>　　</p>
+<p>　　</p>
 <p>&nbsp;</p>
-<p>import table的布局：</p>
-<div id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Import Directory Table * 1</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Import Lookup Table * N</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Hint/Name Table * 1</pre><!--CRLF--></div></div></body>
+<p>sources</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">TARGETNAME=Pspeek
+TARGETPATH=obj
+TARGETTYPE=DRIVER
+
+SOURCES=Pspeek.cpp
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;mk.bat</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">set setenv_script=D:\WinDDK\7600.16385.1\bin\setenv.bat
+set ddk_path=D:\WinDDK\7600.16385.1\
+set config=chk
+set platform=x86
+set os=WXP
+
+%setenv_script% %ddk_path% %config% %platform% %os% &amp;&amp; H: &amp;&amp; cd %cd% &amp;&amp; build
+</pre>
+</div>
+<p>　　</p>
+<h1>2. 加载</h1>
+<p>ld.bat</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">sc stop Pspeek
+sc delete Pspeek
+copy /y "F:\pspeek.sys" "C:\WINDOWS\system32\pspeek.sys"
+sc create Pspeek binPath= "C:\WINDOWS\system32\pspeek.sys" type= kernel start= auto error= ignore DisplayName= "Daniel Process Peek Driver"
+sc start Pspeek
+</pre>
+</div>
+<p>　　</p>
+<p>在Windows 7下，需要使用"管理员权限"才能执行上述脚本。</p>
+<h1>3. 枚举进程列表</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">void GatherProcessListByEPROCESS()
+{
+	HANDLE pid = PsGetCurrentProcessId();
+	DbgPrint("Current Pid: %d\n", pid);
+	PEPROCESS eprocess;
+	PsLookupProcessByProcessId(pid, &amp;eprocess);
+
+	DbgPrint("_EPROCESS: 0x%08x\n", eprocess);
+
+	_LIST_ENTRY active_process_node = {0,0};
+	memcpy(&amp;active_process_node, (CHAR*)eprocess + 0x88, 8);
+
+	DbgPrint("Active Process List Node: [0x%08x, 0x%08x]\n", active_process_node.Blink, active_process_node.Flink);
+
+	DbgPrint("VirtualSize: 0x%08x \n", *(ULONG*)((CHAR*)eprocess + 0xb0));
+}
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;上面代码与WinDbg的验证一致，因此Windows下获取内核相关的数据与Linux并无太大差别。</p>
+<p>&nbsp;</p>
+<p style="display: inline !important;">&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">void PProcess(char* eprocess)
+{
+	DbgPrint("%16s: 0x%08x\n", "_EPROCESS", eprocess);
+	DbgPrint("%16s: %s\n", "ImageName", eprocess + 0x174);
+
+	DbgPrint("\n");
+}
+
+void GatherProcessListByEPROCESS()
+{
+	HANDLE pid = PsGetCurrentProcessId();
+	DbgPrint("Current Pid: %d\n", pid);
+
+	PEPROCESS eprocess;
+	PsLookupProcessByProcessId(pid, &amp;eprocess);
+
+	_LIST_ENTRY active_process_node = {0,0};
+	memcpy(&amp;active_process_node, (CHAR*)eprocess + 0x88, 8);
+
+	_LIST_ENTRY* head = active_process_node.Flink;
+
+	PProcess((char*)eprocess);
+	for (_LIST_ENTRY* cur=head;
+		cur-&gt;Flink != head;
+		cur = cur-&gt;Flink)
+	{
+		PProcess((char*)cur - 0x88);
+	}
+}
+</pre>
+</div>
+<p>　　</p>
+<p>　　</p></body>
 </html>

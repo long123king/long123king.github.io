@@ -1,5 +1,58 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x81EA;&#x7531;</title>
-<body><p>如果我是一根琴弦</p> <p>一定难逃紧绷的命运；</p> <p>如果我是一粒棋子</p> <p>注定接受他人的摆布；</p> <p>然而，</p> <p>我是一个人，</p> <p>血肉包裹着灵魂，</p> <p>彼处稍驻，</p> <p>此时停歇，</p> <p>安静的外表掩饰不了狂噪的心跳，</p> <p>一种渴望在体内燃烧，</p> <p>自由。</p></body>
+<title>taintCheck&#x7684;&#x5B9E;&#x73B0;</title>
+<body><p>参考：<a href="http://bitblaze.cs.berkeley.edu/papers/taintcheck-full.pdf">http://bitblaze.cs.berkeley.edu/papers/taintcheck-full.pdf</a></p>
+<h1>1. 应用taint analysis需要解决三个问题</h1>
+<p>a. 哪些input需要被标记为tainted</p>
+<p>b. 这些tainted的属性需要怎样被传播到其他的内存中</p>
+<p>c. 这些tainted的内存什么情况下可以被视为用于attack</p>
+<p>&nbsp;</p>
+<p>因此TaintCheck是由三个基本组件组成：TaintSeed, TaintTracker以及TaintAssert。</p>
+<p>每个组件都定义了自己独立的policy，可以调整检测的力度。</p>
+<p>&nbsp;</p>
+<h1>2. taint数据的保存</h1>
+<p>即怎样表示一段内存是tainted的呢？</p>
+<p>对于tainted的内存区域Memory（registers, stack, heap）中的每一个字节，都有一个4字节（DWORD）的指针指向一个Taint Data Structure的数据结构；</p>
+<p>而对于正常的内存区域，这个4字节的指针为NULL。</p>
+<p>&nbsp;</p>
+<p>可以预见，tainted的内存区域相对于正常的内存区域要小很多，因此，可以参考页表的管理方式，来管理tainted的内存区域；</p>
+<p>而正常的内存区域，其实连NULL的4字节指针也不必保存。</p>
+<p>&nbsp;</p>
+<blockquote>
+<p>TaintSeed examines the arguments and results of each system call,<br />and determines whether any memory written by the system call should be<br />marked as tainted or untainted according to the TaintSeed policy.</p>
+<p>【通过检查敏感的系统调用（比如socket, read等），根据其参数来确定是否有向内存中</p>
+<p>写数据，那些写的数据可以根据policy确定是否标记为tainted】</p>
+<p>&nbsp;</p>
+<p> When the&nbsp;memory is tainted, TaintSeed allocates a Taint data structure that records<br />the system call number, a snapshot of the current stack, and a copy of the<br />data that was written.</p>
+<p>【当一段内存区域被标记为tainted，一个数据结构Taint Data Structure会记录下一些重要信息：</p>
+<p>1 系统调用号，可以标记信息的来源；</p>
+<p>2 当时stack的备份snapshot，案发现场；</p>
+<p>3 写的数据的一个备份】</p>
+<p>&nbsp;</p>
+
+
+</blockquote>
+<p>&nbsp;</p>
+<h1>3. Taint的传播</h1>
+<p>指令可以分为三类：</p>
+<p>1. 数据传输类</p>
+<p>2. 算术操作类</p>
+<p>3. 其他类</p>
+<p>&nbsp;</p>
+<p>其中，数据传输与算术操作类的指令都能够传播taint属性，前提是源操作数已经被标记为tainted。</p>
+<p>&nbsp;</p>
+<p>字面值的数据，比如常数，字符串是无辜的，因为它们要么是程序的作者指定的，要么是编译器指定的，而不会是外部数据侵入的。</p>
+<p>&nbsp;</p>
+<p>还有一种例外，比如xor eax, eax，指令的输出与输入无关，因此即使输入是tainted，输出也是无辜的。</p>
+<p>&nbsp;</p>
+<p>可以在发现传播时，建立传播链，或者将tainted的内存区域指向同一个Taint Data Structure。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>4. Taint的有害性检测</h1>
+<p>如果一段tainted的内存，被不合法地利用，就可能产生危害。</p>
+<p>a. 被作为jump的目标，即程序的执行流被引导到tainted内存区域</p>
+<p>b. 被作为format string传给printf族函数，这种情况可能发生format溢出</p>
+<p>c. 被作为参数传递给关键的系统调用，比如execve</p>
+<p>&nbsp;</p>
+<p>当上述情况发生时，可以通过之前记录下来的tainted内存区域的链表，找到是哪些输入导致了attack的发生。</p></body>
 </html>

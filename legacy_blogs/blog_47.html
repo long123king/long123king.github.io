@@ -1,10 +1,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>build protobuf to a static library</title>
-<body><p>use ar</p>
-<div class="cnblogs_code">
-<pre><span style="color: #000000;">cd src
-ar </span>-cvq libprotobuf.a *.o</pre>
+<title>&#x91CA;&#x653E;&#x5185;&#x6838;&#x5185;&#x5B58;&#x65F6;&#x51FA;&#x9519;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; !poolval 862bc000
+Pool page 862bc000 region is Nonpaged pool
+
+Validating Pool headers for pool page: 862bc000
+
+Pool page [ 862bc000 ] is __inVALID.
+
+Analyzing linked list...
+[ 862bc3b8 ]: invalid previous size [ 0x22 ] should be [ 0x1f ]
+
+
+Scanning for single bit errors...
+</pre>
 </div>
-<p>&nbsp;</p></body>
+<p>　　</p>
+<p>可能是出现了内存溢出。</p>
+<p>&nbsp;</p>
+<p>该问题最后确认为分配的内存区域溢出所致。</p></body>
 </html>

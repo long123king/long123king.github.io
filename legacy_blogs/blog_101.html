@@ -1,131 +1,59 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Linux&#x6E90;&#x7801;&#x4E0E;&#x7F16;&#x8BD1;&#x51FA;&#x7684;&#x76EE;&#x6807;&#x6587;&#x4EF6;&#x6C47;&#x7F16;&#x4EE3;&#x7801;&#x7684;&#x4E00;&#x81F4;&#x6027;&#x95EE;&#x9898;</title>
-<body><p>start_kernel是内核启动时比较重要的一个函数，然而我发现一个问题，我编译出来的目标文件中的汇编代码与C源码并不完全对应，这是怎么一回事呢？</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">asmlinkage void __init start_kernel(void)
-{
-        char * command_line;
-        extern const struct kernel_param __start___param[], __stop___param[];
+<title>extract specified contents from two files.</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">src_dir=$(pwd)/All_h
+dst_dir=$(pwd)/All
+diff_dir=$(pwd)/diff
 
-        /*
-         * Need to run as early as possible, to initialize the
-         * lockdep hash:
-         */
-        lockdep_init();
-        smp_setup_processor_id();
-        debug_objects_early_init();
+if [ ! -d $diff_dir ]
+then
+	mkdir $diff_dir
+fi
 
-        /*
-         * Set up the the initial canary ASAP:
-         */
-        boot_init_stack_canary();
+for src_full_entry in $src_dir/*
+do
+	src_cat_entry=$(echo $src_full_entry | sed -e "s/\.[0-9a-rA-F]\{8\}$//")
+	src_cat_entry=$(basename "$src_cat_entry")
+	src_ivr_log="$src_full_entry/de_ivr.log"
+	if [ -f "$src_ivr_log" ]
+	then
+		#echo "$src_cat_entry"
+		dst_ivr_log=$(find $dst_dir -regextype posix-egrep -regex ".*/$src_cat_entry\.[0-9A-Fa-f]{8}/ivr.log$")
+		#echo $dst_ivr_log
+		if [ -f "$dst_ivr_log" ]
+		then
+			diff_ivr_log="$diff_dir/$src_cat_entry.diff"	
+			summary="$diff_dir/$src_cat_entry""_summary.txt"
+			#echo $diff_ivr_log
+			#diff -u "$src_ivr_log" "$dst_ivr_log" &gt; "$diff_ivr_log"
+		
+			echo "" &gt; "$summary"			
 
-        cgroup_init_early();
+			echo "##########################################################" &gt;&gt; "$summary"
+			echo "$src_ivr_log:" &gt;&gt; "$summary"
+			echo "##########################################################" &gt;&gt; "$summary"
+			grep -i -n -A 20 "$src_cat_entry" "$src_ivr_log" &gt;&gt; "$summary"
 
-        local_irq_disable();
-        early_boot_irqs_disabled = true;<br />
-/*<br />&nbsp;* Interrupts are still disabled. Do necessary setups, then<br />&nbsp;* enable them<br />&nbsp;*/<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boot_cpu_init();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; page_address_init();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pr_notice("%s", linux_banner);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_arch(&amp;command_line);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mm_init_owner(&amp;init_mm, &amp;init_task);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mm_init_cpumask(&amp;init_mm);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_command_line(command_line);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_nr_cpu_ids();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_per_cpu_areas();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; smp_prepare_boot_cpu(); /* arch-specific boot-cpu hooks */</pre>
-</div>
-<p>&nbsp;</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">objdump -d main.o
+			echo "" &gt;&gt; "$summary"
+			echo "##########################################################" &gt;&gt; "$summary"
+			echo "" &gt;&gt; "$summary"
+
+			echo "##########################################################" &gt;&gt; "$summary"
+			echo "$dst_ivr_log:" &gt;&gt; "$summary"
+			echo "##########################################################" &gt;&gt; "$summary"
+			grep -i -n -A 20 "$src_cat_entry" "$dst_ivr_log" &gt;&gt; "$summary"
+			#diff -u "$src_ivr_log" "$dst_ivr_log" 
+		fi
+	fi
+done
 </pre>
 </div>
-<p>&nbsp;</p>
+<p>　　</p>
+<p>if we want to use regular expressions for find command, we can do it like this.</p>
 <div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">00000337 &lt;start_kernel&gt;:
- 337:	55                   	push   %ebp
- 338:	89 e5                	mov    %esp,%ebp
- 33a:	53                   	push   %ebx
- 33b:	83 ec 14             	sub    $0x14,%esp
- 33e:	e8 fc ff ff ff       	call   33f &lt;start_kernel+0x8&gt;
- 343:	e8 fc ff ff ff       	call   344 &lt;start_kernel+0xd&gt;
- 348:	ff 15 08 00 00 00    	call   *0x8
- 34e:	64 8b 1d 00 00 00 00 	mov    %fs:0x0,%ebx
- 355:	ba 01 00 00 00       	mov    $0x1,%edx
- 35a:	89 d8                	mov    %ebx,%eax
- 35c:	c6 05 00 00 00 00 01 	movb   $0x1,0x0
- 363:	e8 fc ff ff ff       	call   364 &lt;start_kernel+0x2d&gt;
- 368:	89 d8                	mov    %ebx,%eax
- 36a:	ba 01 00 00 00       	mov    $0x1,%edx
- 36f:	e8 fc ff ff ff       	call   370 &lt;start_kernel+0x39&gt;
- 374:	89 d8                	mov    %ebx,%eax
- 376:	ba 01 00 00 00       	mov    $0x1,%edx
- 37b:	e8 fc ff ff ff       	call   37c &lt;start_kernel+0x45&gt;
- 380:	ba 01 00 00 00       	mov    $0x1,%edx
- 385:	89 d8                	mov    %ebx,%eax
- 387:	e8 fc ff ff ff       	call   388 &lt;start_kernel+0x51&gt;
- 38c:	e8 fc ff ff ff       	call   38d &lt;start_kernel+0x56&gt;
- 391:	c7 44 24 04 00 00 00 	movl   $0x0,0x4(%esp)
+<pre class="brush:csharp;gutter:true;">find $dst_dir -regextype posix-egrep -regex ".*/$src_cat_entry\.[0-9A-Fa-f]{8}/ivr.log$"
 </pre>
 </div>
-<p>&nbsp;</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">objdump -r main.o
-</pre>
-</div>
-<p>&nbsp;</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">00000309 R_386_32          boot_command_line
-0000030e R_386_32          .init.data
-00000313 R_386_PC32        strlcpy
-00000318 R_386_32          .init.data
-0000031d R_386_PC32        parse_early_options
-00000324 R_386_32          .init.data
-0000033f R_386_PC32        smp_setup_processor_id
-00000344 R_386_PC32        cgroup_init_early
-0000034a R_386_32          pv_irq_ops
-00000351 R_386_32          cpu_number
-0000035e R_386_32          early_boot_irqs_disabled
-00000364 R_386_PC32        set_cpu_online
-00000370 R_386_PC32        set_cpu_active
-0000037c R_386_PC32        set_cpu_present
-00000388 R_386_PC32        set_cpu_possible
-0000038d R_386_PC32        page_address_init
-00000395 R_386_32          linux_banner
-0000039c R_386_32          .rodata.str1.1
-000003a1 R_386_PC32        printk
-000003a9 R_386_PC32        setup_arch
-000003ae R_386_32          init_task
-000003b3 R_386_32          init_mm
-000003b8 R_386_PC32        mm_init_owner
-000003bd R_386_32          boot_command_line
-</pre>
-</div>
-<p>那么，lockdep_init函数哪里去了呢，start_kernel究竟有没有调用到它呢。</p>
-<p>首先可以肯定的是，lockdep_init没有被内核导出，因为在System.map中找不到它。</p>
-<p>然后，在重定位信息中也找不到lockdep_init。</p>
-<p>lockdep_init是在哪个文件中定义的？</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">kernel/locking/lockdep.c
-</pre>
-</div>
-<p>&nbsp;但是在kernel/locking目录下并没有生成lockdep.o，这又是为什么？</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">void lockdep_init(void)
-{
-        int i;
-
-        /*
-         * Some architectures have their own start_kernel()
-         * code which calls lockdep_init(), while we also
-         * call lockdep_init() from the start_kernel() itself,
-         * and we want to initialize the hashes only once:
-         */
-        if (lockdep_initialized)
-                return;
-
-        for (i = 0; i &lt; CLASSHASH_SIZE; i++)
-                INIT_LIST_HEAD(classhash_table + i);
-
-        for (i = 0; i &lt; CHAINHASH_SIZE; i++)
-                INIT_LIST_HEAD(chainhash_table + i);
-
-        lockdep_initialized = 1;
-}
-</pre>
-</div>
-<p>&nbsp;</p>
-<p>&nbsp;</p></body>
+<p>　　</p></body>
 </html>

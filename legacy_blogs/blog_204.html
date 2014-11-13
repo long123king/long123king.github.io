@@ -1,0 +1,357 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x901A;&#x8FC7;Bochs&#x5206;&#x6790;Lilo&#x542F;&#x52A8;Linux&#x5185;&#x6838;&#x7684;&#x8FC7;&#x7A0B;</title>
+<body><h3>1. Bochs调试</h3>
+<p>参考：<a title="http://www.cnblogs.com/long123king/p/3414884.html" href="http://www.cnblogs.com/long123king/p/3414884.html">http://www.cnblogs.com/long123king/p/3414884.html</a></p>
+<p><a title="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&amp;url=http://bochs.sourceforge.net/doc/docbook" href="http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&amp;url=http://bochs.sourceforge.net/doc/docbook">http://bochs.sourceforge.net/cgi-bin/topper.pl?name=New+Bochs+Documentation&amp;url=http://bochs.sourceforge.net/doc/docbook</a></p>
+<p>&nbsp;</p>
+<p>类似的文章：<a title="http://www.cnblogs.com/wanghj-dz/archive/2011/05/12/2044862.html" href="http://www.cnblogs.com/wanghj-dz/archive/2011/05/12/2044862.html">http://www.cnblogs.com/wanghj-dz/archive/2011/05/12/2044862.html</a></p>
+<p>&nbsp;</p>
+<p>关于IO端口的列表：</p>
+<p><a title="http://bochs.sourceforge.net/techspec/PORTS.LST" href="http://bochs.sourceforge.net/techspec/PORTS.LST">http://bochs.sourceforge.net/techspec/PORTS.LST</a></p>
+<p><a title="http://wiki.osdev.org/I/O_Ports" href="http://wiki.osdev.org/I/O_Ports">http://wiki.osdev.org/I/O_Ports</a></p>
+<p>&nbsp;</p>
+<h3>2. 环境简单描述</h3>
+<p>通过VS2012+Bochs进行Bochs源码以及API两个级别的调试。</p>
+<p>&nbsp;</p>
+<p>Linux的版本, TinyCore</p>
+<p>&nbsp;</p>
+<h3>3. 调试步骤</h3>
+<h4>初始断点：</h4>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> [0x0000fffffff0] f000:fff0 (unk. ctxt): jmp far f000:e05b         ; ea5be000f0</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> &lt;bochs:1&gt; u /10</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 000ffff0: (                    ): jmp far f000:e05b         ; ea5be000f0</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 000ffff5: (                    ): xor word ptr ds:[bx+di], si ; 3131</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 000ffff7: (                    ): das                       ; 2f</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 000ffff8: (                    ): xor word ptr ds:[bx+di], si ; 3131</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 000ffffa: (                    ): das                       ; 2f</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 000ffffb: (                    ): xor word ptr ss:[bp+si], si ; 3132</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 000ffffd: (                    ): add ah, bh                ; 00fc</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 000fffff: (                    ): retf                      ; cb</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 00100000: (                    ): <span style="color: #0000ff;">int</span> 0xcd                  ; cdcd</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 00100002: (                    ): <span style="color: #0000ff;">int</span> 0xcd                  ; cdcd</pre>
+<!--CRLF--></div>
+</div>
+<p>可以看到，初始断点在0xFFFF0处断了下来，这里对应的是BIOS程序。</p>
+<p>然后会跳转到f000:e05b（000fe05b）处执行，看一下这里的代码</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> &lt;bochs:8&gt; u /16</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 000fe05b: (                    ): xor ax, ax                ; 31c0</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 000fe05d: (                    ): out 0x0d, al              ; e60d</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 000fe05f: (                    ): out 0xda, al              ; e6da</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 000fe061: (                    ): mov al, 0xc0              ; b0c0</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 000fe063: (                    ): out 0xd6, al              ; e6d6</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 000fe065: (                    ): mov al, 0x00              ; b000</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 000fe067: (                    ): out 0xd4, al              ; e6d4</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 000fe069: (                    ): mov al, 0x0f              ; b00f</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 000fe06b: (                    ): out 0x70, al              ; e670</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 000fe06d: (                    ): in al, 0x71               ; e471</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 000fe06f: (                    ): mov bl, al                ; 88c3</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 000fe071: (                    ): mov al, 0x0f              ; b00f</pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 000fe073: (                    ): out 0x70, al              ; e670</pre>
+<!--CRLF-->
+<pre><span id="lnum15" style="color: #606060;">  15:</span> 000fe075: (                    ): mov al, 0x00              ; b000</pre>
+<!--CRLF-->
+<pre><span id="lnum16" style="color: #606060;">  16:</span> 000fe077: (                    ): out 0x71, al              ; e671</pre>
+<!--CRLF-->
+<pre><span id="lnum17" style="color: #606060;">  17:</span> 000fe079: (                    ): mov al, bl                ; 88d8</pre>
+<!--CRLF--></div>
+</div>
+<p>涉及的端口有0x0d, 0xd4, 0xd6, 0xda，这些都是DMA处理器的端口；还有0x70, 0x71，这是读写CMOS RAM的端口，这里是读取RTC时钟。</p>
+<p>再跳转</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> (0) [0x0000000fe0a3] f000:e0a3 (unk. ctxt): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> &lt;bochs:32&gt; u /10</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 000fe0a3: (                    ): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 000fe0a4: (                    ): mov ax, 0xfffe            ; b8feff</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 000fe0a7: (                    ): mov sp, ax                ; 89c4</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 000fe0a9: (                    ): xor ax, ax                ; 31c0</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 000fe0ab: (                    ): mov ds, ax                ; 8ed8</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 000fe0ad: (                    ): mov ss, ax                ; 8ed0</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 000fe0af: (                    ): mov byte ptr ds:0x4b0, bl ; 881eb004</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 000fe0b3: (                    ): cmp bl, 0xfe              ; 80fbfe</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 000fe0b6: (                    ): jnz .+3                   ; 7503</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 000fe0b8: (                    ): jmp .-18142               ; e922b9</pre>
+<!--CRLF--></div>
+</div>
+<p>这里是设置栈</p>
+<p>&nbsp;</p>
+<h4>0x7c00</h4>
+<p>我们知道，MBR里面的汇编代码会被BIOS加载到0x7c00处运行，因此我们在这里设置断点</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> lb 0x7c00</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> c</pre>
+<!--CRLF--></div>
+</div>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> (0) Breakpoint 1, 0x0000000000007c00 in ?? ()</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> Next at t=73755932</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> (0) [0x000000007c00] 0000:7c00 (unk. ctxt): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> &lt;bochs:4&gt; u /10</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 00007c00: (                    ): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 00007c01: (                    ): jmp .+108                 ; eb6c</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 00007c03: (                    ): add byte ptr ds:[bx+si], al ; 0000</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 00007c05: (                    ): add byte ptr ds:[si+73], cl ; 004c49</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 00007c08: (                    ): dec sp                    ; 4c</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 00007c09: (                    ): dec di                    ; 4f</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 00007c0a: (                    ): add word ptr ds:[bx+si], ax ; 0100</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 00007c0c: (                    ): adc al, 0x00              ; 1400</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 00007c0e: (                    ): pop dx                    ; 5a</pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 00007c0f: (                    ): add byte ptr ds:[bx+si], al ; 0000</pre>
+<!--CRLF--></div>
+</div>
+<p>既然是MBR，我们可以验证一下分区表</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> &lt;bochs:8&gt; x/16wx 0x7c00+446</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> [bochs]:</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 0x0000000000007dbe &lt;bogus+       0&gt;:    0x00010100      0x31510383      0x00000011      0x00005137</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 0x0000000000007dce &lt;bogus+      16&gt;:    0x00000000      0x00000000      0x00000000      0x00000000</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 0x0000000000007dde &lt;bogus+      32&gt;:    0x00000000      0x00000000      0x00000000      0x00000000</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 0x0000000000007dee &lt;bogus+      48&gt;:    0x00000000      0x00000000      0x00000000      0x00000000</pre>
+<!--CRLF--></div>
+</div>
+<p>分区表表明，只有一个分区，起始的逻辑扇区号为0x0000，包含的扇区个数的0x5137，因此该分区大小为：</p>
+<p>0x5137 * 0x200 / 1024 = 10395 KB = 10.4MB，与我们使用的img大小相符</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> 2014/02/14  11:45        10,653,696 hd10meg.img</pre>
+<!--CRLF--></div>
+</div>
+<p>下面我们分析MBR中的代码</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> &lt;bochs:13&gt; u /20</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 00007c6f: (                    ): mov ax, 0x07c0            ; b8c007</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 00007c72: (                    ): mov ds, ax                ; 8ed8</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 00007c74: (                    ): mov word ptr ds:0x6a, es  ; 8c066a00</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 00007c78: (                    ): mov word ptr ds:0x68, si  ; 89366800</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 00007c7c: (                    ): mov word ptr ds:0x6c, bx  ; 891e6c00</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 00007c80: (                    ): mov byte ptr ds:0x6e, dl  ; 88166e00</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 00007c84: (                    ): mov ax, 0x8a00            ; b8008a</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 00007c87: (                    ): mov es, ax                ; 8ec0</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 00007c89: (                    ): mov cx, 0x0100            ; b90001</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 00007c8c: (                    ): sub si, si                ; 29f6</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 00007c8e: (                    ): sub di, di                ; 29ff</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 00007c90: (                    ): cld                       ; fc</pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 00007c91: (                    ): rep movsw word ptr es:[di], word ptr ds:[si] ; f3a5</pre>
+<!--CRLF-->
+<pre><span id="lnum15" style="color: #606060;">  15:</span> 00007c93: (                    ): </pre>
+<span style="color: #ff0000;">jmp far 8a00:0098</span>
+<pre>         ; ea9800008a</pre>
+<!--CRLF-->
+<pre><span id="lnum16" style="color: #606060;">  16:</span> 00007c</pre>
+<span style="color: #ff0000;">98</span>
+<pre>: (                    ): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum17" style="color: #606060;">  17:</span> 00007c99: (                    ): mov ds, ax                ; 8ed8</pre>
+<!--CRLF-->
+<pre><span id="lnum18" style="color: #606060;">  18:</span> 00007c9b: (                    ): mov es, ax                ; 8ec0</pre>
+<!--CRLF-->
+<pre><span id="lnum19" style="color: #606060;">  19:</span> 00007c9d: (                    ): mov sp, 0xb000            ; bc00b0</pre>
+<!--CRLF-->
+<pre><span id="lnum20" style="color: #606060;">  20:</span> 00007ca0: (                    ): mov ax, 0x8000            ; b80080</pre>
+<!--CRLF-->
+<pre><span id="lnum21" style="color: #606060;">  21:</span> 00007ca3: (                    ): mov ss, ax                ; 8ed0</pre>
+<!--CRLF--></div>
+</div>
+<p>参考：<a title="http://blog.csdn.net/jphaoren/article/details/6954376" href="http://blog.csdn.net/jphaoren/article/details/6954376">http://blog.csdn.net/jphaoren/article/details/6954376</a></p>
+<p>rep movsw的功能是将<strong>ds:si</strong>中的一段内存拷贝到<strong>es:di</strong>中去，一共拷贝cx个word。</p>
+<p>而ds:0x6a, ds:0x68, ds:0x6c, ds:0x6e的值分别都是0</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> Offset      0  1  2  3  4  5  6  7   8  9  A  B  C  D  E  F</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 00000060   00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 B8                  ?</pre>
+<!--CRLF--></div>
+</div>
+<p>所以，这段代码的作用是，将0x7c00处的内存拷贝到0x8a000处，一共拷贝0x100个word：</p>
+<p><strong>0x100 * sizeof(word) = 0x200 = 512Bytes=1扇区</strong></p>
+<p>相当于把整个MBR都拷贝到0x8a000处。</p>
+<p>然后跳转指令<strong>jmp far 8a00:0098</strong>实际上就是恰好跳转到下一条指令cli处去执行。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> &lt;bochs:14&gt; lb 0x8a098</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> &lt;bochs:15&gt; c</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> (0) Breakpoint 2, 0x000000000008a098 in ?? ()</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> Next at t=73756203</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> (0) [0x00000008a098] 8a00:0098 (unk. ctxt): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> &lt;bochs:16&gt; u /10</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 0008a098: (                    ): cli                       ; fa</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 0008a099: (                    ): mov ds, ax                ; 8ed8</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 0008a09b: (                    ): mov es, ax                ; 8ec0</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> 0008a09d: (                    ): mov sp, 0xb000            ; bc00b0</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> 0008a0a0: (                    ): mov ax, 0x8000            ; b80080</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 0008a0a3: (                    ): mov ss, ax                ; 8ed0</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 0008a0a5: (                    ): sti                       ; fb</pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 0008a0a6: (                    ): mov al, 0x0d              ; b00d</pre>
+<!--CRLF-->
+<pre><span id="lnum15" style="color: #606060;">  15:</span> 0008a0a8: (                    ): call .+87                 ; e85700</pre>
+<!--CRLF-->
+<pre><span id="lnum16" style="color: #606060;">  <span style="color: #ff0000;">16:</span></span></pre>
+<span style="color: #ff0000;"> 0008a0ab: ( ): mov al, 0x0a ; b00a</span><!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<p>ax里面的值依然是0x8a00，因此，将数据段ds, es的段基址都设置成0x8a00，即MBR的起始地址；将栈段设置为0x8000:0xb000，即栈底为0x8b000，栈是向低地址方向扩展。</p>
+<p>&nbsp;</p>
+<p>传递一个0x0d作为参数，然后调用call .+87，这是新的栈设置后的第一个函数。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> (0) [0x00000008a0a8] 8a00:00a8 (unk. ctxt): call .+87 (0x0008a102)    ; e85700</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> &lt;bochs:28&gt; x/17bx 0x8aff0</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> [bochs]:</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 0x000000000008aff0 &lt;bogus+       0&gt;:    0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 0x000000000008aff8 &lt;bogus+       8&gt;:    0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 0x000000000008b000 &lt;bogus+      16&gt;:    0x00</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> &lt;bochs:29&gt; s</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> Next at t=73756212</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> (0) [0x00000008a102] 8a00:0102 (unk. ctxt): xor bh, bh                ; 30ff</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> &lt;bochs:30&gt; x/17bx 0x8aff0</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> [bochs]:</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 0x000000000008aff0 &lt;bogus+       0&gt;:    0x00    0x00    0x00    0x00    0x00    0x00    0x00    0x00</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 0x000000000008aff8 &lt;bogus+       8&gt;:    0x00    0x00    0x00    0x00    0x00    0x00    </pre>
+<span style="color: #ff0000;">0xab 0x00</span><!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 0x000000000008b000 &lt;bogus+      16&gt;:    0x00</pre>
+<!--CRLF--></div>
+</div>
+<p>可见，返回地址0x00ab，即对应着<span style="color: #ff0000;">0x0008a0ab</span>，被压到了栈中。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> &lt;bochs:31&gt; u /16</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 0008a102: (                    ): xor bh, bh                ; 30ff</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 0008a104: (                    ): mov ah, 0x0e              ; b40e</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 0008a106: (                    ): <span style="color: #0000ff;">int</span> 0x10                  ; cd10</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 0008a108: (                    ): ret                       ; c3</pre>
+<!--CRLF--></div>
+</div>
+<p>这个函数做了什么？</p>
+<p>INT 10H是BIOS系统调用指令，参考：<a title="http://en.wikipedia.org/wiki/INT_10" href="http://en.wikipedia.org/wiki/INT_10">http://en.wikipedia.org/wiki/INT_10</a></p>
+<p>这个函数的功能是&ldquo;打印&rdquo;al中的字符，这里通过al传入的是0x0a，因此是打印了一个&lsquo;\r&rsquo;字符。</p>
+<p>再看下面的代码</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> &lt;bochs:38&gt; u /10</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 0008a0ab: (                    ): mov al, 0x0a              ; b00a</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 0008a0ad: (                    ): call .+82                 ; e85200</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 0008a0b0: (                    ): mov al, 0x4c              ; b04c</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> 0008a0b2: (                    ): call .+77                 ; e84d00</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> 0008a0b5: (                    ): mov si, 0x0034            ; be3400</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> 0008a0b8: (                    ): mov bx, 0x1000            ; bb0010</pre>
+<!--CRLF--></div>
+</div>
+<p>又分别打印了&lsquo;\n&rsquo;&lsquo;L&rsquo;两个字符。</p>
+<p>看一下屏幕</p>
+<p><a href="http://images.cnitblog.com/blog/580388/201402/141431593008134.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; margin-right: auto; padding-top: 0px; border-width: 0px;" title="image" src="http://long123king.github.io/legacy_blogs/img/blog_204_blog_204_141432031507781.png" alt="image" width="644" height="441" border="0" /></a></p>
+<p>真的打出了L字符。</p>
+<p>我们不能再继续深入了，因为我们关心的是Linux内核的加载，而不是Lilo的代码实现。</p></body>
+</html>

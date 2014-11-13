@@ -1,17 +1,22 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>centos&#x5B89;&#x88C5;virtualbox</title>
-<body><p>参考：<a href="http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/">&nbsp;http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/</a></p>
-<p>如果需要wget设置proxy，参考：&nbsp;<a href="http://www.satwe.com/archives/355.html">http://www.satwe.com/archives/355.html</a></p>
-<p>参考：<a href="https://www.virtualbox.org/wiki/Linux_Downloads">https://www.virtualbox.org/wiki/Linux_Downloads</a></p>
-<p>安装Oracle VirtualBox的Public Key，然后使用rpm安装*.rpm包</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">wget http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc
-sudo rpm --import oracle_vbox.asc
-sudo rpm --checksig VirtualBox-4.3-4.3.12_93733_el5-1.i386.rpm 
-sudo rpm -i VirtualBox-4.3-4.3.12_93733_el5-1.i386.rpm 
-</pre>
-</div>
-<p>　　</p>
+<title>Windows driver layer</title>
+<body><p><img style="display: block; margin-left: auto; margin-right: auto;" src="http://long123king.github.io/legacy_blogs/img/blog_41_071032418035075.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>左边表示的是一个DEVICE_OBJECT对象的链表（devstack），方向从下向上，PDO代表Physical Device Object，而FiDO代表Filter Device Object，FDO代表Function Device Object。</p>
+<p>中间的是每个层次对应的driver，右边是IRP的处理顺序及流向，IRP是由IO Manager产生，并且分发到各个driver的。</p>
+<p style="margin-left: 30px;"><em>当一个IO请求（IRP）过来时，首先由Upper Filter Driver处理，可以过滤一些异常情况；</em></p>
+<p style="margin-left: 30px;"><em>然后交给Function Driver处理，这也是常规意义上的driver；</em></p>
+<p style="margin-left: 30px;"><em>Lower Filter Driver还可以在交给硬件前做进一步的处理；</em></p>
+<p style="margin-left: 30px;"><em>而Bus Driver通常是不允许修改的。</em></p>
+<p>&nbsp;</p>
+<blockquote>
+<p>Lower filter drivers are much less common than upper filters. Since (by definition) a lower filter driver is below the function<br />driver in the PnP stack, it receives only those IRPs that the function driver chooses to send down. For a device attached to a <br />traditional bus such as Peripheral Component Interconnect (PCI), the function driver will consume all the interesting IRPs by <br />making hardware abstraction layer (HAL) callsto do actual I/O. The only IRPs that are likely to flow down from the function <br />driver are power and PnP. Generally speaking, there&rsquo;s not much a filter driver can or should do about those.</p>
+</blockquote>
+<p>&nbsp;</p>
+<p>一般来说，Lower Level Filters能做的不多，因为大多数的IRP请求都会在Function Driver中被解析，并且调用HAL提供的接口来完成真实的IO操作。能够传递下来到达Lower Level Filter的只有一些与Power/PnP相关的请求。</p>
+<p>&nbsp;</p>
+<p>可见，不论Driver分成多少层次，最终与硬件接触的还是in/out汇编指令，它们直接与硬件的port通信，以完成硬件支持的功能。</p>
+<p>HAL是在这基础上的进一步抽象，而各个Driver又是在HAL的基础上更进一步的抽象。</p>
 <p>&nbsp;</p></body>
 </html>

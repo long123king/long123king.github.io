@@ -1,17 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x76D1;&#x63A7;&#x76EE;&#x5F55;&#x662F;&#x5426;&#x4E3A;&#x7A7A;&#xFF0C;&#x5982;&#x679C;&#x7A7A;&#x5C31;&#x5F80;&#x91CC;&#x6DFB;&#x6587;&#x4EF6;</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">lines=$(ls ../request | wc -l)
-
-while true
-do
-	if [ $(ls ../request | wc -l) == 2 ]; then
-		cp ../../crash/* ../request
-	fi
-	sleep 5s;
-done
-</pre>
-</div>
-<p>　　</p></body>
+<title>Windows&#x81EA;&#x5E26;&#x7684;perfmon.exe&#x771F;&#x7684;&#x5F88;&#x70AB;</title>
+<body><p>至于其是怎么实现的，有一点可以确认，它用到了PDH提供的Performance Counter。</p>
+<p>&nbsp;</p>
+<p>顺便发个牢骚，微软的缺点就是把每一个东西都来个规范，而且这些规范又定义的太死板，一点儿人性化的光辉都体现不出来。</p>
+<p>简直就是&ldquo;顺我者昌，逆我者亡&rdquo;啊！</p>
+<p>&nbsp;</p></body>
 </html>

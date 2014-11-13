@@ -1,0 +1,361 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x5982;&#x4F55;&#x5236;&#x4F5C;&#x4E00;&#x4E2A;&#x53EF;&#x4EE5;&#x7528;Bochs&#x8C03;&#x8BD5;&#x7684;&#x6700;&#x65B0;&#x5185;&#x6838;&#x7CFB;&#x7EDF;&#x76D8;</title>
+<body><p>参考：<a title="http://blog.chinaunix.net/uid-26207112-id-3332621.html" href="http://blog.chinaunix.net/uid-26207112-id-3332621.html">http://blog.chinaunix.net/uid-26207112-id-3332621.html</a></p>
+<p>&nbsp;</p>
+<h3>1. 正确地创建一个包含启动分区的磁盘映像</h3>
+<p>&nbsp;</p>
+<h4>1.1 创建磁盘映像文件</h4>
+<p>首先需要对磁盘的结构有一个直观的了解，参考：<a title="http://en.wikipedia.org/wiki/Cylinder-head-sector" href="http://en.wikipedia.org/wiki/Cylinder-head-sector">http://en.wikipedia.org/wiki/Cylinder-head-sector</a></p>
+<p>(Head, Cylinder, Sector)这个三元组用于在磁盘上快速地定位一个扇区(Sector)。</p>
+<p>而且一个磁盘的容量也可以根据这三个参数的范围计算出来。</p>
+<p>&nbsp;</p>
+<p>在这里，我们设置heads=16, sector=63, cylinder=100，那么这块磁盘的容量为</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ echo $((16*63*100*512)) bytes</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 51609600 bytes</pre>
+<!--CRLF--></div>
+</div>
+<p>大约49MB。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ dd <span style="color: #0000ff;">if</span>=/dev/zero of=linux.img count=$((16*63*100))</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> 100800+0 records in</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> 100800+0 records out</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 51609600 bytes (52 MB) copied, 0.266729 s, 193 MB/s</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h4>1.2 将磁盘映像文件挂载为loop块设备</h4>
+<p>我们需要对磁盘映像文件进行块设备操作，因此需要将其挂载为loop块设备(参考：<a title="http://en.wikipedia.org/wiki/Loop_device" href="http://en.wikipedia.org/wiki/Loop_device">http://en.wikipedia.org/wiki/Loop_device</a>)。</p>
+<blockquote>
+<p>In <a href="http://en.wikipedia.org/wiki/Unix-like">Unix-like</a> operating systems, a <strong>loop device</strong>, <strong>vnd</strong> (vnode disk), or <strong>lofi</strong> (loopback file interface) is a <a href="http://en.wikipedia.org/wiki/Device_node">pseudo-device</a> that makes a <a href="http://en.wikipedia.org/wiki/Computer_file">file</a> accessible as a <a href="http://en.wikipedia.org/wiki/Device_file_system#Block_devices">block device</a>.</p>
+</blockquote>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo losetup /dev/loop0 linux.img </pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h4>1.3 在/dev/loop0上创建启动分区</h4>
+<p>使用cfdisk分区工具，其中-s参数指定块设备的sector参数，-h参数指定块设备的磁头参数。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo cfdisk -h 16 -s 63 /dev/loop0</pre>
+<!--CRLF--></div>
+</div>
+<p>&ldquo;New&rdquo;按钮创建一个新的[Primary]类型的分区，在MBR分区表中只保存Primary类型的分区，因此只有Primary类型的分区能够作为启动分区。分区的大小选默认，即占据整个磁盘空间，因为我们只需要一个分区。</p>
+<p><a href="http://images.cnitblog.com/blog/580388/201402/211705587376783.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; margin-right: auto; padding-top: 0px; border-width: 0px;" title="bochs_linux_cfdisk_1" src="http://long123king.github.io/legacy_blogs/img/blog_200_blog_200_211705593147127.png" alt="bochs_linux_cfdisk_1" width="644" height="474" border="0" /></a></p>
+<p>分完区后，将该分区设置成&ldquo;Bootable&rdquo;。</p>
+<p><a href="http://images.cnitblog.com/blog/580388/201402/211705597362956.png"><img style="background-image: none; padding-left: 0px; padding-right: 0px; display: block; float: none; margin-left: auto; margin-right: auto; padding-top: 0px; border-width: 0px;" title="bochs_linux_cfdisk_2" src="http://long123king.github.io/legacy_blogs/img/blog_200_blog_200_211705599729727.png" alt="bochs_linux_cfdisk_2" width="644" height="474" border="0" /></a></p>
+<p>选择&ldquo;Write&rdquo;，将改动写入到目标块设备，在要求确认提示时输入yes。</p>
+<p>选择&ldquo;Quit&rdquo;退出cfdisk界面。</p>
+<p>&nbsp;</p>
+<h4>1.4 将新创建的分区格式化成Ext4文件系统</h4>
+<p>查看新创建的分区的起始扇区号</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo fdisk -l /dev/loop0</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> Disk /dev/loop0: 51 MB, 51609600 bytes</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> 16 heads, 63 sectors/track, 100 cylinders, total 100800 sectors</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> Units = sectors of 1 * 512 = 512 bytes</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> Sector size (logical/physical): 512 bytes / 512 bytes</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> I/O size (minimum/optimal): 512 bytes / 512 bytes</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> Disk identifier: 0x00000000</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span>       Device Boot      Start         End      Blocks   Id  System</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> /dev/loop0p1              <strong><span style="color: #ff0000;">63</span></strong>      100799       50368+  83  Linux</pre>
+<!--CRLF--></div>
+</div>
+<p>将磁盘映像文件的第64个扇区开始的区域挂载成/dev/loop1。注意，如果磁盘映像文件分配了多个分区的话，还需要使用&mdash;sizelimit设置区域大小。</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> Setup loop device:</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span>      losetup [{-e|-E} encryption] [-o offset] </pre>
+<span style="color: #ff0000;">[--sizelimit size]</span><!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span>              [-p pfd] [-r] {-f[--show]|loopdev} file</pre>
+<!--CRLF--></div>
+</div>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo losetup /dev/loop1 linux.img -o $((63*512))</pre>
+<!--CRLF--></div>
+</div>
+<p>将分区格式化为Ext4文件系统：</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo mkfs.ext4 /dev/loop1</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> mke2fs 1.41.14 (22-Dec-2010)</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> Filesystem label=</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> OS type: Linux</pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span> Block size=1024 (log=0)</pre>
+<!--CRLF-->
+<pre><span id="lnum6" style="color: #606060;">   6:</span> Fragment size=1024 (log=0)</pre>
+<!--CRLF-->
+<pre><span id="lnum7" style="color: #606060;">   7:</span> Stride=0 blocks, Stripe width=0 blocks</pre>
+<!--CRLF-->
+<pre><span id="lnum8" style="color: #606060;">   8:</span> 12600 inodes, 50368 blocks</pre>
+<!--CRLF-->
+<pre><span id="lnum9" style="color: #606060;">   9:</span> 2518 blocks (5.00%) reserved <span style="color: #0000ff;">for</span> the super user</pre>
+<!--CRLF-->
+<pre><span id="lnum10" style="color: #606060;">  10:</span> First data block=1</pre>
+<!--CRLF-->
+<pre><span id="lnum11" style="color: #606060;">  11:</span> Maximum filesystem blocks=51642368</pre>
+<!--CRLF-->
+<pre><span id="lnum12" style="color: #606060;">  12:</span> 7 block groups</pre>
+<!--CRLF-->
+<pre><span id="lnum13" style="color: #606060;">  13:</span> 8192 blocks per group, 8192 fragments per group</pre>
+<!--CRLF-->
+<pre><span id="lnum14" style="color: #606060;">  14:</span> 1800 inodes per group</pre>
+<!--CRLF-->
+<pre><span id="lnum15" style="color: #606060;">  15:</span> Superblock backups stored on blocks: </pre>
+<!--CRLF-->
+<pre><span id="lnum16" style="color: #606060;">  16:</span>     8193, 24577, 40961</pre>
+<!--CRLF-->
+<pre><span id="lnum17" style="color: #606060;">  17:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum18" style="color: #606060;">  18:</span> Writing inode tables: done                            </pre>
+<!--CRLF-->
+<pre><span id="lnum19" style="color: #606060;">  19:</span> Creating journal (4096 blocks): done</pre>
+<!--CRLF-->
+<pre><span id="lnum20" style="color: #606060;">  20:</span> Writing superblocks and filesystem accounting information: done</pre>
+<!--CRLF-->
+<pre><span id="lnum21" style="color: #606060;">  21:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum22" style="color: #606060;">  22:</span> This filesystem will be automatically checked every 32 mounts or</pre>
+<!--CRLF-->
+<pre><span id="lnum23" style="color: #606060;">  23:</span> 180 days, whichever comes first.  Use tune2fs -c or -i to override.</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h3>2. 安装Grub2（Boot Loader）到该磁盘映像文件中</h3>
+<p>参考：<a title="http://members.iinet.net/~herman546/p20/GRUB2%20Bash%20Commands.html" href="http://members.iinet.net/~herman546/p20/GRUB2%20Bash%20Commands.html">http://members.iinet.net/~herman546/p20/GRUB2%20Bash%20Commands.html</a></p>
+<p>&nbsp;</p>
+<p>Boot Loader是加载操作系统的必要程序，其实就是一大段代码，这段代码负责将Linux内核文件从文件系统中读入到内存里，进行解压、搬移以及初始化参数的传递操作，然后将系统的控制权交给Linux内核。</p>
+<p>&nbsp;</p>
+<p>Boot Loader通常分为两部分，第一部分安装到MBR的前446字节中，第二部分安装到其他的位置，通常是MBR与第一个分区之间的磁盘区域。</p>
+<p>&nbsp;</p>
+<h4>2.1 拷贝grub程序到目标根文件系统中的/boot目录</h4>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo mkdir linux</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> daniel@ubuntu:~$ sudo mount /dev/loop1 linux</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> daniel@ubuntu:~$ sudo mkdir linux/boot</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span> daniel@ubuntu:~$ sudo cp -r /usr/lib/grub/i386-pc/ linux/boot/grub</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h4>2.2 创建grub代码程序</h4>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo grub-mkimage -O i386-pc -o linux/boot/grub/core.img biosdisk part_msdos ext2</pre>
+<!--CRLF--></div>
+</div>
+<blockquote>
+<p>生成一个core.img, biosdisk负责读取磁盘, part_msdos负责处理MBR, ext2负责读取ext3分区.</p>
+<p>&nbsp;</p>
+</blockquote>
+<h4>2.3 将core.img安装到磁盘上</h4>
+<blockquote>
+<pre>SYNOPSIS
+       grub-setup [OPTION]... DEVICE
+
+DESCRIPTION
+       Set  up images to boot from DEVICE.  DEVICE must be a GRUB device (e.g.
+       `(hd0,1)').
+
+       -b, --boot-image=FILE
+              use FILE as the boot image [default=boot.img]
+
+       -c, --core-image=FILE
+              use FILE as the core image [default=core.img]
+
+       -d, --directory=DIR
+              use GRUB files in the directory DIR [default=/boot/grub]
+
+       -m, --device-map=FILE
+              use FILE as the device map [default=/boot/grub/device.map]
+
+       -r, --root-device=DEV
+              use DEV as the root device [default=guessed]</pre>
+<pre><a title="http://man.he.net/man8/grub-setup" href="http://man.he.net/man8/grub-setup">http://man.he.net/man8/grub-setup</a></pre>
+</blockquote>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo vi linux/boot/grub/device.map</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> (hd0) /dev/loop0</pre>
+<!--CRLF--></div>
+</div>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> daniel@ubuntu:~$ sudo grub-setup -m linux/boot/grub/device.map -d linux/boot/grub/ -r <span style="color: #006080;">'(hd0,1)'</span><span style="color: #006080;">'(hd0)'</span> /dev/loop0</pre>
+<!--CRLF--></div>
+</div>
+<blockquote>
+<p>If the device map file exists, the GRUB utilities (<code>grub-probe</code>, <code>grub-setup</code>, etc.) read it to map BIOS drives to OS devices. This file consists of lines like this:</p>
+<pre>(<var>device</var>) <var>file</var>
+</pre>
+<p><var>device</var> is a drive specified in the GRUB syntax (see <a href="http://www.gnu.org/software/grub/manual/html_node/Device-syntax.html#Device-syntax">Device syntax</a>), and <var>file</var> is an OS file, which is normally a device file.</p>
+<p><a title="http://www.gnu.org/software/grub/manual/html_node/Device-map.html" href="http://www.gnu.org/software/grub/manual/html_node/Device-map.html">http://www.gnu.org/software/grub/manual/html_node/Device-map.html</a></p>
+</blockquote>
+<p>&nbsp;</p>
+<h3>3. 将最小的根文件系统添加到启动分区中</h3>
+<p>可以参考：<a title="http://blog.csdn.net/deansrk/article/details/6661293" href="http://blog.csdn.net/deansrk/article/details/6661293">http://blog.csdn.net/deansrk/article/details/6661293</a></p>
+<p>将最新的内核文件，以及/bin/sh及其依赖文件都拷贝到目标文件系统中。</p>
+<hr />
+<p>如果想要制造一个更加完善的根文件系统，可以选择busybox。</p>
+<p>参考：<a href="http://blog.chinaunix.net/uid-14720887-id-3033771.html">http://blog.chinaunix.net/uid-14720887-id-3033771.html</a></p>
+<p>&nbsp;</p>
+<p>编译BusyBox的步骤：</p>
+<h4>3.1 配置</h4>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo make menuconfig</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<p>选中&ldquo;<span style="color: #000000;">Busybox Settings-&gt; Build Options-&gt; Build Busybox as a static binary</span>&rdquo;。</p>
+<h4>3.2 编译，安装</h4>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo make</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> sudo make install</pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h4>3.3 定制化</h4>
+<p>在_install目录下生成目标根目录结构，我们需要对该目录结构做一些修改：</p>
+<h5>3.3.1&nbsp; 创建子目录</h5>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> mkdir proc sys etc dev </pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h5>3.3.2&nbsp; 创建设备文件</h5>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> cd dev</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> sudo mknod console c 5 1</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> sudo mknod null c 1 3</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span>&nbsp; </pre>
+<!--CRLF-->
+<pre><span id="lnum5" style="color: #606060;">   5:</span>&nbsp; </pre>
+<!--CRLF--></div>
+</div>
+<p>&nbsp;</p>
+<h5>3.3.3&nbsp; 编辑/etc/fstab</h5>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>proc /proc proc defaults 0 0</pre>
+<!--CRLF-->
+<pre>sysfs /sys sysfs defaults 0 0</pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF--></div>
+</div>
+<h5>3.3.4&nbsp; 编辑/etc/inittab</h5>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>::sysinit:/etc/init.d/rcS</pre>
+<!--CRLF-->
+<pre>console::respawn:-/bin/sh</pre>
+<!--CRLF-->
+<pre>::ctrlaltdel:/sbin/reboot</pre>
+<!--CRLF-->
+<pre>::shutdown:/bin/umount &ndash;a -r</pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF--></div>
+</div>
+<h5>3.3.5&nbsp; 编辑/etc/init.d/rcS，并赋予其执行权限</h5>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre>#!/bin/sh</pre>
+<!--CRLF-->
+<pre>mount -a</pre>
+<!--CRLF-->
+<pre>&nbsp;</pre>
+<!--CRLF--></div>
+</div>
+<h5>3.3.6&nbsp; 修改init文件</h5>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> rm linuxrc</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> ln &ndash;sv bin/busybox init</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span>&nbsp; </pre>
+<!--CRLF--></div>
+</div>
+<h4>3.4 与Grub生成的根文件系统合并</h4>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo cp -r busybox/_install/* linux/</pre>
+<!--CRLF--></div>
+</div>
+<h3>&nbsp;</h3>
+<h3>4. 64位主机系统下创建Bochs可以使用的busybox根文件系统</h3>
+<p>&nbsp;</p>
+<p>64位系统编译出来的busybox无法被Bochs使用，因为Bochs是32位模拟器，会在内核启动后期提示：</p>
+<div class="cnblogs_Highlighter">
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> request_module: runaway loop modprobe binfmt-464c</pre>
+<!--CRLF--></div>
+</div>
+</div>
+<p>因此需要参考：<a href="http://www.cnblogs.com/long123king/p/3562020.html">http://www.cnblogs.com/long123king/p/3562020.html</a></p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> sudo apt-get install libc6-dev-i386 gcc-multilib g++-multilib </pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span>&nbsp; </pre>
+<!--CRLF--></div>
+</div>
+<p>在Makefile中添加</p>
+<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
+<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
+<pre><span id="lnum1" style="color: #606060;">   1:</span> CFLAGS += -m32</pre>
+<!--CRLF-->
+<pre><span id="lnum2" style="color: #606060;">   2:</span> LDFLAGS += -m32</pre>
+<!--CRLF-->
+<pre><span id="lnum3" style="color: #606060;">   3:</span> CPPFLAGS += -m32</pre>
+<!--CRLF-->
+<pre><span id="lnum4" style="color: #606060;">   4:</span>&nbsp; </pre>
+<!--CRLF--></div>
+</div>
+<p>然后，再按上文3中的步骤重新编译。</p>
+<div class="title">&nbsp;</div></body>
+</html>

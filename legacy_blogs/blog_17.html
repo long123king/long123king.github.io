@@ -1,24 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x600E;&#x6837;&#x751F;&#x6210;VEX IR</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">bap_block_t* generate_vex_ir(asm_program_t *prog, address_t inst)
-{
-  bap_block_t *vblock = new bap_block_t;
-  VexArch guest = vexarch_of_prog(prog);
-
-  vblock-&gt;inst = inst;
-  // Skip the VEX translation of special instructions because these
-  // are also the ones that VEX does not handle
-  if ( !is_special( inst )) {
-      vblock-&gt;vex_ir = translate_insn(guest, asmir_get_ptr_to_instr(prog, inst), inst);
-  } else
-    vblock-&gt;vex_ir = NULL;
-
-  return vblock;
-}
+<title>&#x600E;&#x6837;&#x5B66;&#x4E60;&#x65B0;&#x8BED;&#x8A00;</title>
+<body><p>作为一个C++出身的程序员，好多语言看起来都很陌生，但是又十分有吸引力</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Python
+Perl
+Ruby
+Lisp
+Lua
+Haskell
+Ocaml
 </pre>
 </div>
-<p>可以在Pin中，将每个Trace通过translate_insn来解析，因为IRSB按道理来说与Trace是相同概念的代码组合。</p>
+<p>　　</p>
+<p>其实学习一门语言的过程并不简单，需要花费很多的时间来与它建立亲密的关系，浅尝辄止基本上是不能领会其中的奥秘的。</p>
+<p>但是无论如何，学习的脚本不能停止。</p>
+<p>对于零碎时间的合理利用，以及良好的规划，可以让这个进程更加有效。</p>
+<p>其次是对于各种语言的第一印象，以及事先考虑可以从这门语言中汲取什么方面的营养，可以让这个进程更加有目的性。</p>
+<p style="margin-left: 30px;">Lua以小而快见称，因此学习Lua，并且将其与其他语言结合使用会更加符合其设计理念。</p>
+<p style="margin-left: 30px;">Ruby最强大的是元编程，这其实是C++语言很欠缺的功能，可以在实际应用中补充C++语言的弱项。</p>
+<p>再次，规划好每种语言的应用场合，可以使这个进程更加有产出。</p>
+<p style="margin-left: 30px;">比如学习Perl中对于正则表达式的处理，并且结合Linux Shell应用会是一个很有产出的过程。</p>
 <p>&nbsp;</p></body>
 </html>

@@ -1,55 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x5B89;&#x88C5;debian&#x603B;&#x7ED3;&#x4EE5;&#x53CA;&#x7F16;&#x8BD1;linux&#x5185;&#x6838;</title>
-<body><h3>1. 安装debian</h3>  <p></p>  <p>使用unetbootin(<a href="http://unetbootin.sourceforge.net/">http://unetbootin.sourceforge.net/</a>)来创建启动盘，并且下载debian的基本包。</p>  <p>将磁盘进行压缩操作，并且保留出一个主分区的位置。</p>  <p>然后，重新启动系统按F12，选择U盘启动，进行安装。</p>  <p>&#160;</p>  <p>有几个需要注意的地方：</p>  <p>1). 事先在Windows系统中，通过“计算机-&gt;管理-&gt;磁盘管理”的工具，将空闲空间较大的分区进行“压缩盘”操作，我这里压缩出40G的空间，再分成两个Partition：一个用于安装“/”根目录，一个用于swap交换分区。</p>  <p>这里，一定要把根目录的分区设置为主分区，即可以在MBR中直接索引到的分区，这是为了让系统可以从这个分区上启动。</p>  <p>2). 重启系统后，我的Thinkpad系列笔记本是按F12可以进入Boot Media Selection菜单，在这里选择从优盘启动。</p>  <p>3). 启动后各个系统的安装过程都大致相同了，主要是在磁盘设置的步骤，选择“手动设置(Manual)”方式，将 上面留出的分区设置成相应的文件系统格式和挂载点。</p>  <p>&#160;</p>  <h3>2. 编译linux内核的步骤</h3>  <p>为什么要编译linux内核，因为直接使用发行版本的内核源码，往往无法make module成功，总是提示缺少文件。索性直接重新编译源码，然后使用新编译的内核来启动系统。</p>  <p>做起来也很简单：</p>  <p></p>  <pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">make menuconfig</pre></pre>
-
-<pre>也不需要做什么特殊的配置，使用默认的就可以。</pre>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">make</pre></pre>
-
-<p>开始编译，大约1~2个小时。</p>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">make bzImage</pre></pre>
-
-<p>生成压缩格式的内核，这步其实不需要做，因为编译之后会自动生成。</p>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">make modules</pre></pre>
-
-<p>编译模块部分</p>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">make modules_install</pre></pre>
-
-<p>将生成的模块文件(*.ko)安装到适当的位置。</p>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">make install</pre></pre>
-
-<p>生成initrd映像，连同内核映像一同拷贝到/boot/目录下，并且更新grub。</p>
-
-<p>&#160;</p>
-
-<p>最后一步，重启系统。</p>
-
-<p>&#160;</p>
-
-<h3>3. 尾声</h3>
-
-<p>&#160;</p>
-
-<p>在经过好一翻折腾之后，考虑过Debian, Linux Mint Debian, Fedora, CentOS, Linux Mint, OpenSuse等等，最后还是选择了Ubuntu 13.10.</p>
-
-<p>通过UNetBootin的方式，将它直接安装在硬盘分区上。</p>
-
-<p>再尝试编写内核模块，直接修改内核源码，以及安装Xen并且在Xen中安装Win XP都一帆风顺。</p>
-
-<p>&#160;</p>
-
-<p>安装xen的步骤：</p>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #fbfbfb">sudo apt-get install xen-hypervisor-4.3-amd64 
-</pre></pre>
-
-<pre><pre style="font-size: 12px; margin: 0em; width: 100%; font-family: consolas,&#39;Courier New&#39;,courier,monospace; background-color: #ffffff">sudo apt-get install virt-manager
-</pre></pre>
-
-<pre>然后重启系统，运行virt-manager，就可以像virtualbox一样地管理或者创建虚拟机了。</pre></body>
+<title>&#x5206;&#x6790;/proc/[pid]/maps&#x4E2D;&#x7684;&#x5404;&#x4E2A;&#x5185;&#x5B58;&#x533A;&#x57DF;&#x7684;&#x5927;&#x5C0F;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">cat maps | sed -e "s/\([0-9a-f]\{8\}\)-\([0-9a-f]\{8\}\)/0x\1 0x\2/" | awk '{printf("\033[0;33m[%8d Page]\033[0m \033[0;35m[%8d KB]\033[0m %s\n", (strtonum($2) - strtonum($1))/4096, (strtonum($2) - strtonum($1))/1024, $0)}'
+</pre>
+</div>
+<p>　　</p></body>
 </html>

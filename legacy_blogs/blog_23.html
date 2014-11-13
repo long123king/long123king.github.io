@@ -1,11 +1,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>ubuntu apt-get proxy</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/Desktop $ cat /etc/apt/apt.conf
-Acquire::http::Proxy "http://cnnjproxy-ha.tw.trendnet.org:8080";
-Acquire::https::Proxy "https://cnnjproxy-ha.tw.trendnet.org:8080";
-</pre>
-</div>
-<p>　　</p></body>
+<title>ZwQueryDirectoryFile&#x7528;&#x6CD5;</title>
+<body><p>1. 当返回值为STATUS_SUCCESS时，返回的字节数保存在IoStatusBlock.Information字段中；</p>
+<p>2. 如果FileName字段被指定了，那么对于同时指定的FileHandle，那么所有后续的对于该FileHandle的调用，都要根据该FileName来过滤结果。</p>
+<p>3. 如果ReturnSingleEntry指定为TRUE, 并且FileName指定为NULL，那么只返回一条记录；</p>
+<p>4. 如果Buffer连一条完整的记录都存放不下，那么返回STATUS_BUFFER_OVERFLOW；</p>
+<p>5. 如果第一次调用时，Buffer足够存放一条完整的记录，就会返回STATUS_SUCCESS，当然，还是会返回尽量多的记录的；</p>
+<p>6. 对于非第一次的调用，如果Buffer大小不够，那么也会返回STATUS_SUCCESS，但是IoStatusBlock.Information为0，提示Buffer大小，需要重新分配更大的Buffer并且重新调用。</p>
+<p>因此，除非只要找一条记录的情况，否则遍历目录，至少要调用两遍该API。</p>
+<p>7. 最后一次调用时，会返回空Buffer，并且返回结果STATUS_NO_MORE_FILES。</p>
+<p>&nbsp;</p></body>
 </html>

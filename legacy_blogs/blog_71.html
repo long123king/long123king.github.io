@@ -1,5 +1,204 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>DynamoRIO</title>
-<body><p>项目地址</p> <p><a title="https://code.google.com/p/dynamorio/" href="https://code.google.com/p/dynamorio/">https://code.google.com/p/dynamorio/</a></p> <p>&nbsp;</p> <p>和pin十分类似，区别在于DynamoRIO是开源的。</p></body>
+<title>&#x600E;&#x6837;&#x7406;&#x89E3;Functor&#x4E0E;Monad</title>
+<body><h1>1. 复合函数操作符</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude&gt; :t (.)
+(.) :: (b -&gt; c) -&gt; (a -&gt; b) -&gt; a -&gt; c
+Prelude&gt; (.) ((+) 5) ((*) 2) 4
+13
+</pre>
+</div>
+<p>　　</p>
+<p>所以(.)操作符的作用，是将4作为参数传递给((*) 2)函数，再将结果传递给((+) 5)函数。</p>
+<p>这就是数学里面的复合函数：</p>
+<p>f(x) = 2x</p>
+<p>g(x) = x + 5</p>
+<p>g(f(x)) = g(2x) = (2x) + 5 = 2x + 5</p>
+<p>g(f(4)) = 2*4 + 5 = 13</p>
+<p>&nbsp;</p>
+<h1>&nbsp;2. Functor</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">194 {- | The 'Functor' class is used for types that can be mapped over.
+195 Instances of 'Functor' should satisfy the following laws:
+196 
+197 &gt; fmap id  ==  id
+198 &gt; fmap (f . g)  ==  fmap f . fmap g
+199 
+200 The instances of 'Functor' for lists, 'Data.Maybe.Maybe' and 'System.IO.IO'
+201 satisfy these laws.
+202 -}
+203 
+204 class  Functor f  where
+205     fmap        :: (a -&gt; b) -&gt; f a -&gt; f b
+206 
+207     -- | Replace all locations in the input with the same value.
+208     -- The default definition is @'fmap' . 'const'@, but this may be
+209     -- overridden with a more efficient version.
+210     (&lt;$)        :: a -&gt; f b -&gt; f a
+211     (&lt;$)        =  fmap . const
+</pre>
+</div>
+<p>　　id是一个函数</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude&gt; :t id
+id :: a -&gt; a
+Prelude&gt; id "Daniel"
+"Daniel"
+Prelude&gt; id 1
+1
+Prelude&gt; id True
+True
+Prelude&gt; id Just "Happy"
+Just "Happy"
+Prelude&gt; id Nothing
+Nothing
+</pre>
+</div>
+<p>　　Functor是一种typeclass，用来定义一种允许的操作集合，这里是fmap，并且对于fmap提出了需要满足的条件：</p>
+<ul>
+<li><strong><em>fmap id == id</em></strong></li>
+<li><strong><em>fmap (f . g) == fmap f . fmap g</em></strong></li>
+</ul>
+<p>可以视为"交换律"和&ldquo;分配律&rdquo;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; fmap isDigit ((++) ['0'..'9'] ['a'..'f'])
+[True,True,True,True,True,True,True,True,True,True,False,False,False,False,False,False]
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; :t isDigit
+isDigit :: Char -&gt; Bool
+</pre>
+</div>
+<p>　　</p>
+<p>fmap不仅可以操作List（此时与List的函数map作用相同），还可以操作比如Maybe</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; fmap isDigit (Just 'a')
+Just False
+Prelude Data.Char&gt; fmap isDigit (Nothing)
+Nothing
+Prelude Data.Char&gt; fmap isDigit (Just '1')
+Just True
+</pre>
+</div>
+<p>　　</p>
+<h1>3. Manod</h1>
+<p>Monad与Functor一样，也是用来定义类型可以进行的操作集合。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; :i Monad
+class Monad m where
+  (&gt;&gt;=) :: m a -&gt; (a -&gt; m b) -&gt; m b
+  (&gt;&gt;) :: m a -&gt; m b -&gt; m b
+  return :: a -&gt; m a
+  fail :: String -&gt; m a
+  	-- Defined in `GHC.Base'
+instance Monad Maybe -- Defined in `Data.Maybe'
+instance Monad (Either e) -- Defined in `Data.Either'
+instance Monad [] -- Defined in `GHC.Base'
+instance Monad IO -- Defined in `GHC.Base'
+instance Monad ((-&gt;) r) -- Defined in `GHC.Base'
+</pre>
+</div>
+<p>　　</p>
+<p>可以看到，这些操作包括(&gt;&gt;=) (&gt;&gt;) return fail</p>
+<p>（&gt;&gt;）执行两个操作，但是放弃前一个操作的结果</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; :t (&gt;&gt;)
+(&gt;&gt;) :: Monad m =&gt; m a -&gt; m b -&gt; m b
+Prelude Data.Char&gt; (&gt;&gt;) "Daniel" "King"
+"KingKingKingKingKingKing"
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">212 
+213 {- | The 'Monad' class defines the basic operations over a /monad/,
+214 a concept from a branch of mathematics known as /category theory/.
+215 From the perspective of a Haskell programmer, however, it is best to
+216 think of a monad as an /abstract datatype/ of actions.
+217 Haskell's @do@ expressions provide a convenient syntax for writing
+218 monadic expressions.
+219 
+220 Minimal complete definition: '&gt;&gt;=' and 'return'.
+221 
+222 Instances of 'Monad' should satisfy the following laws:
+223 
+224 &gt; return a &gt;&gt;= k  ==  k a
+225 &gt; m &gt;&gt;= return  ==  m
+226 &gt; m &gt;&gt;= (\x -&gt; k x &gt;&gt;= h)  ==  (m &gt;&gt;= k) &gt;&gt;= h
+227 
+228 Instances of both 'Monad' and 'Functor' should additionally satisfy the law:
+229 
+230 &gt; fmap f xs  ==  xs &gt;&gt;= return . f
+231 
+232 The instances of 'Monad' for lists, 'Data.Maybe.Maybe' and 'System.IO.IO'
+233 defined in the "Prelude" satisfy these laws.
+234 -}
+235 
+236 class  Monad m  where
+237     -- | Sequentially compose two actions, passing any value produced
+238     -- by the first as an argument to the second.
+239     (&gt;&gt;=)       :: forall a b. m a -&gt; (a -&gt; m b) -&gt; m b
+240     -- | Sequentially compose two actions, discarding any value produced
+241     -- by the first, like sequencing operators (such as the semicolon)
+242     -- in imperative languages.
+243     (&gt;&gt;)        :: forall a b. m a -&gt; m b -&gt; m b
+244         -- Explicit for-alls so that we know what order to
+245         -- give type arguments when desugaring
+246 
+247     -- | Inject a value into the monadic type.
+248     return      :: a -&gt; m a
+249     -- | Fail with a message.  This operation is not part of the
+250     -- mathematical definition of a monad, but is invoked on pattern-match
+251     -- failure in a @do@ expression.
+252     fail        :: String -&gt; m a
+253 
+254     {-# INLINE (&gt;&gt;) #-}
+255     m &gt;&gt; k      = m &gt;&gt;= \_ -&gt; k
+256     fail s      = error s
+</pre>
+</div>
+<p>　　</p>
+<p>(&gt;&gt;=)是将前一个操作的结果作为参数传递给后一个操作，但是注意需要使用return将从a到b的正常转换(a -&gt; b)变成(a -&gt; mb)，即(a -&gt; ma)(a - b) = (a -&gt; mb)</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; :t return
+return :: Monad m =&gt; a -&gt; m a
+Prelude Data.Char&gt; :t (&gt;&gt;=)
+(&gt;&gt;=) :: Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+Prelude Data.Char&gt; (&gt;&gt;=) (return ((++) "Daniel" "King")) ((:) 'X')
+"XDanielKing"
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Data.Char&gt; (&gt;&gt;=) (return ((++) "Daniel" "King")) ((++) "Hello ")
+"Hello DanielKing"
+</pre>
+</div>
+<p>　　</p>
+<p>所以(&gt;&gt;=)和return是配合使用的，效果很类似于Unix下的管道操作。</p>
+<p>Monad的设计想法是允许pure的Haskell可以产生一些side effect，或者说除了自身的值以外，可以保存下一些状态信息。</p>
+<p>比如在这里， ((++) "Daniel" "King")的结果就传递给了后面的action，这样就可以用来更新状态信息。</p>
+<p>&nbsp;</p>
+<p>比较明显的应用是在IO以及Exception Handling上面。</p>
+<p>&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<p>如果参考数学中的概念，Monad可以被看作是虚数体系，或者是另外一个维度的类型；</p>
+<p>普通的类型与Monad类型之间需要显式地进行转换，</p>
+<p>return ： 普通类型转换成Monad类型</p>
+<p>&lt;-：Monad类型转换成普通类型</p>
+<p>&nbsp;</p>
+<p>IO action都是操作的Monad类型。</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">*RecursiveContents Control.Monad Data.Char System.FilePath&gt; :t forM
+forM :: Monad m =&gt; [a] -&gt; (a -&gt; m b) -&gt; m [b]
+*RecursiveContents Control.Monad Data.Char System.FilePath&gt; forM "Daniel King" $ \ch -&gt; do return (toUpper ch)
+"DANIEL KING"
+</pre>
+</div>
+<p>　　</p></body>
 </html>

@@ -1,146 +1,19 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Linux&#x7684;&#x521D;&#x59CB;&#x9875;&#x8868;</title>
-<body><p>LOWMEM，是相对于HIGHMEM而言，其实就是内核态直接映射的物理内存空间的大小，一般为896MB。</p>  <p>这里只是粗略地估计了一下，取1GB。</p>  <p>LOWMEM_PAGES代表了LOWMEM区域对应了多少内存页，1GB / 4KB = 256K，即需要256K个页表项来描述内核空间</p>  <div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; width: 97.5%; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; background-color: #f4f4f4">   <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4">     <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> <span style="color: #008000">/* Number of possible pages in the lowmem region */</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum2" style="color: #606060">   2:</span> LOWMEM_PAGES = (((1&lt;&lt;32) - __PAGE_OFFSET) &gt;&gt; PAGE_SHIFT)</pre>
-<!--CRLF--></div>
-</div>
-
-<p>&#160;</p>
-
-<p>计算一下，需要多少内存页来存放LOWMEM区域对应的内存页表项，有256个页表，每个页表占1页内存，需要256页，即256 * 4KB = <strong>1MB来存放256个页表</strong>。</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; width: 97.5%; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> <span style="color: #008000">/* Enough space to fit pagetables for the low memory linear map */</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum2" style="color: #606060">   2:</span> MAPPING_BEYOND_END = PAGE_TABLE_SIZE(LOWMEM_PAGES) &lt;&lt; PAGE_SHIFT</pre>
-<!--CRLF--></div>
-</div>
-
-<p>其中，PAGE_TABLE_SIZE用来计算需要多少个页表来容纳这么多的页， 256K / 1K = 256，需要256个页表</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; width: 97.5%; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> #<span style="color: #0000ff">if</span> PTRS_PER_PMD &gt; 1</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum2" style="color: #606060">   2:</span> #define PAGE_TABLE_SIZE(pages) (((pages) / PTRS_PER_PMD) + PTRS_PER_PGD)</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum3" style="color: #606060">   3:</span> #<span style="color: #0000ff">else</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum4" style="color: #606060">   4:</span> #define PAGE_TABLE_SIZE(pages) ((pages) / PTRS_PER_PGD)</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum5" style="color: #606060">   5:</span> #endif</pre>
-<!--CRLF--></div>
-</div>
-
-<p>下面的计算与上面是相同的， INIT_MAP_SIZE也是1MB</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; width: 97.5%; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> <span style="color: #008000">/*</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum2" style="color: #606060">   2:</span> <span style="color: #008000"> * Worst-case size of the kernel mapping we need to make:</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum3" style="color: #606060">   3:</span> <span style="color: #008000"> * a relocatable kernel can live anywhere in lowmem, so we need to be able</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum4" style="color: #606060">   4:</span> <span style="color: #008000"> * to map all of lowmem.</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum5" style="color: #606060">   5:</span> <span style="color: #008000"> */</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum6" style="color: #606060">   6:</span> KERNEL_PAGES = LOWMEM_PAGES</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum7" style="color: #606060">   7:</span>&#160; </pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum8" style="color: #606060">   8:</span> INIT_MAP_SIZE = PAGE_TABLE_SIZE(KERNEL_PAGES) * PAGE_SIZE</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum9" style="color: #606060">   9:</span> RESERVE_BRK(pagetables, INIT_MAP_SIZE)</pre>
-<!--CRLF--></div>
-</div>
-
-<p>RESERVE_BRK的作用是在.brk区域预留1MB大小的空间，并且设置pagetables为该区域的起始位置的标号名称。</p>
-
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; border-top: silver 1px solid; font-family: &#39;Courier New&#39;, courier, monospace; border-right: silver 1px solid; width: 97.5%; border-bottom: silver 1px solid; padding-bottom: 4px; direction: ltr; text-align: left; padding-top: 4px; padding-left: 4px; margin: 20px 0px 10px; border-left: silver 1px solid; line-height: 12pt; padding-right: 4px; max-height: 200px; background-color: #f4f4f4">
-  <div id="codeSnippet" style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4">
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum1" style="color: #606060">   1:</span> <span style="color: #008000">/*</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum2" style="color: #606060">   2:</span> <span style="color: #008000"> * Reserve space in the brk section.  The name must be unique within</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum3" style="color: #606060">   3:</span> <span style="color: #008000"> * the file, and somewhat descriptive.  The size is in bytes.  Must be</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum4" style="color: #606060">   4:</span> <span style="color: #008000"> * used at file scope.</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum5" style="color: #606060">   5:</span> <span style="color: #008000"> *</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum6" style="color: #606060">   6:</span> <span style="color: #008000"> * (This uses a temp function to wrap the asm so we can pass it the</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum7" style="color: #606060">   7:</span> <span style="color: #008000"> * size parameter; otherwise we wouldn't be able to.  We can't use a</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum8" style="color: #606060">   8:</span> <span style="color: #008000"> * &quot;section&quot; attribute on a normal variable because it always ends up</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum9" style="color: #606060">   9:</span> <span style="color: #008000"> * being @progbits, which ends up allocating space in the vmlinux</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum10" style="color: #606060">  10:</span> <span style="color: #008000"> * executable.)</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum11" style="color: #606060">  11:</span> <span style="color: #008000"> */</span></pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum12" style="color: #606060">  12:</span> #define RESERVE_BRK(name,sz)                        \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum13" style="color: #606060">  13:</span>     <span style="color: #0000ff">static</span> <span style="color: #0000ff">void</span> __section(.discard.text) __used notrace        \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum14" style="color: #606060">  14:</span>     __brk_reservation_fn_##name##__(<span style="color: #0000ff">void</span>) {                \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum15" style="color: #606060">  15:</span>         asm <span style="color: #0000ff">volatile</span> (                        \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum16" style="color: #606060">  16:</span>             <span style="color: #006080">&quot;.pushsection .brk_reservation,\&quot;aw\&quot;,@nobits;&quot;</span> \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum17" style="color: #606060">  17:</span>             <span style="color: #006080">&quot;.brk.&quot;</span> #name <span style="color: #006080">&quot;:&quot;</span>                \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum18" style="color: #606060">  18:</span>             <span style="color: #006080">&quot; 1:.skip %c0;&quot;</span>                    \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum19" style="color: #606060">  19:</span>             <span style="color: #006080">&quot; .size .brk.&quot;</span> #name <span style="color: #006080">&quot;, . - 1b;&quot;</span>        \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum20" style="color: #606060">  20:</span>             <span style="color: #006080">&quot; .popsection&quot;</span>                    \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: white"><span id="lnum21" style="color: #606060">  21:</span>             : : <span style="color: #006080">&quot;i&quot;</span> (sz));                    \</pre>
-<!--CRLF-->
-
-    <pre style="border-top-style: none; overflow: visible; font-size: 8pt; font-family: &#39;Courier New&#39;, courier, monospace; width: 100%; border-bottom-style: none; color: black; padding-bottom: 0px; direction: ltr; text-align: left; padding-top: 0px; border-right-style: none; padding-left: 0px; margin: 0em; border-left-style: none; line-height: 12pt; padding-right: 0px; background-color: #f4f4f4"><span id="lnum22" style="color: #606060">  22:</span>     }</pre>
-<!--CRLF--></div>
-</div></body>
+<title>Profiler&#x7EBF;&#x7A0B;&#x6A21;&#x578B;</title>
+<body><p>为了提高效率，对于Profiler.dll这个pintool采用多线程模型。</p> <p>&nbsp;</p> <p>采用类型消息模型</p> <p>&nbsp;</p> <p>这样做的限制在于，传递消息时，一定要将需要的所有内容传递过去，因为两个线程的栈已经完全不再相同了。</p> <p>&nbsp;</p> <p>可以采用多个消息响应类，而且要添加过滤机制。</p> <p>&nbsp;</p> <p>可以设置多个过滤器，比如Address_Filter，Size_Filter,Name_Filter，</p> <p>都是对应XXX_Address, XXX_Size, XXX_Name设置的。</p> <p>&nbsp;</p> <p>在打开某个级别的Instrument时，就可以添加过滤器。</p> <p>&nbsp;</p> <p>在Instrument_Callback中</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #0000ff">if</span> (filter(sec/trace/rtn…))</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">{</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    SendInstrumentMessage(type_sec, )</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">}</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">&nbsp;</pre><!--CRLF--></div></div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>但是这个构架实现起来没有效率意义。</p>
+<p>
+<hr>
+</p>
+<p>由于pintool的instrument的引入，会导致目标线程的运行时间明显增长，因此绝对时间对于Profiler来说没有意义，有意义的是相对时间及其在总体时间中的比例。</p>
+<p>&nbsp;</p>
+<p>但是好像enter/leave routine并不是按预想的成对出现，甚至程序刚刚开始就有leave，这是为什么？</p>
+<p>即使考虑到调用层次，也说不通。</p>
+<p>&nbsp;</p>
+<p>或者可以通过另外一种方式，在instruction级别进行统计，找到哪些routine的指令被执行，或者可以放宽一点，对于BBL进行统计，因为BBL是“单入单出”的，可以作为最小的执行粒度。</p>
+<p>&nbsp;</p>
+<p>然后统计时，以routine为单位，同时统计指令执行的条数，以及执行的时间。</p></body>
 </html>

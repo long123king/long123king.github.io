@@ -1,24 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Makefile.am&#x6A21;&#x677F;&#x53C2;&#x8003;&#xFF0C;&#x6765;&#x81EA;bap&#x9879;&#x76EE;</title>
+<title>Modify PDF operators.</title>
 <body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">1 bin_PROGRAMS = \
-  2         print-ir \
-  3         lifttrace
-  4 
-  5 # these executables should depend on libasmir, since they link it in
-  6 # statically.
-  7 #print-ir_DEPENDENCIES = ../src/libasmir.a
-  8 #lifttrace_DEPENDENCIES = ../src/libasmir.a
-  9 
- 10 print_ir_SOURCES = print-ir.cpp ir_printer.cpp
- 11 lifttrace_SOURCES = lifttrace.cpp
- 12 LDADD = @ASMIR_DIR@/src/libasmir.a @VEX_DIR@/libvex.a -lbfd -ldl -lopcodes
- 13 AM_CXXFLAGS = \
- 14               -g -O3\
- 15               -I../include \
- 16               -I../src/traces \
- 17               -I@VEX_DIR@/pub
+<pre class="brush:python;gutter:true;">  1 Depart Process:
+  2 1. Grep xref and trailer binary position in file.
+  3 2. Dump xref table and trailer part.
+  4 3. Calculate every object binary offset and length.
+  5 4. Dump every object.
+  6 5. Dump header part.
+  7 
+  8 Manual Process:
+  9 1. Find object contains stream.
+ 10 2. Deflate stream.
+ 11 3. Modify grahics operators.
+ 12 4. Flate stream back to object.
+ 13 
+ 14 Part Process:
+ 15 1. DD header part.
+ 16 2. DD every object, log every binary offset.
+ 17 3. Rewrite xref table.
+ 18 4. Rewrite trailer part.
 </pre>
 </div>
 <p>　　</p></body>

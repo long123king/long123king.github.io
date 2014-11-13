@@ -1,5 +1,17 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>JavaScript Closure&#x7406;&#x89E3;</title>
-<body><p><a title="http://stackoverflow.com/a/111111/941650" href="http://stackoverflow.com/a/111111/941650">http://stackoverflow.com/a/111111/941650</a></p> <blockquote> <p>There is a critical difference between a C pointer to a function and a JavaScript reference to a function. In JavaScript, you can think of a function reference variable as having both a pointer to a function <em>as well</em> as a hidden pointer to a closure. <p>The above code has a closure because the anonymous function <code>function() { alert(text); }</code> is declared <em>inside</em> another function, <code>sayHello2()</code> in this example. In JavaScript, if you use the <code>function</code>keyword inside another function, you are creating a closure.</p></blockquote> <p>可以理解成，JavaScript里面，如果在function A内部又定义了function B，而且这个内部的function B又被作为引用传递到了function A的外部，这时就可能存在一个潜在的危险，就是function B里面又引用到了function B/A内部定义的变量，那么如果这些变量是定义在栈上的，那么就完蛋了，因为这片空间已经回收了，就会出现未定义的行为。 <p>&nbsp; <p>为什么C++没有这个问题，是因为C++中有对象，而且C++不允许函数定义上的嵌套出现，会无法通过编译的。 <p>&nbsp; <p>但是JavaScript又必须要支持这种特性，为什么，因为JavaScript本身没有对象，JavaScript的面向对象的特征都体现在function上。 <p>&nbsp; <p>JavaScript中function是一等公民，即要承担起函数的角色，又要承担起类的角色，因此成为了二者的合体。 <p>&nbsp; <p>当把JavaScript的function作为类来使用时，那么function中定义的局部数据成员，就都成为了该类的数据成员变量，能不保存吗？所以，就生出了Closure这个奇怪的产物。可以认为，Closure就是对象。</p></body>
+<title>centos&#x5B89;&#x88C5;virtualbox</title>
+<body><p>参考：<a href="http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/">&nbsp;http://www.if-not-true-then-false.com/2010/install-virtualbox-with-yum-on-fedora-centos-red-hat-rhel/</a></p>
+<p>如果需要wget设置proxy，参考：&nbsp;<a href="http://www.satwe.com/archives/355.html">http://www.satwe.com/archives/355.html</a></p>
+<p>参考：<a href="https://www.virtualbox.org/wiki/Linux_Downloads">https://www.virtualbox.org/wiki/Linux_Downloads</a></p>
+<p>安装Oracle VirtualBox的Public Key，然后使用rpm安装*.rpm包</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">wget http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc
+sudo rpm --import oracle_vbox.asc
+sudo rpm --checksig VirtualBox-4.3-4.3.12_93733_el5-1.i386.rpm 
+sudo rpm -i VirtualBox-4.3-4.3.12_93733_el5-1.i386.rpm 
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p></body>
 </html>

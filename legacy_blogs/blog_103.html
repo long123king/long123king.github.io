@@ -1,5 +1,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x5728;Linux&#x4E0B;&#x9762;&#x65E0;&#x6CD5;&#x4F7F;&#x7528;&#x5411;&#x4E0A;&#x7BAD;&#x5934;&#x81EA;&#x52A8;&#x8865;&#x5168;&#x4E0A;&#x6761;&#x547D;&#x4EE4;</title>
-<body><p>会用^[[A替代。</p> <p>参考：<a title="http://stackoverflow.com/a/8641302/941650" href="http://stackoverflow.com/a/8641302/941650">http://stackoverflow.com/a/8641302/941650</a></p></body>
+<title>ROP&#x5B66;&#x4E60;</title>
+<body><h1>DEP</h1>
+<p>DEP是利用了硬件提供的机制，即对于Page的保护，对于一些保存数据的内存Page，是不允许执行的。</p>
+<p>DEP保护了stack/heap，即使其中包含了溢出的shellcode，但是没有执行权限。</p>
+<p>&nbsp;</p>
+<p>克服DEP的方法有return-to-libc和ROP。</p>
+<p>&nbsp;</p></body>
 </html>

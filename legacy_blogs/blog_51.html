@@ -1,31 +1,16 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>sed use case: Filter without editing</title>
-<body><p>if we want to filter with sed pattern and just print the filtered lines without any further editing , we can do it like this</p>
-<div class="cnblogs_code">
-<pre>ls -a1 ~ | sed -ne <span style="color: #800000;">"</span><span style="color: #800000;">/^\./p</span><span style="color: #800000;">"</span></pre>
+<title>Zw/Nt version API</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">nt!ZwCreateKey:
+804fe8c4 b829000000      mov     eax,29h
+804fe8c9 8d542404        lea     edx,[esp+4]
+804fe8cd 9c              pushfd
+804fe8ce 6a08            push    8
+804fe8d0 e83cf10300      call    nt!KiSystemService (8053da11)
+804fe8d5 c21c00          ret     1Ch
+</pre>
 </div>
-<p>This command will print all dir entries that starts with "."</p>
-<div class="cnblogs_code">
-<pre>ls -a1 ~ | sed -ne <span style="color: #800000;">"</span><span style="color: #800000;">/^\./p</span><span style="color: #800000;">"</span> | sed -ne <span style="color: #800000;">"</span><span style="color: #800000;">/bash/p</span><span style="color: #800000;">"</span></pre>
-</div>
-<p>I want to find meta files related to bash, so I got the result:</p>
-<div class="cnblogs_code">
-<pre><span style="color: #000000;">.bash_history
-.bash_logout
-.bashrc</span></pre>
-</div>
-<p>we can view each file content by</p>
-<div class="cnblogs_code">
-<pre>ls -a1 ~ | sed -ne <span style="color: #800000;">"</span><span style="color: #800000;">/^\./p</span><span style="color: #800000;">"</span> | sed -ne <span style="color: #800000;">"</span><span style="color: #800000;">/bash/p</span><span style="color: #800000;">"</span> | xargs -n <span style="color: #800080;">1</span> less</pre>
-</div>
-<p>&nbsp;delete file and directories except "term.sh" and "test.cpp"</p>
-<div class="cnblogs_code">
-<pre>ls | sed -e <span style="color: #800000;">"</span><span style="color: #800000;">/^term.sh$/d</span><span style="color: #800000;">"</span> | sed -e <span style="color: #800000;">"</span><span style="color: #800000;">/^test.cpp$/d</span><span style="color: #800000;">"</span> | xargs -n <span style="color: #800080;">1</span> rm -rf</pre>
-</div>
-<p>&nbsp;show contents of all status file in current directory tree</p>
-<div class="cnblogs_code">
-<pre>find . -iname status | xargs -n <span style="color: #800080;">1</span> less</pre>
-</div>
-<p>&nbsp;</p></body>
+<p>　　</p>
+<p>可以看到，ZwCreateKey直接调用KiSystemService来分发系统调用</p></body>
 </html>

@@ -1,5 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x4F55;&#x53BB;&#x4F55;&#x4ECE;</title>
-<body><p>资本主义，</p> <p>还是社会主义，</p> <p>人类社会的发展方向，</p> <p>不是几个精英冥想出来的，</p> <p>而是全体人类生活出来的。</p></body>
+<title>build temu error about SDL</title>
+<body><h1>1. 安装sdl2</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">sudo apt-get install libsdl2-dev
+</pre>
+</div>
+<p>　　</p>
+<h1>2. 将configure文件中与SDL有关的地方改成SDL2</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">if test -z "$sdl" ; then
+    sdl_config="sdl2-config"
+    sdl=no
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">cat &gt; $TMPC &lt;&lt; EOF
+#include &lt;SDL2/SDL.h&gt;
+#undef main /* We don't want SDL to override our main() */
+</pre>
+</div>
+<p>　　</p></body>
 </html>

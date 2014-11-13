@@ -1,25 +1,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x4ECE;pcap&#x6587;&#x4EF6;&#x4E2D;&#x5206;&#x6790;&#x51FA;&#x6570;&#x636E;&#x5305;</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:cpp;gutter:true;">import dpkt
-import struct
-import sys,os
+<title>SEH</title>
+<body><blockquote>
+<p>When SEH is used there is a registration process where an exception structure is <br />created for every function as a local variable. The last field of the structure overlaps the <br />location where frame pointer EBP points. Function's prologue creates this structure on <br />its stack frame and registers it with the operating system at runtime. The significance of <br />this is that the pointer to the exception handler and the pointer to the Next exception <br />handler are both stored on the stack in the program function&rsquo;s local variables section of <br />its stack frame.</p>
 
-f=file(sys.argv[1],"rb")
-pcap=dpkt.pcap.Reader(f)
-
-for ts, buf in pcap:
-    eth=dpkt.ethernet.Ethernet(buf)
-    ip=eth.data
-    tcp=ip.data
-
-    if eth.type == dpkt.ethernet.ETH_TYPE_IP:
-        src_tuple = map(ord, ip.src)
-        print "src ip addr: (%d.%d.%d.%d)" % ((src_tuple[0]), (src_tuple[1]), (src_tuple[2]), (src_tuple[3])),
-        dst_tuple = map(ord, ip.dst)
-        print "dst ip addr: (%d.%d.%d.%d)" % ((dst_tuple[0]), (dst_tuple[1]), (dst_tuple[2]), (dst_tuple[3]))
-</pre>
-</div>
-<p>使用dpkt库</p></body>
+</blockquote>
+<p>&nbsp;</p>
+<p>参考：<a href="http://rogunix.com/docs/Reversing&amp;Exploiting/Understanding%20SEH%20Exploitation.pdf">http://rogunix.com/docs/Reversing&amp;Exploiting/Understanding%20SEH%20Exploitation.pdf</a></p>
+<p>&nbsp;</p>
+<p>SEH Record会作为局部变量存放在栈中，或者说它与局部变量在栈中相邻存放，先存放SEH Record，再存放局部变量。</p>
+<p>&nbsp;</p>
+<blockquote>
+<p>When an exception occurs in a program function, the system exception dispatcher <br />routine runs and sets up its own stack frame.While doing so, it will push elements of <br />this Exception Handler structure onto the stack since this is part of a function prologue to <br />execute the exception code. Keep in mind that this is a separate stack used for the <br />exception dispatcher and not directly related to the program stack that we overwrote with <br />the buffer. </p>
+</blockquote>
+<p>&nbsp;</p>
+<p>当异常发生时，SEH的Handler并不会在当前程序的栈环境中执行，而是会使用独立的栈，在这个栈中，esp+8的位置上保存着指向SEH Record的指针，所以这就是为什么需要</p>
+<p>PPR(pop;pop;ret)的原因了。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p></body>
 </html>

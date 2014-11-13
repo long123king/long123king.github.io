@@ -1,40 +1,1182 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Linux&#x5D29;&#x6E83;&#x65F6;&#x542F;&#x52A8;&#x811A;&#x672C;&#x83B7;&#x53D6;&#x8FDB;&#x7A0B;&#x76F8;&#x5173;&#x4FE1;&#x606F;</title>
-<body><p>编写test.cpp</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre><span style="color: #cc6633">#include</span> &lt;stdlib.h&gt;</pre><!--CRLF--><pre><span style="color: #cc6633">#include</span> &lt;stdio.h&gt;</pre><!--CRLF--><pre><span style="color: #cc6633">#include</span> &lt;exception&gt;</pre><!--CRLF--><pre><span style="color: #cc6633">#include</span> &lt;string.h&gt;</pre><!--CRLF--><pre><span style="color: #cc6633">#include</span> &lt;unistd.h&gt;</pre><!--CRLF--><pre>&nbsp;</pre><!--CRLF--><pre><span style="color: #0000ff">void</span> terminate_handler()</pre><!--CRLF--><pre>{</pre><!--CRLF--><pre>   <span style="color: #0000ff">char</span> cmdline[1024] = {0,};</pre><!--CRLF--><pre>   sprintf(cmdline, <span style="color: #006080">"bash term.sh %d %d"</span>, getpid(), getppid());</pre><!--CRLF--><pre>  <span style="color: #008000">// printf("executing %s\n", cmdline);</span></pre><!--CRLF--><pre>   system(cmdline);</pre><!--CRLF--><pre>}</pre><!--CRLF--><pre>&nbsp;</pre><!--CRLF--><pre><span style="color: #0000ff">int</span> main()</pre><!--CRLF--><pre>{</pre><!--CRLF--><pre>    std::set_terminate(terminate_handler);</pre><!--CRLF--><pre>    <span style="color: #008000">//abort();</span></pre><!--CRLF--><pre>    <span style="color: #0000ff">int</span> a = 10 / 0;</pre><!--CRLF--><pre>    <span style="color: #0000ff">throw</span> <span style="color: #006080">"test"</span>;</pre><!--CRLF--><pre>    <span style="color: #0000ff">return</span> 0;</pre><!--CRLF--><pre>}</pre><!--CRLF--></div></div>
+<title>SSDT and Shadow SSDT table</title>
+<body><p>参考：<a href="http://x86.renejeschke.de/html/file_module_x86_id_313.html">http://x86.renejeschke.de/html/file_module_x86_id_313.html</a></p>
+<p><a href="http://msdn.microsoft.com/en-us/library/windows/hardware/ff553516(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/hardware/ff553516(v=vs.85).aspx</a></p>
+<p><a href="http://en.wikipedia.org/wiki/Model-specific_register">http://en.wikipedia.org/wiki/Model-specific_register</a></p>
 <p>&nbsp;</p>
-<p>Makefile</p>
-<div id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre>CC= g++</pre><!--CRLF--><pre>CC_Flag= -O3</pre><!--CRLF--><pre>&nbsp;</pre><!--CRLF--><pre>test: test.cpp</pre><!--CRLF--><pre>    $(CC) $(CC_Flag) $&lt; -o $@</pre><!--CRLF--><pre>&nbsp;</pre><!--CRLF--><pre>&nbsp;</pre><!--CRLF--></div></div>
-<p>term.sh</p>
-<div id="codeSnippetWrapper"><pre>src_dir=/proc/$1<br>term_dir=$PWD/term<br>dst_dir=$term_dir/$1<br><br><br><span style="color: #cc6633">#if</span> [ -d $src_dir ]; then<br>#    echo source folder \<span style="color: #006080">"$src_dir\" existing<br>#fi<br><br>if ! [ -d $term_dir ]; then<br>    mkdir $term_dir<br>else<br>    rm -rf $term_dir/*<br>fi<br><br>if ! [ -d $dst_dir ]; then<br>#    echo destination folder \" $dst_dir \" doesn\'t existing<br>    mkdir $dst_dir<br>#else<br>#    echo destination folder \" $dst_dir \" existing<br>fi<br>    <br>if [ -f $src_dir/status ]; then<br>    cat $src_dir/status &gt; $dst_dir/status<br>    chmod a+w $dst_dir/status<br>fi<br><br>if [ -d $src_dir/task ]; then<br>    #ls $src_dir/task | tee | sed -e "</span>s/^/task /<span style="color: #006080">" <br>    for file in $(ls $src_dir/task)<br>    do<br>        thread_dir=$src_dir/task/$file<br>        if [ -d $thread_dir ]; then<br>            if [ -O $thread_dir/stack ]; then<br>                mkdir $dst_dir/$file<br>                sudo cat $thread_dir/stack &gt; $dst_dir/$file/stack<br>                chmod a+w $dst_dir/$file/stack<br>            else<br>                echo "</span>Invalid permissions"<br>                sudo cat $file/stack &gt; $dst_dir/{basename $file}/stack<br>            fi<br>        fi<br>    done<br>fi<br><br><br><br><br></pre></div>
-<hr>
+<div class="cnblogs_Highlighter">
+<p>&nbsp;rdmsr ( 0x00000174 ) = 0x00000000 ~ 0x00000008 <br />&nbsp;rdmsr ( 0x00000175 ) = 0x00000000 ~ 0xf7a1a000 <br />&nbsp;rdmsr ( 0x00000176 ) = 0x00000000 ~ 0x8053dad0 </p>
 
-<p>接下来是测试结果</p>
-<div id="codeSnippetWrapper"><pre>$ ./test<br>[sudo] password <span style="color: #0000ff">for</span> daniel: <br>已放弃</pre></div>
-<p>&nbsp;</p>
-<div id="codeSnippetWrapper"><pre>$ tree<br>.<br>├── Makefile<br>├── term<br>│ └── 5886<br>│ ├── 5886<br>│ │ └── stack<br>│ └── status<br>├── term.sh<br>├── test<br>└── test.cpp<br><br>3 directories, 6 files</pre></div>
-<p>&nbsp;</p>
-<div><pre>$ cat term/5886/5886/stack <br>[&lt;ffffffff81063c72&gt;] do_wait+0x1e2/0x240<br>[&lt;ffffffff81064cb4&gt;] SyS_wait4+0x64/0xe0<br>[&lt;ffffffff816f521d&gt;] system_call_fastpath+0x1a/0x1f<br>[&lt;ffffffffffffffff&gt;] 0xffffffffffffffff</pre></div>
-<div>&nbsp;</div>
-<div>&nbsp;</div>
-<div id="codeSnippetWrapper"><pre>$ cat term/5886/status <br>Name: test<br>State: S (sleeping)<br>Tgid: 5886<br>Pid: 5886<br>PPid: 2205<br>TracerPid: 0<br>Uid: 1000 1000 1000 1000<br>Gid: 1000 1000 1000 1000<br>FDSize: 256<br>Groups: 4 24 27 30 46 112 118 124 1000 <br>VmPeak:  12652 kB<br>VmSize:  12652 kB<br>VmLck:  0 kB<br>VmPin:  0 kB<br>VmHWM:  1072 kB<br>VmRSS:  1072 kB<br>VmData:  272 kB<br>VmStk:  136 kB<br>VmExe:  4 kB<br>VmLib:  3960 kB<br>VmPTE:  44 kB<br>VmSwap:  0 kB<br>Threads: 1<br>SigQ: 0/30685<br>SigPnd: 0000000000000000<br>ShdPnd: 0000000000000000<br>SigBlk: 0000000000010000<br>SigIgn: 0000000000000006<br>SigCgt: 0000000000000000<br>CapInh: 0000000000000000<br>CapPrm: 0000000000000000<br>CapEff: 0000000000000000<br>CapBnd: 0000001fffffffff<br>Seccomp: 0<br>Cpus_allowed: ff<br>Cpus_allowed_list: 0-7<br>Mems_allowed: 00000000,00000001<br>Mems_allowed_list: 0<br>voluntary_ctxt_switches: 3<br>nonvoluntary_ctxt_switches: 1</pre></div>
-<hr>
 
-<p>用autotools来替换手动编写Makefile</p>
-<p>&nbsp;</p>
-<p>Makefile_Template.am</p>
-<div id="codeSnippetWrapper"><pre>bin_PROGRAMS = XXX<br>XXX_SOURCES = YYY</pre></div>
-<p>&nbsp;</p>
-<p>autogen.sh</p>
-<div><pre>sed -e <span style="color: #006080">"{<br>    s/XXX/$1/<br>    s/YYY/$2/<br>    }"</span> Makefile_Template.am &gt; Makefile.am<br><br>autoscan<br><br>sed -e <span style="color: #006080">"/AC_INIT/a\<br>    AM_INIT_AUTOMAKE"</span> configure.scan &gt; configure.ac</pre><pre>autoheader</pre><pre><br>aclocal<br>touch README AUTHORS NEWS ChangeLog <br>automake --add-missing --copy<br>autoconf<br>./configure<br>make</pre></div>
-<div><span style="color: #ff0000">【s/YYY/$2是无法支持多个.cpp文件的，需要进一步优化】</span></div>
-<div>&nbsp;</div>
-<p>调用autogen.sh</p>
-<div id="codeSnippetWrapper"><pre>bash autogen.sh test test.cpp</pre></div>
-<div id="codeSnippetWrapper"><pre>./test</pre></div>
-<p>结果与上面是一样的</p>
-<hr>
 
-<div id="codeSnippetWrapper"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet">src_dir=/proc/$1<br>timestamp=$(date +%F | tr <span style="color: #006080">"-"</span> <span style="color: #006080">"_"</span>)<br>timestamp=<span style="color: #006080">"$timestamp"</span>_<span style="color: #006080">"$(date +%T | tr "</span>:<span style="color: #006080">" "</span>_<span style="color: #006080">")"</span><br>term_dir=$PWD/$timestamp<br>dst_dir=$term_dir/$1<br><br><span style="color: #0000ff">if</span> ! [ -d $term_dir ]; then<br>    mkdir $term_dir<br><span style="color: #0000ff">else</span><br>    rm -rf $term_dir<span style="color: #008000">/*</span><br><span style="color: #008000">fi</span><br><span style="color: #008000"></span><br><span style="color: #008000">if ! [ -d $dst_dir ]; then</span><br><span style="color: #008000">    mkdir $dst_dir</span><br><span style="color: #008000">fi</span><br><span style="color: #008000">    </span><br><span style="color: #008000">if [ -f $src_dir/status ]; then</span><br><span style="color: #008000">    cat $src_dir/status &gt; $dst_dir/status</span><br><span style="color: #008000">    chmod a+w $dst_dir/status</span><br><span style="color: #008000">fi</span><br><span style="color: #008000"></span><br><span style="color: #008000">if [ -f $src_dir/maps ]; then</span><br><span style="color: #008000">    cat $src_dir/maps &gt; $dst_dir/maps</span><br><span style="color: #008000">    chmod a+w $dst_dir/maps</span><br><span style="color: #008000">fi</span><br><span style="color: #008000"></span><br><span style="color: #008000">if [ -d $src_dir/task ]; then</span><br><span style="color: #008000">    for file in $(ls $src_dir/task)</span><br><span style="color: #008000">    do</span><br><span style="color: #008000">        thread_dir=$src_dir/task/$file</span><br><span style="color: #008000">        if [ -d $thread_dir ]; then</span><br><span style="color: #008000">            if [ -O $thread_dir/stack ]; then</span><br><span style="color: #008000">                mkdir $dst_dir/$file</span><br><span style="color: #008000">                sudo cat $thread_dir/stack &gt; $dst_dir/$file/stack</span><br><span style="color: #008000">                chmod a+w $dst_dir/$file/stack</span><br><span style="color: #008000">            else</span><br><span style="color: #008000">                echo "Invalid permissions"</span><br><span style="color: #008000">                sudo cat $file/stack &gt; $dst_dir/$file/stack</span><br><span style="color: #008000">            fi</span><br><span style="color: #008000">        fi</span><br><span style="color: #008000">    done</span><br><span style="color: #008000">fi</span><br><span style="color: #008000"></span><br><span style="color: #008000">max_threads=$(cat /proc/sys/kernel/threads-max)</span><br><span style="color: #008000">cur_threads=$(grep -s '^Threads' /proc/[0-9]*/</span>status | awk <span style="color: #006080">'{ sum += $2; } END { print sum; }'</span>)<br>max_mem=$(cat /proc/meminfo | grep MemTotal | awk <span style="color: #006080">'{print $2,$3}'</span>)<br>free_mem=$(cat /proc/meminfo | grep MemFree | awk <span style="color: #006080">'{print $2,$3}'</span>)<br>vm_peak=$(cat $src_dir/status | grep VmPeak | awk <span style="color: #006080">'{print $2,$3}'</span>) <br>vm_size=$(cat $src_dir/status | grep VmPeak | awk <span style="color: #006080">'{print $2,$3}'</span>) <br><br>echo <span style="color: #006080">"System Summary:"</span> &gt; $term_dir/summary<br>echo <span style="color: #006080">"Threads:"</span><br>echo -e <span style="color: #006080">"Maximum \e[1;31m"</span> $max_threads <span style="color: #006080">"\e[0mthreads allowed!"</span> &gt;&gt; $term_dir/summary<br>echo -e <span style="color: #006080">"Currently \e[1;31m"</span> $cur_threads <span style="color: #006080">"\e[0mthreads consumed!"</span> &gt;&gt; $term_dir/summary<br>echo <span style="color: #006080">"Memory:"</span><br>echo -e <span style="color: #006080">"Total \e[1;31m"</span> $max_mem <span style="color: #006080">"\e[0mmemory in system!"</span> &gt;&gt; $term_dir/summary<br>echo -e <span style="color: #006080">"Free \e[1;31m"</span> $free_mem <span style="color: #006080">"\e[0mmemory in system!"</span> &gt;&gt; $term_dir/summary<br>echo <span style="color: #006080">"Process "</span> $1 <span style="color: #006080">"Memory:"</span><br>echo -e <span style="color: #006080">"Peak use \e[1;31m"</span> $vm_peak <span style="color: #006080">"\e[0mmemory!"</span> &gt;&gt; $term_dir/summary<br>echo -e <span style="color: #006080">"Current use \e[1;31m"</span> $vm_size <span style="color: #006080">"\e[0mmemory!"</span> &gt;&gt; $term_dir/summary<br><br>cat $term_dir/summary<br></pre><br></div></body>
+
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; dg 0
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0000 00000000 00000000 &lt;Reserved&gt; 0 Nb By Np Nl 00000000
+kd&gt; dg 0x08
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0008 00000000 ffffffff Code RE Ac 0 Bg Pg P  Nl 00000c9b
+kd&gt; dg 0x13
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0013 00000000 ffffffff Data RW Ac 0 Bg Pg P  Nl 00000c93
+kd&gt; dg 0x18
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0018 00000000 ffffffff Code RE Ac 3 Bg Pg P  Nl 00000cfb
+kd&gt; dg 0x23
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0023 00000000 ffffffff Data RW Ac 3 Bg Pg P  Nl 00000cf3
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>因此，sysenter_cs就是内核的代码段。</p>
+<p>&nbsp;</p>
+<p>列举内核中全部的driver</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; !drivers
+
+  The !drivers command is no longer supported.
+
+  Please use the 'lm t n' command.
+  Consult the debugger documentation for the supported 'lm' command options.
+
+  The WinDbg "Modules" window can also be used to display timestamps.
+  The "Modules" window supports sorting on name or timestamp values
+
+kd&gt; lm t n
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">nt!KiFastCallEntry:
+8053dad0 b923000000      mov     ecx,23h
+8053dad5 6a30            push    30h
+8053dad7 0fa1            pop     fs
+8053dad9 8ed9            mov     ds,cx
+8053dadb 8ec1            mov     es,cx
+8053dadd 8b0d40f0dfff    mov     ecx,dword ptr ds:[0FFDFF040h]
+8053dae3 8b6104          mov     esp,dword ptr [ecx+4]
+8053dae6 6a23            push    23h
+8053dae8 52              push    edx
+8053dae9 9c              pushfd
+8053daea 6a02            push    2
+8053daec 83c208          add     edx,8
+8053daef 9d              popfd
+8053daf0 804c240102      or      byte ptr [esp+1],2
+8053daf5 6a1b            push    1Bh
+8053daf7 ff350403dfff    push    dword ptr ds:[0FFDF0304h]
+8053dafd 6a00            push    0
+8053daff 55              push    ebp
+8053db00 53              push    ebx
+8053db01 56              push    esi
+8053db02 57              push    edi
+8053db03 8b1d1cf0dfff    mov     ebx,dword ptr ds:[0FFDFF01Ch]
+8053db09 6a3b            push    3Bh
+8053db0b 8bb324010000    mov     esi,dword ptr [ebx+124h]
+8053db11 ff33            push    dword ptr [ebx]
+8053db13 c703ffffffff    mov     dword ptr [ebx],0FFFFFFFFh
+8053db19 8b6e18          mov     ebp,dword ptr [esi+18h]
+8053db1c 6a01            push    1
+8053db1e 83ec48          sub     esp,48h
+8053db21 81ed9c020000    sub     ebp,29Ch
+8053db27 c6864001000001  mov     byte ptr [esi+140h],1
+8053db2e 3bec            cmp     ebp,esp
+8053db30 759a            jne     nt!KiFastCallEntry2+0x47 (8053dacc)
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; u nt!KiSystemService L20
+nt!KiSystemService:
+8053da11 6a00            push    0
+8053da13 55              push    ebp
+8053da14 53              push    ebx
+8053da15 56              push    esi
+8053da16 57              push    edi
+8053da17 0fa0            push    fs
+8053da19 bb30000000      mov     ebx,30h
+8053da1e 668ee3          mov     fs,bx
+8053da21 ff3500f0dfff    push    dword ptr ds:[0FFDFF000h]
+8053da27 c70500f0dfffffffffff mov dword ptr ds:[0FFDFF000h],0FFFFFFFFh
+8053da31 8b3524f1dfff    mov     esi,dword ptr ds:[0FFDFF124h]
+8053da37 ffb640010000    push    dword ptr [esi+140h]
+8053da3d 83ec48          sub     esp,48h
+8053da40 8b5c246c        mov     ebx,dword ptr [esp+6Ch]
+8053da44 83e301          and     ebx,1
+8053da47 889e40010000    mov     byte ptr [esi+140h],bl
+8053da4d 8bec            mov     ebp,esp
+8053da4f 8b9e34010000    mov     ebx,dword ptr [esi+134h]
+8053da55 895d3c          mov     dword ptr [ebp+3Ch],ebx
+8053da58 89ae34010000    mov     dword ptr [esi+134h],ebp
+8053da5e fc              cld
+8053da5f 8b5d60          mov     ebx,dword ptr [ebp+60h]
+8053da62 8b7d68          mov     edi,dword ptr [ebp+68h]
+8053da65 89550c          mov     dword ptr [ebp+0Ch],edx
+8053da68 c74508000ddbba  mov     dword ptr [ebp+8],0BADB0D00h
+8053da6f 895d00          mov     dword ptr [ebp],ebx
+8053da72 897d04          mov     dword ptr [ebp+4],edi
+8053da75 f6462cff        test    byte ptr [esi+2Ch],0FFh
+8053da79 0f858dfeffff    jne     nt!Dr_kss_a (8053d90c)
+8053da7f fb              sti
+8053da80 e9d8000000      jmp     nt!KiFastCallEntry+0x8d (8053db5d)
+nt!KiFastCallEntry2:
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; !idt 2e
+
+Dumping IDT:
+
+2e:	8053da11 nt!KiSystemService
+</pre>
+</div>
+<p>　</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/windbg $ awk '{printf("[% 8x]: \t\t[%s --&gt; %s] \t\t%s\n", NR, $1, $2, $3)}' kiservicetable 
+[       1]: 		[80502354 --&gt; 80599a66] 		nt!NtAcceptConnectPort
+[       2]: 		[80502358 --&gt; 805e6cce] 		nt!NtAccessCheck
+[       3]: 		[8050235c --&gt; 805ea514] 		nt!NtAccessCheckAndAuditAlarm
+[       4]: 		[80502360 --&gt; 805e6d00] 		nt!NtAccessCheckByType
+[       5]: 		[80502364 --&gt; 805ea54e] 		nt!NtAccessCheckByTypeAndAuditAlarm
+[       6]: 		[80502368 --&gt; 805e6d36] 		nt!NtAccessCheckByTypeResultList
+[       7]: 		[8050236c --&gt; 805ea592] 		nt!NtAccessCheckByTypeResultListAndAuditAlarm
+[       8]: 		[80502370 --&gt; 805ea5d6] 		nt!NtAccessCheckByTypeResultListAndAuditAlarmByHandle
+[       9]: 		[80502374 --&gt; 8060bc40] 		nt!NtAddAtom
+[       a]: 		[80502378 --&gt; 8060c984] 		nt!NtAddBootEntry
+[       b]: 		[8050237c --&gt; 805e2066] 		nt!NtAdjustGroupsToken
+[       c]: 		[80502380 --&gt; 805e1cbe] 		nt!NtAdjustPrivilegesToken
+[       d]: 		[80502384 --&gt; 805caccc] 		nt!NtAlertResumeThread
+[       e]: 		[80502388 --&gt; 805cac7c] 		nt!NtAlertThread
+[       f]: 		[8050238c --&gt; 8060c266] 		nt!NtAllocateLocallyUniqueId
+[      10]: 		[80502390 --&gt; 805ab654] 		nt!NtAllocateUserPhysicalPages
+[      11]: 		[80502394 --&gt; 8060b87e] 		nt!NtAllocateUuids
+[      12]: 		[80502398 --&gt; 8059dedc] 		nt!NtAllocateVirtualMemory
+[      13]: 		[8050239c --&gt; 805a5aa6] 		nt!NtAreMappedFilesTheSame
+[      14]: 		[805023a0 --&gt; 805cc7aa] 		nt!NtAssignProcessToJobObject
+[      15]: 		[805023a4 --&gt; 80500020] 		nt!NtCallbackReturn
+[      16]: 		[805023a8 --&gt; 805be3e2] 		nt!NtModifyBootEntry
+[      17]: 		[805023ac --&gt; 8056c0c6] 		nt!NtCancelIoFile
+[      18]: 		[805023b0 --&gt; 80535596] 		nt!NtCancelTimer
+[      19]: 		[805023b4 --&gt; 80604f36] 		nt!NtClearEvent
+[      1a]: 		[805023b8 --&gt; 805b1ce0] 		nt!NtClose
+[      1b]: 		[805023bc --&gt; 805eaa4e] 		nt!NtCloseObjectAuditAlarm
+[      1c]: 		[805023c0 --&gt; 80619dfe] 		nt!NtCompactKeys
+[      1d]: 		[805023c4 --&gt; 805eef40] 		nt!NtCompareTokens
+[      1e]: 		[805023c8 --&gt; 8059a154] 		nt!NtCompleteConnectPort
+[      1f]: 		[805023cc --&gt; 8061a052] 		nt!NtCompressKey
+[      20]: 		[805023d0 --&gt; 80599a06] 		nt!NtConnectPort
+[      21]: 		[805023d4 --&gt; 80541390] 		nt!NtContinue
+[      22]: 		[805023d8 --&gt; 806381da] 		nt!NtCreateDebugObject
+[      23]: 		[805023dc --&gt; 805b3bdc] 		nt!NtCreateDirectoryObject
+[      24]: 		[805023e0 --&gt; 80604f86] 		nt!NtCreateEvent
+[      25]: 		[805023e4 --&gt; 8060d1fa] 		nt!NtCreateEventPair
+[      26]: 		[805023e8 --&gt; 8056e62e] 		nt!NtCreateFile
+[      27]: 		[805023ec --&gt; 8056e00c] 		nt!NtCreateIoCompletion
+[      28]: 		[805023f0 --&gt; 805cb76e] 		nt!NtCreateJobObject
+[      29]: 		[805023f4 --&gt; 805cb4a6] 		nt!NtCreateJobSet
+[      2a]: 		[805023f8 --&gt; 8061a22e] 		nt!NtCreateKey
+[      2b]: 		[805023fc --&gt; 8056e73c] 		nt!NtCreateMailslotFile
+[      2c]: 		[80502400 --&gt; 8060d5f2] 		nt!NtCreateMutant
+[      2d]: 		[80502404 --&gt; 8056e668] 		nt!NtCreateNamedPipeFile
+[      2e]: 		[80502408 --&gt; 805a0ec6] 		nt!NtCreatePagingFile
+[      2f]: 		[8050240c --&gt; 8059a522] 		nt!NtCreatePort
+[      30]: 		[80502410 --&gt; 805c7332] 		nt!NtCreateProcess
+[      31]: 		[80502414 --&gt; 805c727c] 		nt!NtCreateProcessEx
+[      32]: 		[80502418 --&gt; 8060da12] 		nt!NtCreateProfile
+[      33]: 		[8050241c --&gt; 805a080a] 		nt!NtCreateSection
+[      34]: 		[80502420 --&gt; 8060af9c] 		nt!NtCreateSemaphore
+[      35]: 		[80502424 --&gt; 805ba9e4] 		nt!NtCreateSymbolicLinkObject
+[      36]: 		[80502428 --&gt; 805c711a] 		nt!NtCreateThread
+[      37]: 		[8050242c --&gt; 8060cec2] 		nt!NtCreateTimer
+[      38]: 		[80502430 --&gt; 805ef2e8] 		nt!NtCreateToken
+[      39]: 		[80502434 --&gt; 8059a546] 		nt!NtCreateWaitablePort
+[      3a]: 		[80502438 --&gt; 806392b6] 		nt!NtDebugActiveProcess
+[      3b]: 		[8050243c --&gt; 80639406] 		nt!NtDebugContinue
+[      3c]: 		[80502440 --&gt; 8060c8d4] 		nt!NtDelayExecution
+[      3d]: 		[80502444 --&gt; 8060c0f6] 		nt!NtDeleteAtom
+[      3e]: 		[80502448 --&gt; 805be3e2] 		nt!NtModifyBootEntry
+[      3f]: 		[8050244c --&gt; 8056c20c] 		nt!NtDeleteFile
+[      40]: 		[80502450 --&gt; 8061a6be] 		nt!NtDeleteKey
+[      41]: 		[80502454 --&gt; 805eab5a] 		nt!NtDeleteObjectAuditAlarm
+[      42]: 		[80502458 --&gt; 8061a88e] 		nt!NtDeleteValueKey
+[      43]: 		[8050245c --&gt; 8056e7f4] 		nt!NtDeviceIoControlFile
+[      44]: 		[80502460 --&gt; 80608f10] 		nt!NtDisplayString
+[      45]: 		[80502464 --&gt; 805b37bc] 		nt!NtDuplicateObject
+[      46]: 		[80502468 --&gt; 805e2f04] 		nt!NtDuplicateToken
+[      47]: 		[8050246c --&gt; 8060c984] 		nt!NtAddBootEntry
+[      48]: 		[80502470 --&gt; 8061aa6e] 		nt!NtEnumerateKey
+[      49]: 		[80502474 --&gt; 8060c976] 		nt!NtEnumerateSystemEnvironmentValuesEx
+[      4a]: 		[80502478 --&gt; 8061acd8] 		nt!NtEnumerateValueKey
+[      4b]: 		[8050247c --&gt; 805a91cc] 		nt!NtExtendSection
+[      4c]: 		[80502480 --&gt; 805e30b0] 		nt!NtFilterToken
+[      4d]: 		[80502484 --&gt; 8060beaa] 		nt!NtFindAtom
+[      4e]: 		[80502488 --&gt; 8056c2d8] 		nt!NtFlushBuffersFile
+[      4f]: 		[8050248c --&gt; 805abede] 		nt!NtFlushInstructionCache
+[      50]: 		[80502490 --&gt; 8061af42] 		nt!NtFlushKey
+[      51]: 		[80502494 --&gt; 805a1bd6] 		nt!NtFlushVirtualMemory
+[      52]: 		[80502498 --&gt; 805abe80] 		nt!NtFlushWriteBuffer
+[      53]: 		[8050249c --&gt; 805ab9f0] 		nt!NtFreeUserPhysicalPages
+[      54]: 		[805024a0 --&gt; 805a84a6] 		nt!NtFreeVirtualMemory
+[      55]: 		[805024a4 --&gt; 8056e828] 		nt!NtFsControlFile
+[      56]: 		[805024a8 --&gt; 805c7644] 		nt!NtGetContextThread
+[      57]: 		[805024ac --&gt; 805be404] 		nt!NtGetDevicePowerState
+[      58]: 		[805024b0 --&gt; 8058e83c] 		nt!NtGetPlugPlayEvent
+[      59]: 		[805024b4 --&gt; 8051df7e] 		nt!NtGetWriteWatch
+[      5a]: 		[805024b8 --&gt; 805eec34] 		nt!NtImpersonateAnonymousToken
+[      5b]: 		[805024bc --&gt; 8059a5b0] 		nt!NtImpersonateClientOfPort
+[      5c]: 		[805024c0 --&gt; 805cd942] 		nt!NtImpersonateThread
+[      5d]: 		[805024c4 --&gt; 80618206] 		nt!NtInitializeRegistry
+[      5e]: 		[805024c8 --&gt; 805be1dc] 		nt!NtInitiatePowerAction
+[      5f]: 		[805024cc --&gt; 805cb36a] 		nt!NtIsProcessInJob
+[      60]: 		[805024d0 --&gt; 805be3f0] 		nt!NtIsSystemResumeAutomatic
+[      61]: 		[805024d4 --&gt; 8059a7bc] 		nt!NtListenPort
+[      62]: 		[805024d8 --&gt; 80579848] 		nt!NtLoadDriver
+[      63]: 		[805024dc --&gt; 8061bf5e] 		nt!NtLoadKey
+[      64]: 		[805024e0 --&gt; 8061bba8] 		nt!NtLoadKey2
+[      65]: 		[805024e4 --&gt; 8056e85c] 		nt!NtLockFile
+[      66]: 		[805024e8 --&gt; 80609472] 		nt!NtLockProductActivationKeys
+[      67]: 		[805024ec --&gt; 8061a0fe] 		nt!NtLockRegistryKey
+[      68]: 		[805024f0 --&gt; 805abfe6] 		nt!NtLockVirtualMemory
+[      69]: 		[805024f4 --&gt; 805b505c] 		nt!NtMakePermanentObject
+[      6a]: 		[805024f8 --&gt; 805b1d84] 		nt!NtMakeTemporaryObject
+[      6b]: 		[805024fc --&gt; 805aa948] 		nt!NtMapUserPhysicalPages
+[      6c]: 		[80502500 --&gt; 805aaf20] 		nt!NtMapUserPhysicalPagesScatter
+[      6d]: 		[80502504 --&gt; 805a7526] 		nt!NtMapViewOfSection
+[      6e]: 		[80502508 --&gt; 805be3e2] 		nt!NtModifyBootEntry
+[      6f]: 		[8050250c --&gt; 8056f48c] 		nt!NtNotifyChangeDirectoryFile
+[      70]: 		[80502510 --&gt; 8061bf28] 		nt!NtNotifyChangeKey
+[      71]: 		[80502514 --&gt; 8061b044] 		nt!NtNotifyChangeMultipleKeys
+[      72]: 		[80502518 --&gt; 805b3cae] 		nt!NtOpenDirectoryObject
+[      73]: 		[8050251c --&gt; 80605086] 		nt!NtOpenEvent
+[      74]: 		[80502520 --&gt; 8060d2d2] 		nt!NtOpenEventPair
+[      75]: 		[80502524 --&gt; 8056f74c] 		nt!NtOpenFile
+[      76]: 		[80502528 --&gt; 8056e0e4] 		nt!NtOpenIoCompletion
+[      77]: 		[8050252c --&gt; 805cb8f4] 		nt!NtOpenJobObject
+[      78]: 		[80502530 --&gt; 8061b5c4] 		nt!NtOpenKey
+[      79]: 		[80502534 --&gt; 8060d6ca] 		nt!NtOpenMutant
+[      7a]: 		[80502538 --&gt; 805ea61c] 		nt!NtOpenObjectAuditAlarm
+[      7b]: 		[8050253c --&gt; 805c11c2] 		nt!NtOpenProcess
+[      7c]: 		[80502540 --&gt; 805e38fc] 		nt!NtOpenProcessToken
+[      7d]: 		[80502544 --&gt; 805e3502] 		nt!NtOpenProcessTokenEx
+[      7e]: 		[80502548 --&gt; 8059f840] 		nt!NtOpenSection
+[      7f]: 		[8050254c --&gt; 8060b096] 		nt!NtOpenSemaphore
+[      80]: 		[80502550 --&gt; 805babca] 		nt!NtOpenSymbolicLinkObject
+[      81]: 		[80502554 --&gt; 805c144e] 		nt!NtOpenThread
+[      82]: 		[80502558 --&gt; 805e391a] 		nt!NtOpenThreadToken
+[      83]: 		[8050255c --&gt; 805e3672] 		nt!NtOpenThreadTokenEx
+[      84]: 		[80502560 --&gt; 8060cfe4] 		nt!NtOpenTimer
+[      85]: 		[80502564 --&gt; 8063b4a8] 		nt!NtPlugPlayControl
+[      86]: 		[80502568 --&gt; 805bf272] 		nt!NtPowerInformation
+[      87]: 		[8050256c --&gt; 805edce6] 		nt!NtPrivilegeCheck
+[      88]: 		[80502570 --&gt; 805e992e] 		nt!NtPrivilegeObjectAuditAlarm
+[      89]: 		[80502574 --&gt; 805e9b1a] 		nt!NtPrivilegedServiceAuditAlarm
+[      8a]: 		[80502578 --&gt; 805adaae] 		nt!NtProtectVirtualMemory
+[      8b]: 		[8050257c --&gt; 8060513e] 		nt!NtPulseEvent
+[      8c]: 		[80502580 --&gt; 8056c4be] 		nt!NtQueryAttributesFile
+[      8d]: 		[80502584 --&gt; 8060c984] 		nt!NtAddBootEntry
+[      8e]: 		[80502588 --&gt; 8060c984] 		nt!NtAddBootEntry
+[      8f]: 		[8050258c --&gt; 8053c5be] 		nt!NtQueryDebugFilterState
+[      90]: 		[80502590 --&gt; 80606caa] 		nt!NtQueryDefaultLocale
+[      91]: 		[80502594 --&gt; 8060790a] 		nt!NtQueryDefaultUILanguage
+[      92]: 		[80502598 --&gt; 8056f426] 		nt!NtQueryDirectoryFile
+[      93]: 		[8050259c --&gt; 805b3d4e] 		nt!NtQueryDirectoryObject
+[      94]: 		[805025a0 --&gt; 8056f77c] 		nt!NtQueryEaFile
+[      95]: 		[805025a4 --&gt; 80605206] 		nt!NtQueryEvent
+[      96]: 		[805025a8 --&gt; 8056c5f6] 		nt!NtQueryFullAttributesFile
+[      97]: 		[805025ac --&gt; 8060c11e] 		nt!NtQueryInformationAtom
+[      98]: 		[805025b0 --&gt; 8056fff8] 		nt!NtQueryInformationFile
+[      99]: 		[805025b4 --&gt; 805cbdc6] 		nt!NtQueryInformationJobObject
+[      9a]: 		[805025b8 --&gt; 8059a81a] 		nt!NtQueryInformationPort
+[      9b]: 		[805025bc --&gt; 805c2b28] 		nt!NtQueryInformationProcess
+[      9c]: 		[805025c0 --&gt; 805c16f4] 		nt!NtQueryInformationThread
+[      9d]: 		[805025c4 --&gt; 805e39fa] 		nt!NtQueryInformationToken
+[      9e]: 		[805025c8 --&gt; 806070a8] 		nt!NtQueryInstallUILanguage
+[      9f]: 		[805025cc --&gt; 8060de94] 		nt!NtQueryIntervalProfile
+[      a0]: 		[805025d0 --&gt; 8056e18c] 		nt!NtQueryIoCompletion
+[      a1]: 		[805025d4 --&gt; 8061b8e8] 		nt!NtQueryKey
+[      a2]: 		[805025d8 --&gt; 806193fc] 		nt!NtQueryMultipleValueKey
+[      a3]: 		[805025dc --&gt; 8060d772] 		nt!NtQueryMutant
+[      a4]: 		[805025e0 --&gt; 805ba0a4] 		nt!NtQueryObject
+[      a5]: 		[805025e4 --&gt; 80619a62] 		nt!NtQueryOpenSubKeys
+[      a6]: 		[805025e8 --&gt; 8060df22] 		nt!NtQueryPerformanceCounter
+[      a7]: 		[805025ec --&gt; 80570e42] 		nt!NtQueryQuotaInformationFile
+[      a8]: 		[805025f0 --&gt; 805adc70] 		nt!NtQuerySection
+[      a9]: 		[805025f4 --&gt; 805b5a28] 		nt!NtQuerySecurityObject
+[      aa]: 		[805025f8 --&gt; 8060b14e] 		nt!NtQuerySemaphore
+[      ab]: 		[805025fc --&gt; 805bac6a] 		nt!NtQuerySymbolicLinkObject
+[      ac]: 		[80502600 --&gt; 8060c9a0] 		nt!NtQuerySystemEnvironmentValue
+[      ad]: 		[80502604 --&gt; 8060c968] 		nt!NtSetSystemEnvironmentValueEx
+[      ae]: 		[80502608 --&gt; 8060798a] 		nt!NtQuerySystemInformation
+[      af]: 		[8050260c --&gt; 80609826] 		nt!NtQuerySystemTime
+[      b0]: 		[80502610 --&gt; 8060d09c] 		nt!NtQueryTimer
+[      b1]: 		[80502614 --&gt; 806090de] 		nt!NtQueryTimerResolution
+[      b2]: 		[80502618 --&gt; 806182e8] 		nt!NtQueryValueKey
+[      b3]: 		[8050261c --&gt; 805ae2f6] 		nt!NtQueryVirtualMemory
+[      b4]: 		[80502620 --&gt; 80571332] 		nt!NtQueryVolumeInformationFile
+[      b5]: 		[80502624 --&gt; 805c7390] 		nt!NtQueueApcThread
+[      b6]: 		[80502628 --&gt; 805413d8] 		nt!NtRaiseException
+[      b7]: 		[8050262c --&gt; 8060adc0] 		nt!NtRaiseHardError
+[      b8]: 		[80502630 --&gt; 80571afa] 		nt!NtReadFile
+[      b9]: 		[80502634 --&gt; 80572088] 		nt!NtReadFileScatter
+[      ba]: 		[80502638 --&gt; 8059b2a2] 		nt!NtReadRequestData
+[      bb]: 		[8050263c --&gt; 805a97b8] 		nt!NtReadVirtualMemory
+[      bc]: 		[80502640 --&gt; 805c88c6] 		nt!NtRegisterThreadTerminatePort
+[      bd]: 		[80502644 --&gt; 8060d8aa] 		nt!NtReleaseMutant
+[      be]: 		[80502648 --&gt; 8060b27e] 		nt!NtReleaseSemaphore
+[      bf]: 		[8050264c --&gt; 8056e484] 		nt!NtRemoveIoCompletion
+[      c0]: 		[80502650 --&gt; 80639386] 		nt!NtRemoveProcessDebug
+[      c1]: 		[80502654 --&gt; 80619c54] 		nt!NtRenameKey
+[      c2]: 		[80502658 --&gt; 8061be0e] 		nt!NtReplaceKey
+[      c3]: 		[8050265c --&gt; 8059a922] 		nt!NtReplyPort
+[      c4]: 		[80502660 --&gt; 8059b8ea] 		nt!NtReplyWaitReceivePort
+[      c5]: 		[80502664 --&gt; 8059b2f2] 		nt!NtReplyWaitReceivePortEx
+[      c6]: 		[80502668 --&gt; 8059ac0c] 		nt!NtReplyWaitReplyPort
+[      c7]: 		[8050266c --&gt; 805be374] 		nt!NtRequestDeviceWakeup
+[      c8]: 		[80502670 --&gt; 80597e80] 		nt!NtRequestPort
+[      c9]: 		[80502674 --&gt; 805981ac] 		nt!NtRequestWaitReplyPort
+[      ca]: 		[80502678 --&gt; 805be182] 		nt!NtRequestWakeupLatency
+[      cb]: 		[8050267c --&gt; 80605318] 		nt!NtResetEvent
+[      cc]: 		[80502680 --&gt; 8051e45e] 		nt!NtResetWriteWatch
+[      cd]: 		[80502684 --&gt; 80618636] 		nt!NtRestoreKey
+[      ce]: 		[80502688 --&gt; 805cac26] 		nt!NtResumeProcess
+[      cf]: 		[8050268c --&gt; 805cab08] 		nt!NtResumeThread
+[      d0]: 		[80502690 --&gt; 806186d8] 		nt!NtSaveKey
+[      d1]: 		[80502694 --&gt; 80618768] 		nt!NtSaveKeyEx
+[      d2]: 		[80502698 --&gt; 80618834] 		nt!NtSaveMergedKeys
+[      d3]: 		[8050269c --&gt; 8059919a] 		nt!NtSecureConnectPort
+[      d4]: 		[805026a0 --&gt; 8060c984] 		nt!NtAddBootEntry
+[      d5]: 		[805026a4 --&gt; 8060c984] 		nt!NtAddBootEntry
+[      d6]: 		[805026a8 --&gt; 805c7854] 		nt!NtSetContextThread
+[      d7]: 		[805026ac --&gt; 8063c03e] 		nt!NtSetDebugFilterState
+[      d8]: 		[805026b0 --&gt; 8060ac6a] 		nt!NtSetDefaultHardErrorPort
+[      d9]: 		[805026b4 --&gt; 80606dfa] 		nt!NtSetDefaultLocale
+[      da]: 		[805026b8 --&gt; 8060766c] 		nt!NtSetDefaultUILanguage
+[      db]: 		[805026bc --&gt; 8056fc98] 		nt!NtSetEaFile
+[      dc]: 		[805026c0 --&gt; 806053d8] 		nt!NtSetEvent
+[      dd]: 		[805026c4 --&gt; 806054a2] 		nt!NtSetEventBoostPriority
+[      de]: 		[805026c8 --&gt; 8060d58e] 		nt!NtSetHighEventPair
+[      df]: 		[805026cc --&gt; 8060d4be] 		nt!NtSetHighWaitLowEventPair
+[      e0]: 		[805026d0 --&gt; 80638d50] 		nt!NtSetInformationDebugObject
+[      e1]: 		[805026d4 --&gt; 805705fc] 		nt!NtSetInformationFile
+[      e2]: 		[805026d8 --&gt; 805ccad6] 		nt!NtSetInformationJobObject
+[      e3]: 		[805026dc --&gt; 80618fc8] 		nt!NtSetInformationKey
+[      e4]: 		[805026e0 --&gt; 805b94e8] 		nt!NtSetInformationObject
+[      e5]: 		[805026e4 --&gt; 805c3c80] 		nt!NtSetInformationProcess
+[      e6]: 		[805026e8 --&gt; 805c1c40] 		nt!NtSetInformationThread
+[      e7]: 		[805026ec --&gt; 805f0062] 		nt!NtSetInformationToken
+[      e8]: 		[805026f0 --&gt; 8060d9f6] 		nt!NtSetIntervalProfile
+[      e9]: 		[805026f4 --&gt; 8056e422] 		nt!NtSetIoCompletion
+[      ea]: 		[805026f8 --&gt; 805c9a52] 		nt!NtSetLdtEntries
+[      eb]: 		[805026fc --&gt; 8060d52a] 		nt!NtSetLowEventPair
+[      ec]: 		[80502700 --&gt; 8060d452] 		nt!NtSetLowWaitHighEventPair
+[      ed]: 		[80502704 --&gt; 80570e20] 		nt!NtSetQuotaInformationFile
+[      ee]: 		[80502708 --&gt; 805b595c] 		nt!NtSetSecurityObject
+[      ef]: 		[8050270c --&gt; 8060cc24] 		nt!NtSetSystemEnvironmentValue
+[      f0]: 		[80502710 --&gt; 8060c968] 		nt!NtSetSystemEnvironmentValueEx
+[      f1]: 		[80502714 --&gt; 80605cd8] 		nt!NtSetSystemInformation
+[      f2]: 		[80502718 --&gt; 806485f6] 		nt!NtSetSystemPowerState
+[      f3]: 		[8050271c --&gt; 8060a3e6] 		nt!NtSetSystemTime
+[      f4]: 		[80502720 --&gt; 805be096] 		nt!NtSetThreadExecutionState
+[      f5]: 		[80502724 --&gt; 805356d2] 		nt!NtSetTimer
+[      f6]: 		[80502728 --&gt; 806098b8] 		nt!NtSetTimerResolution
+[      f7]: 		[8050272c --&gt; 8060b734] 		nt!NtSetUuidSeed
+[      f8]: 		[80502730 --&gt; 806188ee] 		nt!NtSetValueKey
+[      f9]: 		[80502734 --&gt; 80571756] 		nt!NtSetVolumeInformationFile
+[      fa]: 		[80502738 --&gt; 80608ed4] 		nt!NtShutdownSystem
+[      fb]: 		[8050273c --&gt; 80523210] 		nt!NtSignalAndWaitForSingleObject
+[      fc]: 		[80502740 --&gt; 8060dc40] 		nt!NtStartProfile
+[      fd]: 		[80502744 --&gt; 8060ddea] 		nt!NtStopProfile
+[      fe]: 		[80502748 --&gt; 805cabd0] 		nt!NtSuspendProcess
+[      ff]: 		[8050274c --&gt; 805caa42] 		nt!NtSuspendThread
+[     100]: 		[80502750 --&gt; 8060e00e] 		nt!NtSystemDebugControl
+[     101]: 		[80502754 --&gt; 805cd640] 		nt!NtTerminateJobObject
+[     102]: 		[80502758 --&gt; 805c8b10] 		nt!NtTerminateProcess
+[     103]: 		[8050275c --&gt; 805c8d0a] 		nt!NtTerminateThread
+[     104]: 		[80502760 --&gt; 805cad90] 		nt!NtTestAlert
+[     105]: 		[80502764 --&gt; 80531db0] 		nt!NtTraceEvent
+[     106]: 		[80502768 --&gt; 8060c992] 		nt!NtTranslateFilePath
+[     107]: 		[8050276c --&gt; 805799dc] 		nt!NtUnloadDriver
+[     108]: 		[80502770 --&gt; 80618bb6] 		nt!NtUnloadKey
+[     109]: 		[80502774 --&gt; 80618da4] 		nt!NtUnloadKeyEx
+[     10a]: 		[80502778 --&gt; 8056ec08] 		nt!NtUnlockFile
+[     10b]: 		[8050277c --&gt; 805ac574] 		nt!NtUnlockVirtualMemory
+[     10c]: 		[80502780 --&gt; 805a833c] 		nt!NtUnmapViewOfSection
+[     10d]: 		[80502784 --&gt; 805f141a] 		nt!NtVdmControl
+[     10e]: 		[80502788 --&gt; 80638ab8] 		nt!NtWaitForDebugEvent
+[     10f]: 		[8050278c --&gt; 805b6094] 		nt!NtWaitForMultipleObjects
+[     110]: 		[80502790 --&gt; 805b5faa] 		nt!NtWaitForSingleObject
+[     111]: 		[80502794 --&gt; 8060d3ee] 		nt!NtWaitHighEventPair
+[     112]: 		[80502798 --&gt; 8060d38a] 		nt!NtWaitLowEventPair
+[     113]: 		[8050279c --&gt; 80572598] 		nt!NtWriteFile
+[     114]: 		[805027a0 --&gt; 80572ba8] 		nt!NtWriteFileGather
+[     115]: 		[805027a4 --&gt; 8059b2ca] 		nt!NtWriteRequestData
+[     116]: 		[805027a8 --&gt; 805a98c2] 		nt!NtWriteVirtualMemory
+[     117]: 		[805027ac --&gt; 805029f4] 		nt!NtYieldExecution
+[     118]: 		[805027b0 --&gt; 8060e466] 		nt!NtCreateKeyedEvent
+[     119]: 		[805027b4 --&gt; 8060e550] 		nt!NtOpenKeyedEvent
+[     11a]: 		[805027b8 --&gt; 8060e602] 		nt!NtReleaseKeyedEvent
+[     11b]: 		[805027bc --&gt; 8060e88e] 		nt!NtWaitForKeyedEvent
+[     11c]: 		[805027c0 --&gt; 805c16c4] 		nt!NtQueryPortInformationProcess
+</pre>
+</div>
+<p><span style="line-height: 1.5;">可见， KeServiceDescriptorTable的前四项是对KiServiceTable的描述【start_addr, start_index, end_addr, end_index】</span></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">//
+// System Service Table Descriptor
+//
+typedef struct _KSERVICE_TABLE_DESCRIPTOR
+{
+    PULONG_PTR Base;
+    PULONG Count;
+    ULONG Limit;
+#if defined(_IA64_)
+    LONG TableBaseGpOffset;
+#endif
+    PUCHAR Number;
+} KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">//
+// Exported System Service Descriptor Tables
+//
+extern KSERVICE_TABLE_DESCRIPTOR NTSYSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
+extern KSERVICE_TABLE_DESCRIPTOR NTSYSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">//
+// Maximum System Descriptor Table Entries
+//
+#define SSDT_MAX_ENTRIES                2
+</pre>
+</div>
+<p>　　</p>
+<p>因此KeServiceDescriptorTable与KeServiceDescriptorTableShadow其实是上述结构体KSERVICE_TABLE_DESCRIPTOR的数组，每个数组里面都只有两项。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; dds nt!KeServiceDescriptorTable L8
+80553580  80502354 nt!KiServiceTable
+80553584  00000000
+80553588  0000011c
+8055358c  805027c8 nt!KiArgumentTable
+80553590  00000000
+80553594  00000000
+80553598  00000000
+8055359c  00000000
+kd&gt; dds nt!KeServiceDescriptorTableShadow L8
+80553540  80502354 nt!KiServiceTable
+80553544  00000000
+80553548  0000011c
+8055354c  805027c8 nt!KiArgumentTable
+80553550  bf999400 win32k!W32pServiceTable
+80553554  00000000
+80553558  0000029b
+8055355c  bf99a110 win32k!W32pArgumentTable
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>而真正的System Service Routine的列表在KiServiceTable和W32pServiceTable中。　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">[       1]: 		[bf999400 --&gt; bf9357a3] 		win32k!NtGdiAbortDoc
+[       2]: 		[bf999404 --&gt; bf947361] 		win32k!NtGdiAbortPath
+[       3]: 		[bf999408 --&gt; bf896625] 		win32k!NtGdiAddFontResourceW
+[       4]: 		[bf99940c --&gt; bf93ef25] 		win32k!NtGdiAddRemoteFontToDC
+[       5]: 		[bf999410 --&gt; bf948978] 		win32k!NtGdiAddFontMemResourceEx
+[       6]: 		[bf999414 --&gt; bf935a37] 		win32k!NtGdiRemoveMergeFont
+[       7]: 		[bf999418 --&gt; bf935adc] 		win32k!NtGdiAddRemoteMMInstanceToDC
+[       8]: 		[bf99941c --&gt; bf83b65f] 		win32k!NtGdiAlphaBlend
+[       9]: 		[bf999420 --&gt; bf94829f] 		win32k!NtGdiAngleArc
+[       a]: 		[bf999424 --&gt; bf934242] 		win32k!NtGdiAnyLinkedFonts
+[       b]: 		[bf999428 --&gt; bf948897] 		win32k!NtGdiFontIsLinked
+[       c]: 		[bf99942c --&gt; bf90eea2] 		win32k!NtGdiArcInternal
+[       d]: 		[bf999430 --&gt; bf900833] 		win32k!NtGdiBeginPath
+[       e]: 		[bf999434 --&gt; bf80a178] 		win32k!NtGdiBitBlt
+[       f]: 		[bf999438 --&gt; bf948769] 		win32k!NtGdiCancelDC
+[      10]: 		[bf99943c --&gt; bf949f65] 		win32k!NtGdiCheckBitmapBits
+[      11]: 		[bf999440 --&gt; bf8ff130] 		win32k!NtGdiCloseFigure
+[      12]: 		[bf999444 --&gt; bf89d4eb] 		win32k!NtGdiClearBitmapAttributes
+[      13]: 		[bf999448 --&gt; bf948847] 		win32k!NtGdiClearBrushAttributes
+[      14]: 		[bf99944c --&gt; bf94a098] 		win32k!NtGdiColorCorrectPalette
+[      15]: 		[bf999450 --&gt; bf8210bb] 		win32k!NtGdiCombineRgn
+[      16]: 		[bf999454 --&gt; bf8dcd15] 		win32k!NtGdiCombineTransform
+[      17]: 		[bf999458 --&gt; bf88374b] 		win32k!NtGdiComputeXformCoefficients
+[      18]: 		[bf99945c --&gt; bf87d210] 		win32k!NtGdiConsoleTextOut
+[      19]: 		[bf999460 --&gt; bf9100dd] 		win32k!NtGdiConvertMetafileRect
+[      1a]: 		[bf999464 --&gt; bf80e427] 		win32k!NtGdiCreateBitmap
+[      1b]: 		[bf999468 --&gt; bf8dc9bd] 		win32k!NtGdiCreateClientObj
+[      1c]: 		[bf99946c --&gt; bf949d5d] 		win32k!NtGdiCreateColorSpace
+[      1d]: 		[bf999470 --&gt; bf94ac5c] 		win32k!NtGdiCreateColorTransform
+[      1e]: 		[bf999474 --&gt; bf80fc96] 		win32k!NtGdiCreateCompatibleBitmap
+[      1f]: 		[bf999478 --&gt; bf80d0f2] 		win32k!NtGdiCreateCompatibleDC
+[      20]: 		[bf99947c --&gt; bf8d1699] 		win32k!NtGdiCreateDIBBrush
+[      21]: 		[bf999480 --&gt; bf838921] 		win32k!NtGdiCreateDIBitmapInternal
+[      22]: 		[bf999484 --&gt; bf82dac0] 		win32k!NtGdiCreateDIBSection
+[      23]: 		[bf999488 --&gt; bf9386bb] 		win32k!NtGdiCreateEllipticRgn
+[      24]: 		[bf99948c --&gt; bf84b5aa] 		win32k!NtGdiCreateHalftonePalette
+[      25]: 		[bf999490 --&gt; bf94bce8] 		win32k!NtGdiCreateHatchBrushInternal
+[      26]: 		[bf999494 --&gt; bf8e6517] 		win32k!NtGdiCreateMetafileDC
+[      27]: 		[bf999498 --&gt; bf88235e] 		win32k!NtGdiCreatePaletteInternal
+[      28]: 		[bf99949c --&gt; bf8687e1] 		win32k!NtGdiCreatePatternBrushInternal
+[      29]: 		[bf9994a0 --&gt; bf84f1ec] 		win32k!NtGdiCreatePen
+[      2a]: 		[bf9994a4 --&gt; bf8408ce] 		win32k!NtGdiCreateRectRgn
+[      2b]: 		[bf9994a8 --&gt; bf88cb87] 		win32k!NtGdiCreateRoundRectRgn
+[      2c]: 		[bf9994ac --&gt; bf90ffe2] 		win32k!NtGdiCreateServerMetaFile
+[      2d]: 		[bf9994b0 --&gt; bf81a08f] 		win32k!NtGdiCreateSolidBrush
+[      2e]: 		[bf9994b4 --&gt; bf9338ae] 		win32k!NtGdiD3dContextCreate
+[      2f]: 		[bf9994b8 --&gt; bf9338c1] 		win32k!NtGdiD3dContextDestroy
+[      30]: 		[bf9994bc --&gt; bf9338d4] 		win32k!NtGdiD3dContextDestroyAll
+[      31]: 		[bf9994c0 --&gt; bf9338e7] 		win32k!NtGdiD3dValidateTextureStageState
+[      32]: 		[bf9994c4 --&gt; bf9338fa] 		win32k!NtGdiD3dDrawPrimitives2
+[      33]: 		[bf9994c8 --&gt; bf93390d] 		win32k!NtGdiDdGetDriverState
+[      34]: 		[bf9994cc --&gt; bf933783] 		win32k!NtGdiDdAddAttachedSurface
+[      35]: 		[bf9994d0 --&gt; bf9339cd] 		win32k!NtGdiDdAlphaBlt
+[      36]: 		[bf9994d4 --&gt; bf907cf2] 		win32k!NtGdiDdAttachSurface
+[      37]: 		[bf9994d8 --&gt; bf933978] 		win32k!NtGdiDdBeginMoCompFrame
+[      38]: 		[bf9994dc --&gt; bf907d05] 		win32k!NtGdiDdBlt
+[      39]: 		[bf9994e0 --&gt; bf907adf] 		win32k!NtGdiDdCanCreateSurface
+[      3a]: 		[bf9994e4 --&gt; bf933885] 		win32k!NtGdiDdCanCreateD3DBuffer
+[      3b]: 		[bf9994e8 --&gt; bf933796] 		win32k!NtGdiDdColorControl
+[      3c]: 		[bf9994ec --&gt; bf8edd93] 		win32k!NtGdiDdCreateDirectDrawObject
+[      3d]: 		[bf9994f0 --&gt; bf8edda6] 		win32k!NtGdiDdCreateSurface
+[      3e]: 		[bf9994f4 --&gt; bf93386f] 		win32k!NtGdiDdCreateD3DBuffer
+[      3f]: 		[bf9994f8 --&gt; bf907b1e] 		win32k!NtGdiDdCreateMoComp
+[      40]: 		[bf9994fc --&gt; bf90815d] 		win32k!NtGdiDdCreateSurfaceObject
+[      41]: 		[bf999500 --&gt; bf8edfef] 		win32k!NtGdiDdDeleteDirectDrawObject
+[      42]: 		[bf999504 --&gt; bf907cc6] 		win32k!NtGdiDdDeleteSurfaceObject
+[      43]: 		[bf999508 --&gt; bf907af2] 		win32k!NtGdiDdDestroyMoComp
+[      44]: 		[bf99950c --&gt; bf8edfd9] 		win32k!NtGdiDdDestroySurface
+[      45]: 		[bf999510 --&gt; bf933898] 		win32k!NtGdiDdDestroyD3DBuffer
+[      46]: 		[bf999514 --&gt; bf93398b] 		win32k!NtGdiDdEndMoCompFrame
+[      47]: 		[bf999518 --&gt; bf908203] 		win32k!NtGdiDdFlip
+[      48]: 		[bf99951c --&gt; bf90890e] 		win32k!NtGdiDdFlipToGDISurface
+[      49]: 		[bf999520 --&gt; bf907cdc] 		win32k!NtGdiDdGetAvailDriverMemory
+[      4a]: 		[bf999524 --&gt; bf9337a9] 		win32k!NtGdiDdGetBltStatus
+[      4b]: 		[bf999528 --&gt; bf907a4a] 		win32k!NtGdiDdGetDC
+[      4c]: 		[bf99952c --&gt; bf907a89] 		win32k!NtGdiDdGetDriverInfo
+[      4d]: 		[bf999530 --&gt; bf933817] 		win32k!NtGdiDdGetDxHandle
+[      4e]: 		[bf999534 --&gt; bf9337bf] 		win32k!NtGdiDdGetFlipStatus
+[      4f]: 		[bf999538 --&gt; bf933962] 		win32k!NtGdiDdGetInternalMoCompInfo
+[      50]: 		[bf99953c --&gt; bf93394c] 		win32k!NtGdiDdGetMoCompBuffInfo
+[      51]: 		[bf999540 --&gt; bf907b08] 		win32k!NtGdiDdGetMoCompGuids
+[      52]: 		[bf999544 --&gt; bf933936] 		win32k!NtGdiDdGetMoCompFormats
+[      53]: 		[bf999548 --&gt; bf908a14] 		win32k!NtGdiDdGetScanLine
+[      54]: 		[bf99954c --&gt; bf8e42af] 		win32k!NtGdiDdLock
+[      55]: 		[bf999550 --&gt; bf933843] 		win32k!NtGdiDdLockD3D
+[      56]: 		[bf999554 --&gt; bf8edd32] 		win32k!NtGdiDdQueryDirectDrawObject
+[      57]: 		[bf999558 --&gt; bf9339b7] 		win32k!NtGdiDdQueryMoCompStatus
+[      58]: 		[bf99955c --&gt; bf8edd6d] 		win32k!NtGdiDdReenableDirectDrawObject
+[      59]: 		[bf999560 --&gt; bf907bbe] 		win32k!NtGdiDdReleaseDC
+[      5a]: 		[bf999564 --&gt; bf9339a1] 		win32k!NtGdiDdRenderMoComp
+[      5b]: 		[bf999568 --&gt; bf8e40f5] 		win32k!NtGdiDdResetVisrgn
+[      5c]: 		[bf99956c --&gt; bf908219] 		win32k!NtGdiDdSetColorKey
+[      5d]: 		[bf999570 --&gt; bf9337d5] 		win32k!NtGdiDdSetExclusiveMode
+[      5e]: 		[bf999574 --&gt; bf93382d] 		win32k!NtGdiDdSetGammaRamp
+[      5f]: 		[bf999578 --&gt; bf933920] 		win32k!NtGdiDdCreateSurfaceEx
+[      60]: 		[bf99957c --&gt; bf9337eb] 		win32k!NtGdiDdSetOverlayPosition
+[      61]: 		[bf999580 --&gt; bf907d92] 		win32k!NtGdiDdUnattachSurface
+[      62]: 		[bf999584 --&gt; bf8e40a5] 		win32k!NtGdiDdUnlock
+[      63]: 		[bf999588 --&gt; bf933859] 		win32k!NtGdiDdUnlockD3D
+[      64]: 		[bf99958c --&gt; bf9081ed] 		win32k!NtGdiDdUpdateOverlay
+[      65]: 		[bf999590 --&gt; bf933801] 		win32k!NtGdiDdWaitForVerticalBlank
+[      66]: 		[bf999594 --&gt; bf9339e0] 		win32k!NtGdiDvpCanCreateVideoPort
+[      67]: 		[bf999598 --&gt; bf9339f6] 		win32k!NtGdiDvpColorControl
+[      68]: 		[bf99959c --&gt; bf933a0c] 		win32k!NtGdiDvpCreateVideoPort
+[      69]: 		[bf9995a0 --&gt; bf933a22] 		win32k!NtGdiDvpDestroyVideoPort
+[      6a]: 		[bf9995a4 --&gt; bf933a38] 		win32k!NtGdiDvpFlipVideoPort
+[      6b]: 		[bf9995a8 --&gt; bf933a4e] 		win32k!NtGdiDvpGetVideoPortBandwidth
+[      6c]: 		[bf9995ac --&gt; bf933a64] 		win32k!NtGdiDvpGetVideoPortField
+[      6d]: 		[bf9995b0 --&gt; bf933a7a] 		win32k!NtGdiDvpGetVideoPortFlipStatus
+[      6e]: 		[bf9995b4 --&gt; bf933a90] 		win32k!NtGdiDvpGetVideoPortInputFormats
+[      6f]: 		[bf9995b8 --&gt; bf933aa6] 		win32k!NtGdiDvpGetVideoPortLine
+[      70]: 		[bf9995bc --&gt; bf933abc] 		win32k!NtGdiDvpGetVideoPortOutputFormats
+[      71]: 		[bf9995c0 --&gt; bf933ad2] 		win32k!NtGdiDvpGetVideoPortConnectInfo
+[      72]: 		[bf9995c4 --&gt; bf933ae8] 		win32k!NtGdiDvpGetVideoSignalStatus
+[      73]: 		[bf9995c8 --&gt; bf933afe] 		win32k!NtGdiDvpUpdateVideoPort
+[      74]: 		[bf9995cc --&gt; bf933b14] 		win32k!NtGdiDvpWaitForVideoPortSync
+[      75]: 		[bf9995d0 --&gt; bf933b2a] 		win32k!NtGdiDvpAcquireNotification
+[      76]: 		[bf9995d4 --&gt; bf933b40] 		win32k!NtGdiDvpReleaseNotification
+[      77]: 		[bf9995d8 --&gt; bf933770] 		win32k!NtGdiDxgGenericThunk
+[      78]: 		[bf9995dc --&gt; bf8dcadf] 		win32k!NtGdiDeleteClientObj
+[      79]: 		[bf9995e0 --&gt; bf949d50] 		win32k!NtGdiDeleteColorSpace
+[      7a]: 		[bf9995e4 --&gt; bf94af18] 		win32k!NtGdiDeleteColorTransform
+[      7b]: 		[bf9995e8 --&gt; bf80fb23] 		win32k!NtGdiDeleteObjectApp
+[      7c]: 		[bf9995ec --&gt; bf94944e] 		win32k!NtGdiDescribePixelFormat
+[      7d]: 		[bf9995f0 --&gt; bf8faebb] 		win32k!NtGdiGetPerBandInfo
+[      7e]: 		[bf9995f4 --&gt; bf8fc502] 		win32k!NtGdiDoBanding
+[      7f]: 		[bf9995f8 --&gt; bf843898] 		win32k!NtGdiDoPalette
+[      80]: 		[bf9995fc --&gt; bf9482e9] 		win32k!NtGdiDrawEscape
+[      81]: 		[bf999600 --&gt; bf8d41b0] 		win32k!NtGdiEllipse
+[      82]: 		[bf999604 --&gt; bf89bbe3] 		win32k!NtGdiEnableEudc
+[      83]: 		[bf999608 --&gt; bf8fbe4b] 		win32k!NtGdiEndDoc
+[      84]: 		[bf99960c --&gt; bf9052ee] 		win32k!NtGdiEndPage
+[      85]: 		[bf999610 --&gt; bf9008d3] 		win32k!NtGdiEndPath
+[      86]: 		[bf999614 --&gt; bf88768a] 		win32k!NtGdiEnumFontChunk
+[      87]: 		[bf999618 --&gt; bf887609] 		win32k!NtGdiEnumFontClose
+[      88]: 		[bf99961c --&gt; bf886c98] 		win32k!NtGdiEnumFontOpen
+[      89]: 		[bf999620 --&gt; bf8d19a1] 		win32k!NtGdiEnumObjects
+[      8a]: 		[bf999624 --&gt; bf9387b6] 		win32k!NtGdiEqualRgn
+[      8b]: 		[bf999628 --&gt; bf94f4f3] 		win32k!NtGdiEudcLoadUnloadLink
+[      8c]: 		[bf99962c --&gt; bf82d2c1] 		win32k!NtGdiExcludeClipRect
+[      8d]: 		[bf999630 --&gt; bf8c9d87] 		win32k!NtGdiExtCreatePen
+[      8e]: 		[bf999634 --&gt; bf840c15] 		win32k!NtGdiExtCreateRegion
+[      8f]: 		[bf999638 --&gt; bf8bfb6c] 		win32k!NtGdiExtEscape
+[      90]: 		[bf99963c --&gt; bf950311] 		win32k!NtGdiExtFloodFill
+[      91]: 		[bf999640 --&gt; bf82c1c7] 		win32k!NtGdiExtGetObjectW
+[      92]: 		[bf999644 --&gt; bf80f2e7] 		win32k!NtGdiExtSelectClipRgn
+[      93]: 		[bf999648 --&gt; bf82928c] 		win32k!NtGdiExtTextOutW
+[      94]: 		[bf99964c --&gt; bf947486] 		win32k!NtGdiFillPath
+[      95]: 		[bf999650 --&gt; bf875583] 		win32k!NtGdiFillRgn
+[      96]: 		[bf999654 --&gt; bf9473eb] 		win32k!NtGdiFlattenPath
+[      97]: 		[bf999658 --&gt; bf80c24f] 		win32k!NtGdiFlushUserBatch
+[      98]: 		[bf99965c --&gt; bf807a02] 		win32k!NtGdiFlush
+[      99]: 		[bf999660 --&gt; bf94932e] 		win32k!NtGdiForceUFIMapping
+[      9a]: 		[bf999664 --&gt; bf88cdf9] 		win32k!NtGdiFrameRgn
+[      9b]: 		[bf999668 --&gt; bf93b48f] 		win32k!NtGdiFullscreenControl
+[      9c]: 		[bf99966c --&gt; bf8c9058] 		win32k!NtGdiGetAndSetDCDword
+[      9d]: 		[bf999670 --&gt; bf816afe] 		win32k!NtGdiGetAppClipBox
+[      9e]: 		[bf999674 --&gt; bf875a76] 		win32k!NtGdiGetBitmapBits
+[      9f]: 		[bf999678 --&gt; bf949250] 		win32k!NtGdiGetBitmapDimension
+[      a0]: 		[bf99967c --&gt; bf8bd5dd] 		win32k!NtGdiGetBoundsRect
+[      a1]: 		[bf999680 --&gt; bf8f91ba] 		win32k!NtGdiGetCharABCWidthsW
+[      a2]: 		[bf999684 --&gt; bf9479f4] 		win32k!NtGdiGetCharacterPlacementW
+[      a3]: 		[bf999688 --&gt; bf80f8b3] 		win32k!NtGdiGetCharSet
+[      a4]: 		[bf99968c --&gt; bf8eb49e] 		win32k!NtGdiGetCharWidthW
+[      a5]: 		[bf999690 --&gt; bf882e1c] 		win32k!NtGdiGetCharWidthInfo
+[      a6]: 		[bf999694 --&gt; bf94860b] 		win32k!NtGdiGetColorAdjustment
+[      a7]: 		[bf999698 --&gt; bf950bc6] 		win32k!NtGdiGetColorSpaceforBitmap
+[      a8]: 		[bf99969c --&gt; bf82c494] 		win32k!NtGdiGetDCDword
+[      a9]: 		[bf9996a0 --&gt; bf836294] 		win32k!NtGdiGetDCforBitmap
+[      aa]: 		[bf9996a4 --&gt; bf82c321] 		win32k!NtGdiGetDCObject
+[      ab]: 		[bf9996a8 --&gt; bf8c5409] 		win32k!NtGdiGetDCPoint
+[      ac]: 		[bf9996ac --&gt; bf948807] 		win32k!NtGdiGetDeviceCaps
+[      ad]: 		[bf9996b0 --&gt; bf94a2ef] 		win32k!NtGdiGetDeviceGammaRamp
+[      ae]: 		[bf9996b4 --&gt; bf8fa227] 		win32k!NtGdiGetDeviceCapsAll
+[      af]: 		[bf9996b8 --&gt; bf84567d] 		win32k!NtGdiGetDIBitsInternal
+[      b0]: 		[bf9996bc --&gt; bf951b29] 		win32k!NtGdiGetETM
+[      b1]: 		[bf9996c0 --&gt; bf94cf95] 		win32k!NtGdiGetEudcTimeStampEx
+[      b2]: 		[bf9996c4 --&gt; bf8ecc8c] 		win32k!NtGdiGetFontData
+[      b3]: 		[bf9996c8 --&gt; bf948aa6] 		win32k!NtGdiGetFontResourceInfoInternalW
+[      b4]: 		[bf9996cc --&gt; bf949731] 		win32k!NtGdiGetGlyphIndicesW
+[      b5]: 		[bf9996d0 --&gt; bf9495d4] 		win32k!NtGdiGetGlyphIndicesWInternal
+[      b6]: 		[bf9996d4 --&gt; bf9483fc] 		win32k!NtGdiGetGlyphOutline
+[      b7]: 		[bf9996d8 --&gt; bf948501] 		win32k!NtGdiGetKerningPairs
+[      b8]: 		[bf9996dc --&gt; bf9357bb] 		win32k!NtGdiGetLinkedUFIs
+[      b9]: 		[bf9996e0 --&gt; bf8e657f] 		win32k!NtGdiGetMiterLimit
+[      ba]: 		[bf9996e4 --&gt; bf93e3b6] 		win32k!NtGdiGetMonitorID
+[      bb]: 		[bf9996e8 --&gt; bf82d417] 		win32k!NtGdiGetNearestColor
+[      bc]: 		[bf9996ec --&gt; bf94bd6e] 		win32k!NtGdiGetNearestPaletteIndex
+[      bd]: 		[bf9996f0 --&gt; bf948592] 		win32k!NtGdiGetObjectBitmapHandle
+[      be]: 		[bf9996f4 --&gt; bf8eab87] 		win32k!NtGdiGetOutlineTextMetricsInternalW
+[      bf]: 		[bf9996f8 --&gt; bf947853] 		win32k!NtGdiGetPath
+[      c0]: 		[bf9996fc --&gt; bf84666d] 		win32k!NtGdiGetPixel
+[      c1]: 		[bf999700 --&gt; bf80f2f7] 		win32k!NtGdiGetRandomRgn
+[      c2]: 		[bf999704 --&gt; bf8ed7ca] 		win32k!NtGdiGetRasterizerCaps
+[      c3]: 		[bf999708 --&gt; bf9497dc] 		win32k!NtGdiGetRealizationInfo
+[      c4]: 		[bf99970c --&gt; bf87f1b4] 		win32k!NtGdiGetRegionData
+[      c5]: 		[bf999710 --&gt; bf8c5353] 		win32k!NtGdiGetRgnBox
+[      c6]: 		[bf999714 --&gt; bf91023c] 		win32k!NtGdiGetServerMetaFileBits
+[      c7]: 		[bf999718 --&gt; bf890c97] 		win32k!NtGdiGetSpoolMessage
+[      c8]: 		[bf99971c --&gt; bf951ca6] 		win32k!NtGdiGetStats
+[      c9]: 		[bf999720 --&gt; bf81fa30] 		win32k!NtGdiGetStockObject
+[      ca]: 		[bf999724 --&gt; bf94eb87] 		win32k!NtGdiGetStringBitmapW
+[      cb]: 		[bf999728 --&gt; bf8f4c41] 		win32k!NtGdiGetSystemPaletteUse
+[      cc]: 		[bf99972c --&gt; bf837d45] 		win32k!NtGdiGetTextCharsetInfo
+[      cd]: 		[bf999730 --&gt; bf84ab72] 		win32k!NtGdiGetTextExtent
+[      ce]: 		[bf999734 --&gt; bf8d1207] 		win32k!NtGdiGetTextExtentExW
+[      cf]: 		[bf999738 --&gt; bf839de4] 		win32k!NtGdiGetTextFaceW
+[      d0]: 		[bf99973c --&gt; bf837ba3] 		win32k!NtGdiGetTextMetricsW
+[      d1]: 		[bf999740 --&gt; bf8bc64f] 		win32k!NtGdiGetTransform
+[      d2]: 		[bf999744 --&gt; bf948ced] 		win32k!NtGdiGetUFI
+[      d3]: 		[bf999748 --&gt; bf948db6] 		win32k!NtGdiGetEmbUFI
+[      d4]: 		[bf99974c --&gt; bf948e96] 		win32k!NtGdiGetUFIPathname
+[      d5]: 		[bf999750 --&gt; bf948c6e] 		win32k!NtGdiGetEmbedFonts
+[      d6]: 		[bf999754 --&gt; bf948c78] 		win32k!NtGdiChangeGhostFont
+[      d7]: 		[bf999758 --&gt; bf934aed] 		win32k!NtGdiAddEmbFontToDC
+[      d8]: 		[bf99975c --&gt; bf949755] 		win32k!NtGdiGetFontUnicodeRanges
+[      d9]: 		[bf999760 --&gt; bf838ff4] 		win32k!NtGdiGetWidthTable
+[      da]: 		[bf999764 --&gt; bf88e033] 		win32k!NtGdiGradientFill
+[      db]: 		[bf999768 --&gt; bf837891] 		win32k!NtGdiHfontCreate
+[      dc]: 		[bf99976c --&gt; bf94a8d3] 		win32k!NtGdiIcmBrushInfo
+[      dd]: 		[bf999770 --&gt; bf87c3bc] 		win32k!NtGdiInit
+[      de]: 		[bf999774 --&gt; bf89dc09] 		win32k!NtGdiInitSpool
+[      df]: 		[bf999778 --&gt; bf816627] 		win32k!NtGdiIntersectClipRect
+[      e0]: 		[bf99977c --&gt; bf8f8704] 		win32k!NtGdiInvertRgn
+[      e1]: 		[bf999780 --&gt; bf8c6c65] 		win32k!NtGdiLineTo
+[      e2]: 		[bf999784 --&gt; bf9494c8] 		win32k!NtGdiMakeFontDir
+[      e3]: 		[bf999788 --&gt; bf950bff] 		win32k!NtGdiMakeInfoDC
+[      e4]: 		[bf99978c --&gt; bf8386f2] 		win32k!NtGdiMaskBlt
+[      e5]: 		[bf999790 --&gt; bf8bc42c] 		win32k!NtGdiModifyWorldTransform
+[      e6]: 		[bf999794 --&gt; bf8e6752] 		win32k!NtGdiMonoBitmap
+[      e7]: 		[bf999798 --&gt; bf948799] 		win32k!NtGdiMoveTo
+[      e8]: 		[bf99979c --&gt; bf8fc39d] 		win32k!NtGdiOffsetClipRgn
+[      e9]: 		[bf9997a0 --&gt; bf8367a8] 		win32k!NtGdiOffsetRgn
+[      ea]: 		[bf9997a4 --&gt; bf838c10] 		win32k!NtGdiOpenDCW
+[      eb]: 		[bf9997a8 --&gt; bf8c49c1] 		win32k!NtGdiPatBlt
+[      ec]: 		[bf9997ac --&gt; bf82f42b] 		win32k!NtGdiPolyPatBlt
+[      ed]: 		[bf9997b0 --&gt; bf947560] 		win32k!NtGdiPathToRegion
+[      ee]: 		[bf9997b4 --&gt; bf94312d] 		win32k!NtGdiPlgBlt
+[      ef]: 		[bf9997b8 --&gt; bf947e87] 		win32k!NtGdiPolyDraw
+[      f0]: 		[bf9997bc --&gt; bf84ea6e] 		win32k!NtGdiPolyPolyDraw
+[      f1]: 		[bf9997c0 --&gt; bf947f84] 		win32k!NtGdiPolyTextOutW
+[      f2]: 		[bf9997c4 --&gt; bf948887] 		win32k!NtGdiPtInRegion
+[      f3]: 		[bf9997c8 --&gt; bf938958] 		win32k!NtGdiPtVisible
+[      f4]: 		[bf9997cc --&gt; bf9488a7] 		win32k!NtGdiQueryFonts
+[      f5]: 		[bf9997d0 --&gt; bf87c8cd] 		win32k!NtGdiQueryFontAssocInfo
+[      f6]: 		[bf9997d4 --&gt; bf8e3601] 		win32k!NtGdiRectangle
+[      f7]: 		[bf9997d8 --&gt; bf8ee042] 		win32k!NtGdiRectInRegion
+[      f8]: 		[bf9997dc --&gt; bf8351f2] 		win32k!NtGdiRectVisible
+[      f9]: 		[bf9997e0 --&gt; bf8d0ae2] 		win32k!NtGdiRemoveFontResourceW
+[      fa]: 		[bf9997e4 --&gt; bf948a8a] 		win32k!NtGdiRemoveFontMemResourceEx
+[      fb]: 		[bf9997e8 --&gt; bf8e3060] 		win32k!NtGdiResetDC
+[      fc]: 		[bf9997ec --&gt; bf94bfe2] 		win32k!NtGdiResizePalette
+[      fd]: 		[bf9997f0 --&gt; bf82e80f] 		win32k!NtGdiRestoreDC
+[      fe]: 		[bf9997f4 --&gt; bf90e07e] 		win32k!NtGdiRoundRect
+[      ff]: 		[bf9997f8 --&gt; bf82e81f] 		win32k!NtGdiSaveDC
+[     100]: 		[bf9997fc --&gt; bf94131f] 		win32k!NtGdiScaleViewportExtEx
+[     101]: 		[bf999800 --&gt; bf9491dc] 		win32k!NtGdiScaleWindowExtEx
+[     102]: 		[bf999804 --&gt; bf808d86] 		win32k!GreSelectBitmap
+[     103]: 		[bf999808 --&gt; bf948779] 		win32k!NtGdiSelectBrush
+[     104]: 		[bf99980c --&gt; bf9009ce] 		win32k!NtGdiSelectClipPath
+[     105]: 		[bf999810 --&gt; bf8210cb] 		win32k!NtGdiSelectFont
+[     106]: 		[bf999814 --&gt; bf948789] 		win32k!NtGdiSelectPen
+[     107]: 		[bf999818 --&gt; bf89d5f2] 		win32k!NtGdiSetBitmapAttributes
+[     108]: 		[bf99981c --&gt; bf8c4309] 		win32k!NtGdiSetBitmapBits
+[     109]: 		[bf999820 --&gt; bf9492ba] 		win32k!NtGdiSetBitmapDimension
+[     10a]: 		[bf999824 --&gt; bf8bd9e4] 		win32k!NtGdiSetBoundsRect
+[     10b]: 		[bf999828 --&gt; bf948827] 		win32k!NtGdiSetBrushAttributes
+[     10c]: 		[bf99982c --&gt; bf8c43a7] 		win32k!NtGdiSetBrushOrg
+[     10d]: 		[bf999830 --&gt; bf94866c] 		win32k!NtGdiSetColorAdjustment
+[     10e]: 		[bf999834 --&gt; bf949e12] 		win32k!NtGdiSetColorSpace
+[     10f]: 		[bf999838 --&gt; bf94a62b] 		win32k!NtGdiSetDeviceGammaRamp
+[     110]: 		[bf99983c --&gt; bf82bbeb] 		win32k!NtGdiSetDIBitsToDeviceInternal
+[     111]: 		[bf999840 --&gt; bf8b82ba] 		win32k!NtGdiSetFontEnumeration
+[     112]: 		[bf999844 --&gt; bf8dce95] 		win32k!NtGdiSetFontXform
+[     113]: 		[bf999848 --&gt; bf8c65a8] 		win32k!NtGdiSetIcmMode
+[     114]: 		[bf99984c --&gt; bf8fabb9] 		win32k!NtGdiSetLinkedUFIs
+[     115]: 		[bf999850 --&gt; bf94c26c] 		win32k!NtGdiSetMagicColors
+[     116]: 		[bf999854 --&gt; bf8dcc14] 		win32k!NtGdiSetMetaRgn
+[     117]: 		[bf999858 --&gt; bf8dcc36] 		win32k!NtGdiSetMiterLimit
+[     118]: 		[bf99985c --&gt; bf9491cc] 		win32k!NtGdiGetDeviceWidth
+[     119]: 		[bf999860 --&gt; bf9491bc] 		win32k!NtGdiMirrorWindowOrg
+[     11a]: 		[bf999864 --&gt; bf82d1c9] 		win32k!NtGdiSetLayout
+[     11b]: 		[bf999868 --&gt; bf8468af] 		win32k!NtGdiSetPixel
+[     11c]: 		[bf99986c --&gt; bf952970] 		win32k!NtGdiSetPixelFormat
+[     11d]: 		[bf999870 --&gt; bf948877] 		win32k!NtGdiSetRectRgn
+[     11e]: 		[bf999874 --&gt; bf948817] 		win32k!NtGdiSetSystemPaletteUse
+[     11f]: 		[bf999878 --&gt; bf951f36] 		win32k!NtGdiSetTextJustification
+[     120]: 		[bf99987c --&gt; bf8992a6] 		win32k!NtGdiSetupPublicCFONT
+[     121]: 		[bf999880 --&gt; bf8dca38] 		win32k!NtGdiSetVirtualResolution
+[     122]: 		[bf999884 --&gt; bf8dcf06] 		win32k!NtGdiSetSizeDevice
+[     123]: 		[bf999888 --&gt; bf9041c6] 		win32k!NtGdiStartDoc
+[     124]: 		[bf99988c --&gt; bf90513f] 		win32k!NtGdiStartPage
+[     125]: 		[bf999890 --&gt; bf881872] 		win32k!NtGdiStretchBlt
+[     126]: 		[bf999894 --&gt; bf848dfd] 		win32k!NtGdiStretchDIBitsInternal
+[     127]: 		[bf999898 --&gt; bf8ff549] 		win32k!NtGdiStrokeAndFillPath
+[     128]: 		[bf99989c --&gt; bf947767] 		win32k!NtGdiStrokePath
+[     129]: 		[bf9998a0 --&gt; bf952b18] 		win32k!NtGdiSwapBuffers
+[     12a]: 		[bf9998a4 --&gt; bf8c4b54] 		win32k!NtGdiTransformPoints
+[     12b]: 		[bf9998a8 --&gt; bf8bbdaf] 		win32k!NtGdiTransparentBlt
+[     12c]: 		[bf9998ac --&gt; bf94939f] 		win32k!NtGdiUnloadPrinterDriver
+[     12d]: 		[bf9998b0 --&gt; bf952dd6] 		win32k!NtGdiUnmapMemFont
+[     12e]: 		[bf9998b4 --&gt; bf948867] 		win32k!NtGdiUnrealizeObject
+[     12f]: 		[bf9998b8 --&gt; bf94c27c] 		win32k!NtGdiUpdateColors
+[     130]: 		[bf9998bc --&gt; bf947648] 		win32k!NtGdiWidenPath
+[     131]: 		[bf9998c0 --&gt; bf8855d0] 		win32k!NtUserActivateKeyboardLayout
+[     132]: 		[bf9998c4 --&gt; bf88b0ee] 		win32k!NtUserAlterWindowStyle
+[     133]: 		[bf9998c8 --&gt; bf9143f8] 		win32k!NtUserAssociateInputContext
+[     134]: 		[bf9998cc --&gt; bf8f519c] 		win32k!NtUserAttachThreadInput
+[     135]: 		[bf9998d0 --&gt; bf815a6d] 		win32k!NtUserBeginPaint
+[     136]: 		[bf9998d4 --&gt; bf8f4c67] 		win32k!NtUserBitBltSysBmp
+[     137]: 		[bf9998d8 --&gt; bf912d94] 		win32k!NtUserBlockInput
+[     138]: 		[bf9998dc --&gt; bf91452f] 		win32k!NtUserBuildHimcList
+[     139]: 		[bf9998e0 --&gt; bf8360b3] 		win32k!NtUserBuildHwndList
+[     13a]: 		[bf9998e4 --&gt; bf86b9f4] 		win32k!NtUserBuildNameList
+[     13b]: 		[bf9998e8 --&gt; bf912b57] 		win32k!NtUserBuildPropList
+[     13c]: 		[bf9998ec --&gt; bf8c208c] 		win32k!NtUserCallHwnd
+[     13d]: 		[bf9998f0 --&gt; bf8366ef] 		win32k!NtUserCallHwndLock
+[     13e]: 		[bf9998f4 --&gt; bf89ac2c] 		win32k!NtUserCallHwndOpt
+[     13f]: 		[bf9998f8 --&gt; bf8368e2] 		win32k!NtUserCallHwndParam
+[     140]: 		[bf9998fc --&gt; bf828813] 		win32k!NtUserCallHwndParamLock
+[     141]: 		[bf999900 --&gt; bf8f4b76] 		win32k!NtUserCallMsgFilter
+[     142]: 		[bf999904 --&gt; bf8f655f] 		win32k!NtUserCallNextHookEx
+[     143]: 		[bf999908 --&gt; bf8010df] 		win32k!NtUserCallNoParam
+[     144]: 		[bf99990c --&gt; bf801097] 		win32k!NtUserCallOneParam
+[     145]: 		[bf999910 --&gt; bf8368a2] 		win32k!NtUserCallTwoParam
+[     146]: 		[bf999914 --&gt; bf8f974d] 		win32k!NtUserChangeClipboardChain
+[     147]: 		[bf999918 --&gt; bf8b689c] 		win32k!NtUserChangeDisplaySettings
+[     148]: 		[bf99991c --&gt; bf86c501] 		win32k!NtUserCheckImeHotKey
+[     149]: 		[bf999920 --&gt; bf8cca4b] 		win32k!NtUserCheckMenuItem
+[     14a]: 		[bf999924 --&gt; bf8940b7] 		win32k!NtUserChildWindowFromPointEx
+[     14b]: 		[bf999928 --&gt; bf8fa9d9] 		win32k!NtUserClipCursor
+[     14c]: 		[bf99992c --&gt; bf8f8609] 		win32k!NtUserCloseClipboard
+[     14d]: 		[bf999930 --&gt; bf86b6cf] 		win32k!NtUserCloseDesktop
+[     14e]: 		[bf999934 --&gt; bf86b791] 		win32k!NtUserCloseWindowStation
+[     14f]: 		[bf999938 --&gt; bf87bdf0] 		win32k!NtUserConsoleControl
+[     150]: 		[bf99993c --&gt; bf8ea9b4] 		win32k!NtUserConvertMemHandle
+[     151]: 		[bf999940 --&gt; bf90d6b7] 		win32k!NtUserCopyAcceleratorTable
+[     152]: 		[bf999944 --&gt; bf8f4c1b] 		win32k!NtUserCountClipboardFormats
+[     153]: 		[bf999948 --&gt; bf84b4cf] 		win32k!NtUserCreateAcceleratorTable
+[     154]: 		[bf99994c --&gt; bf8733b4] 		win32k!NtUserCreateCaret
+[     155]: 		[bf999950 --&gt; bf89d1d8] 		win32k!NtUserCreateDesktop
+[     156]: 		[bf999954 --&gt; bf91435e] 		win32k!NtUserCreateInputContext
+[     157]: 		[bf999958 --&gt; bf8f9aa8] 		win32k!NtUserCreateLocalMemHandle
+[     158]: 		[bf99995c --&gt; bf834af6] 		win32k!NtUserCreateWindowEx
+[     159]: 		[bf999960 --&gt; bf89d949] 		win32k!NtUserCreateWindowStation
+[     15a]: 		[bf999964 --&gt; bf911be1] 		win32k!NtUserDdeGetQualityOfService
+[     15b]: 		[bf999968 --&gt; bf89b8dd] 		win32k!NtUserDdeInitialize
+[     15c]: 		[bf99996c --&gt; bf911b11] 		win32k!NtUserDdeSetQualityOfService
+[     15d]: 		[bf999970 --&gt; bf86c82e] 		win32k!NtUserDeferWindowPos
+[     15e]: 		[bf999974 --&gt; bf86cbf4] 		win32k!NtUserDefSetText
+[     15f]: 		[bf999978 --&gt; bf8737e0] 		win32k!NtUserDeleteMenu
+[     160]: 		[bf99997c --&gt; bf8fa978] 		win32k!NtUserDestroyAcceleratorTable
+[     161]: 		[bf999980 --&gt; bf835e37] 		win32k!NtUserDestroyCursor
+[     162]: 		[bf999984 --&gt; bf9143ae] 		win32k!NtUserDestroyInputContext
+[     163]: 		[bf999988 --&gt; bf845a1f] 		win32k!NtUserDestroyMenu
+[     164]: 		[bf99998c --&gt; bf866c76] 		win32k!NtUserDestroyWindow
+[     165]: 		[bf999990 --&gt; bf914b66] 		win32k!NtUserDisableThreadIme
+[     166]: 		[bf999994 --&gt; bf80ed89] 		win32k!NtUserDispatchMessage
+[     167]: 		[bf999998 --&gt; bf912c52] 		win32k!NtUserDragDetect
+[     168]: 		[bf99999c --&gt; bf9110d5] 		win32k!NtUserDragObject
+[     169]: 		[bf9999a0 --&gt; bf911db1] 		win32k!NtUserDrawAnimatedRects
+[     16a]: 		[bf9999a4 --&gt; bf911e74] 		win32k!NtUserDrawCaption
+[     16b]: 		[bf9999a8 --&gt; bf90b537] 		win32k!NtUserDrawCaptionTemp
+[     16c]: 		[bf9999ac --&gt; bf83c221] 		win32k!NtUserDrawIconEx
+[     16d]: 		[bf9999b0 --&gt; bf912e1f] 		win32k!NtUserDrawMenuBarTemp
+[     16e]: 		[bf9999b4 --&gt; bf8ea639] 		win32k!NtUserEmptyClipboard
+[     16f]: 		[bf9999b8 --&gt; bf8c550e] 		win32k!NtUserEnableMenuItem
+[     170]: 		[bf9999bc --&gt; bf911a8c] 		win32k!NtUserEnableScrollBar
+[     171]: 		[bf9999c0 --&gt; bf82cdb7] 		win32k!NtUserEndDeferWindowPosEx
+[     172]: 		[bf9999c4 --&gt; bf911f1d] 		win32k!NtUserEndMenu
+[     173]: 		[bf9999c8 --&gt; bf815724] 		win32k!NtUserEndPaint
+[     174]: 		[bf9999cc --&gt; bf880b0c] 		win32k!NtUserEnumDisplayDevices
+[     175]: 		[bf9999d0 --&gt; bf835801] 		win32k!NtUserEnumDisplayMonitors
+[     176]: 		[bf9999d4 --&gt; bf8c0e17] 		win32k!NtUserEnumDisplaySettings
+[     177]: 		[bf9999d8 --&gt; bf911362] 		win32k!NtUserEvent
+[     178]: 		[bf9999dc --&gt; bf8f890a] 		win32k!NtUserExcludeUpdateRgn
+[     179]: 		[bf9999e0 --&gt; bf8f4aad] 		win32k!NtUserFillWindow
+[     17a]: 		[bf9999e4 --&gt; bf81b77e] 		win32k!NtUserFindExistingCursorIcon
+[     17b]: 		[bf9999e8 --&gt; bf869562] 		win32k!NtUserFindWindowEx
+[     17c]: 		[bf9999ec --&gt; bf914f55] 		win32k!NtUserFlashWindowEx
+[     17d]: 		[bf9999f0 --&gt; bf8e885b] 		win32k!NtUserGetAltTabInfo
+[     17e]: 		[bf9999f4 --&gt; bf82c9c9] 		win32k!NtUserGetAncestor
+[     17f]: 		[bf9999f8 --&gt; bf914903] 		win32k!NtUserGetAppImeLevel
+[     180]: 		[bf9999fc --&gt; bf87146d] 		win32k!NtUserGetAsyncKeyState
+[     181]: 		[bf999a00 --&gt; bf834cd2] 		win32k!NtUserGetAtomName
+[     182]: 		[bf999a04 --&gt; bf842297] 		win32k!NtUserGetCaretBlinkTime
+[     183]: 		[bf999a08 --&gt; bf8c50b2] 		win32k!NtUserGetCaretPos
+[     184]: 		[bf999a0c --&gt; bf843559] 		win32k!NtUserGetClassInfo
+[     185]: 		[bf999a10 --&gt; bf82c6fa] 		win32k!NtUserGetClassName
+[     186]: 		[bf999a14 --&gt; bf8f98e3] 		win32k!NtUserGetClipboardData
+[     187]: 		[bf999a18 --&gt; bf8ee107] 		win32k!NtUserGetClipboardFormatName
+[     188]: 		[bf999a1c --&gt; bf8ea72f] 		win32k!NtUserGetClipboardOwner
+[     189]: 		[bf999a20 --&gt; bf8c4e6b] 		win32k!NtUserGetClipboardSequenceNumber
+[     18a]: 		[bf999a24 --&gt; bf911f63] 		win32k!NtUserGetClipboardViewer
+[     18b]: 		[bf999a28 --&gt; bf9119f4] 		win32k!NtUserGetClipCursor
+[     18c]: 		[bf999a2c --&gt; bf91162a] 		win32k!NtUserGetComboBoxInfo
+[     18d]: 		[bf999a30 --&gt; bf882d33] 		win32k!NtUserGetControlBrush
+[     18e]: 		[bf999a34 --&gt; bf9075cb] 		win32k!NtUserGetControlColor
+[     18f]: 		[bf999a38 --&gt; bf821662] 		win32k!NtUserGetCPD
+[     190]: 		[bf999a3c --&gt; bf882fd2] 		win32k!NtUserGetCursorFrameInfo
+[     191]: 		[bf999a40 --&gt; bf911747] 		win32k!NtUserGetCursorInfo
+[     192]: 		[bf999a44 --&gt; bf804547] 		win32k!NtUserGetDC
+[     193]: 		[bf999a48 --&gt; bf83a237] 		win32k!NtUserGetDCEx
+[     194]: 		[bf999a4c --&gt; bf83b202] 		win32k!NtUserGetDoubleClickTime
+[     195]: 		[bf999a50 --&gt; bf820d48] 		win32k!NtUserGetForegroundWindow
+[     196]: 		[bf999a54 --&gt; bf91119e] 		win32k!NtUserGetGuiResources
+[     197]: 		[bf999a58 --&gt; bf869f06] 		win32k!NtUserGetGUIThreadInfo
+[     198]: 		[bf999a5c --&gt; bf842cc5] 		win32k!NtUserGetIconInfo
+[     199]: 		[bf999a60 --&gt; bf842e15] 		win32k!NtUserGetIconSize
+[     19a]: 		[bf999a64 --&gt; bf9147c1] 		win32k!NtUserGetImeHotKey
+[     19b]: 		[bf999a68 --&gt; bf914631] 		win32k!NtUserGetImeInfoEx
+[     19c]: 		[bf999a6c --&gt; bf9113f3] 		win32k!NtUserGetInternalWindowPos
+[     19d]: 		[bf999a70 --&gt; bf835528] 		win32k!NtUserGetKeyboardLayoutList
+[     19e]: 		[bf999a74 --&gt; bf8f5ff8] 		win32k!NtUserGetKeyboardLayoutName
+[     19f]: 		[bf999a78 --&gt; bf87606e] 		win32k!NtUserGetKeyboardState
+[     1a0]: 		[bf999a7c --&gt; bf90b884] 		win32k!NtUserGetKeyNameText
+[     1a1]: 		[bf999a80 --&gt; bf820ff3] 		win32k!NtUserGetKeyState
+[     1a2]: 		[bf999a84 --&gt; bf9116f3] 		win32k!NtUserGetListBoxInfo
+[     1a3]: 		[bf999a88 --&gt; bf911844] 		win32k!NtUserGetMenuBarInfo
+[     1a4]: 		[bf999a8c --&gt; bf911c9a] 		win32k!NtUserGetMenuIndex
+[     1a5]: 		[bf999a90 --&gt; bf9127ce] 		win32k!NtUserGetMenuItemRect
+[     1a6]: 		[bf999a94 --&gt; bf819fc9] 		win32k!NtUserGetMessage
+[     1a7]: 		[bf999a98 --&gt; bf9124a9] 		win32k!NtUserGetMouseMovePointsEx
+[     1a8]: 		[bf999a9c --&gt; bf81a241] 		win32k!NtUserGetObjectInformation
+[     1a9]: 		[bf999aa0 --&gt; bf8f4bef] 		win32k!NtUserGetOpenClipboardWindow
+[     1aa]: 		[bf999aa4 --&gt; bf911f8f] 		win32k!NtUserGetPriorityClipboardFormat
+[     1ab]: 		[bf999aa8 --&gt; bf81a0ac] 		win32k!NtUserGetProcessWindowStation
+[     1ac]: 		[bf999aac --&gt; bf9157d5] 		win32k!NtUserGetRawInputBuffer
+[     1ad]: 		[bf999ab0 --&gt; bf9150d5] 		win32k!NtUserGetRawInputData
+[     1ae]: 		[bf999ab4 --&gt; bf9152af] 		win32k!NtUserGetRawInputDeviceInfo
+[     1af]: 		[bf999ab8 --&gt; bf9155a4] 		win32k!NtUserGetRawInputDeviceList
+[     1b0]: 		[bf999abc --&gt; bf91579a] 		win32k!NtUserGetRegisteredRawInputDevices
+[     1b1]: 		[bf999ac0 --&gt; bf84624e] 		win32k!NtUserGetScrollBarInfo
+[     1b2]: 		[bf999ac4 --&gt; bf840ace] 		win32k!NtUserGetSystemMenu
+[     1b3]: 		[bf999ac8 --&gt; bf81a4f7] 		win32k!NtUserGetThreadDesktop
+[     1b4]: 		[bf999acc --&gt; bf823b41] 		win32k!NtUserGetThreadState
+[     1b5]: 		[bf999ad0 --&gt; bf83a4c1] 		win32k!NtUserGetTitleBarInfo
+[     1b6]: 		[bf999ad4 --&gt; bf83b02f] 		win32k!NtUserGetUpdateRect
+[     1b7]: 		[bf999ad8 --&gt; bf8c51fa] 		win32k!NtUserGetUpdateRgn
+[     1b8]: 		[bf999adc --&gt; bf803811] 		win32k!NtUserGetWindowDC
+[     1b9]: 		[bf999ae0 --&gt; bf8f9b76] 		win32k!NtUserGetWindowPlacement
+[     1ba]: 		[bf999ae4 --&gt; bf90da63] 		win32k!NtUserGetWOWClass
+[     1bb]: 		[bf999ae8 --&gt; bf910fdf] 		win32k!NtUserHardErrorControl
+[     1bc]: 		[bf999aec --&gt; bf82ce91] 		win32k!NtUserHideCaret
+[     1bd]: 		[bf999af0 --&gt; bf912018] 		win32k!NtUserHiliteMenuItem
+[     1be]: 		[bf999af4 --&gt; bf912dba] 		win32k!NtUserImpersonateDdeClientWindow
+[     1bf]: 		[bf999af8 --&gt; bf8b1d7e] 		win32k!NtUserInitialize
+[     1c0]: 		[bf999afc --&gt; bf8ac31e] 		win32k!NtUserInitializeClientPfnArrays
+[     1c1]: 		[bf999b00 --&gt; bf9114d2] 		win32k!NtUserInitTask
+[     1c2]: 		[bf999b04 --&gt; bf83a5bd] 		win32k!NtUserInternalGetWindowText
+[     1c3]: 		[bf999b08 --&gt; bf814dbb] 		win32k!NtUserInvalidateRect
+[     1c4]: 		[bf999b0c --&gt; bf8459c5] 		win32k!NtUserInvalidateRgn
+[     1c5]: 		[bf999b10 --&gt; bf8c4e31] 		win32k!NtUserIsClipboardFormatAvailable
+[     1c6]: 		[bf999b14 --&gt; bf80ea37] 		win32k!NtUserKillTimer
+[     1c7]: 		[bf999b18 --&gt; bf891798] 		win32k!NtUserLoadKeyboardLayoutEx
+[     1c8]: 		[bf999b1c --&gt; bf89d43a] 		win32k!NtUserLockWindowStation
+[     1c9]: 		[bf999b20 --&gt; bf8cc992] 		win32k!NtUserLockWindowUpdate
+[     1ca]: 		[bf999b24 --&gt; bf9110b8] 		win32k!NtUserLockWorkStation
+[     1cb]: 		[bf999b28 --&gt; bf8c7e35] 		win32k!NtUserMapVirtualKeyEx
+[     1cc]: 		[bf999b2c --&gt; bf9128a5] 		win32k!NtUserMenuItemFromPoint
+[     1cd]: 		[bf999b30 --&gt; bf80efcd] 		win32k!NtUserMessageCall
+[     1ce]: 		[bf999b34 --&gt; bf90f645] 		win32k!NtUserMinMaximize
+[     1cf]: 		[bf999b38 --&gt; bf912168] 		win32k!NtUserMNDragLeave
+[     1d0]: 		[bf999b3c --&gt; bf9120b8] 		win32k!NtUserMNDragOver
+[     1d1]: 		[bf999b40 --&gt; bf8e3267] 		win32k!NtUserModifyUserStartupInfoFlags
+[     1d2]: 		[bf999b44 --&gt; bf838ae5] 		win32k!NtUserMoveWindow
+[     1d3]: 		[bf999b48 --&gt; bf914b01] 		win32k!NtUserNotifyIMEStatus
+[     1d4]: 		[bf999b4c --&gt; bf87c3f2] 		win32k!NtUserNotifyProcessCreate
+[     1d5]: 		[bf999b50 --&gt; bf8c54b9] 		win32k!NtUserNotifyWinEvent
+[     1d6]: 		[bf999b54 --&gt; bf8f8586] 		win32k!NtUserOpenClipboard
+[     1d7]: 		[bf999b58 --&gt; bf86b969] 		win32k!NtUserOpenDesktop
+[     1d8]: 		[bf999b5c --&gt; bf899b89] 		win32k!NtUserOpenInputDesktop
+[     1d9]: 		[bf999b60 --&gt; bf8f9dbe] 		win32k!NtUserOpenWindowStation
+[     1da]: 		[bf999b64 --&gt; bf885886] 		win32k!NtUserPaintDesktop
+[     1db]: 		[bf999b68 --&gt; bf803700] 		win32k!NtUserPeekMessage
+[     1dc]: 		[bf999b6c --&gt; bf808b4d] 		win32k!NtUserPostMessage
+[     1dd]: 		[bf999b70 --&gt; bf86bf40] 		win32k!NtUserPostThreadMessage
+[     1de]: 		[bf999b74 --&gt; bf8b83bd] 		win32k!NtUserPrintWindow
+[     1df]: 		[bf999b78 --&gt; bf87a14a] 		win32k!NtUserProcessConnect
+[     1e0]: 		[bf999b7c --&gt; bf912937] 		win32k!NtUserQueryInformationThread
+[     1e1]: 		[bf999b80 --&gt; bf9144ab] 		win32k!NtUserQueryInputContext
+[     1e2]: 		[bf999b84 --&gt; bf912ce5] 		win32k!NtUserQuerySendMessage
+[     1e3]: 		[bf999b88 --&gt; bf914c0a] 		win32k!NtUserQueryUserCounters
+[     1e4]: 		[bf999b8c --&gt; bf803b9c] 		win32k!NtUserQueryWindow
+[     1e5]: 		[bf999b90 --&gt; bf911806] 		win32k!NtUserRealChildWindowFromPoint
+[     1e6]: 		[bf999b94 --&gt; bf899641] 		win32k!NtUserRealInternalGetMessage
+[     1e7]: 		[bf999b98 --&gt; bf91270e] 		win32k!NtUserRealWaitMessageEx
+[     1e8]: 		[bf999b9c --&gt; bf823d16] 		win32k!NtUserRedrawWindow
+[     1e9]: 		[bf999ba0 --&gt; bf81f433] 		win32k!NtUserRegisterClassExWOW
+[     1ea]: 		[bf999ba4 --&gt; bf89dd35] 		win32k!NtUserRegisterUserApiHook
+[     1eb]: 		[bf999ba8 --&gt; bf8b7901] 		win32k!NtUserRegisterHotKey
+[     1ec]: 		[bf999bac --&gt; bf9156ee] 		win32k!NtUserRegisterRawInputDevices
+[     1ed]: 		[bf999bb0 --&gt; bf9115f6] 		win32k!NtUserRegisterTasklist
+[     1ee]: 		[bf999bb4 --&gt; bf807b93] 		win32k!NtUserRegisterWindowMessage
+[     1ef]: 		[bf999bb8 --&gt; bf8b82e5] 		win32k!NtUserRemoveMenu
+[     1f0]: 		[bf999bbc --&gt; bf832c6e] 		win32k!NtUserRemoveProp
+[     1f1]: 		[bf999bc0 --&gt; bf892189] 		win32k!NtUserResolveDesktop
+[     1f2]: 		[bf999bc4 --&gt; bf9159e5] 		win32k!NtUserResolveDesktopForWOW
+[     1f3]: 		[bf999bc8 --&gt; bf8460f5] 		win32k!NtUserSBGetParms
+[     1f4]: 		[bf999bcc --&gt; bf879a5a] 		win32k!NtUserScrollDC
+[     1f5]: 		[bf999bd0 --&gt; bf8e593a] 		win32k!NtUserScrollWindowEx
+[     1f6]: 		[bf999bd4 --&gt; bf83856c] 		win32k!NtUserSelectPalette
+[     1f7]: 		[bf999bd8 --&gt; bf8c33ab] 		win32k!NtUserSendInput
+[     1f8]: 		[bf999bdc --&gt; bf8bacca] 		win32k!NtUserSetActiveWindow
+[     1f9]: 		[bf999be0 --&gt; bf914898] 		win32k!NtUserSetAppImeLevel
+[     1fa]: 		[bf999be4 --&gt; bf8724da] 		win32k!NtUserSetCapture
+[     1fb]: 		[bf999be8 --&gt; bf845c62] 		win32k!NtUserSetClassLong
+[     1fc]: 		[bf999bec --&gt; bf912185] 		win32k!NtUserSetClassWord
+[     1fd]: 		[bf999bf0 --&gt; bf8ea8d8] 		win32k!NtUserSetClipboardData
+[     1fe]: 		[bf999bf4 --&gt; bf8f9663] 		win32k!NtUserSetClipboardViewer
+[     1ff]: 		[bf999bf8 --&gt; bf88636b] 		win32k!NtUserSetConsoleReserveKeys
+[     200]: 		[bf999bfc --&gt; bf82126e] 		win32k!NtUserSetCursor
+[     201]: 		[bf999c00 --&gt; bf912787] 		win32k!NtUserSetCursorContents
+[     202]: 		[bf999c04 --&gt; bf842fa4] 		win32k!NtUserSetCursorIconData
+[     203]: 		[bf999c08 --&gt; bf911d1d] 		win32k!NtUserSetDbgTag
+[     204]: 		[bf999c0c --&gt; bf83a9b3] 		win32k!NtUserSetFocus
+[     205]: 		[bf999c10 --&gt; bf8916c2] 		win32k!NtUserSetImeHotKey
+[     206]: 		[bf999c14 --&gt; bf914716] 		win32k!NtUserSetImeInfoEx
+[     207]: 		[bf999c18 --&gt; bf91496d] 		win32k!NtUserSetImeOwnerWindow
+[     208]: 		[bf999c1c --&gt; bf87c056] 		win32k!NtUserSetInformationProcess
+[     209]: 		[bf999c20 --&gt; bf886135] 		win32k!NtUserSetInformationThread
+[     20a]: 		[bf999c24 --&gt; bf911913] 		win32k!NtUserSetInternalWindowPos
+[     20b]: 		[bf999c28 --&gt; bf8f89ea] 		win32k!NtUserSetKeyboardState
+[     20c]: 		[bf999c2c --&gt; bf8a5d53] 		win32k!NtUserSetLogonNotifyWindow
+[     20d]: 		[bf999c30 --&gt; bf90b74a] 		win32k!NtUserSetMenu
+[     20e]: 		[bf999c34 --&gt; bf911d40] 		win32k!NtUserSetMenuContextHelpId
+[     20f]: 		[bf999c38 --&gt; bf8b827a] 		win32k!NtUserSetMenuDefaultItem
+[     210]: 		[bf999c3c --&gt; bf911d7d] 		win32k!NtUserSetMenuFlagRtoL
+[     211]: 		[bf999c40 --&gt; bf91102a] 		win32k!NtUserSetObjectInformation
+[     212]: 		[bf999c44 --&gt; bf882afc] 		win32k!NtUserSetParent
+[     213]: 		[bf999c48 --&gt; bf86bd5b] 		win32k!NtUserSetProcessWindowStation
+[     214]: 		[bf999c4c --&gt; bf82847c] 		win32k!NtUserSetProp
+[     215]: 		[bf999c50 --&gt; bf911cfa] 		win32k!NtUserSetRipFlags
+[     216]: 		[bf999c54 --&gt; bf80e774] 		win32k!NtUserSetScrollInfo
+[     217]: 		[bf999c58 --&gt; bf89a417] 		win32k!NtUserSetShellWindowEx
+[     218]: 		[bf999c5c --&gt; bf9121c0] 		win32k!NtUserSetSysColors
+[     219]: 		[bf999c60 --&gt; bf91274e] 		win32k!NtUserSetSystemCursor
+[     21a]: 		[bf999c64 --&gt; bf8f61bb] 		win32k!NtUserSetSystemMenu
+[     21b]: 		[bf999c68 --&gt; bf912cac] 		win32k!NtUserSetSystemTimer
+[     21c]: 		[bf999c6c --&gt; bf86bdb3] 		win32k!NtUserSetThreadDesktop
+[     21d]: 		[bf999c70 --&gt; bf914a80] 		win32k!NtUserSetThreadLayoutHandles
+[     21e]: 		[bf999c74 --&gt; bf882cf7] 		win32k!NtUserSetThreadState
+[     21f]: 		[bf999c78 --&gt; bf803aab] 		win32k!NtUserSetTimer
+[     220]: 		[bf999c7c --&gt; bf882ba7] 		win32k!NtUserSetWindowFNID
+[     221]: 		[bf999c80 --&gt; bf832d7e] 		win32k!NtUserSetWindowLong
+[     222]: 		[bf999c84 --&gt; bf88d87b] 		win32k!NtUserSetWindowPlacement
+[     223]: 		[bf999c88 --&gt; bf828223] 		win32k!NtUserSetWindowPos
+[     224]: 		[bf999c8c --&gt; bf840823] 		win32k!NtUserSetWindowRgn
+[     225]: 		[bf999c90 --&gt; bf88e300] 		win32k!NtUserSetWindowsHookAW
+[     226]: 		[bf999c94 --&gt; bf8ba057] 		win32k!NtUserSetWindowsHookEx
+[     227]: 		[bf999c98 --&gt; bf89d2d7] 		win32k!NtUserSetWindowStationUser
+[     228]: 		[bf999c9c --&gt; bf8f8f9b] 		win32k!NtUserSetWindowWord
+[     229]: 		[bf999ca0 --&gt; bf8edb64] 		win32k!NtUserSetWinEventHook
+[     22a]: 		[bf999ca4 --&gt; bf82cef3] 		win32k!NtUserShowCaret
+[     22b]: 		[bf999ca8 --&gt; bf8c5730] 		win32k!NtUserShowScrollBar
+[     22c]: 		[bf999cac --&gt; bf83513b] 		win32k!NtUserShowWindow
+[     22d]: 		[bf999cb0 --&gt; bf89207c] 		win32k!NtUserShowWindowAsync
+[     22e]: 		[bf999cb4 --&gt; bf8e32d5] 		win32k!NtUserSoundSentry
+[     22f]: 		[bf999cb8 --&gt; bf89a6ac] 		win32k!NtUserSwitchDesktop
+[     230]: 		[bf999cbc --&gt; bf81e8e3] 		win32k!NtUserSystemParametersInfo
+[     231]: 		[bf999cc0 --&gt; bf90dbee] 		win32k!NtUserTestForInteractiveUser
+[     232]: 		[bf999cc4 --&gt; bf8f611c] 		win32k!NtUserThunkedMenuInfo
+[     233]: 		[bf999cc8 --&gt; bf83fc0d] 		win32k!NtUserThunkedMenuItemInfo
+[     234]: 		[bf999ccc --&gt; bf912559] 		win32k!NtUserToUnicodeEx
+[     235]: 		[bf999cd0 --&gt; bf86c580] 		win32k!NtUserTrackMouseEvent
+[     236]: 		[bf999cd4 --&gt; bf912376] 		win32k!NtUserTrackPopupMenuEx
+[     237]: 		[bf999cd8 --&gt; bf83a728] 		win32k!NtUserCalcMenuBar
+[     238]: 		[bf999cdc --&gt; bf8eef29] 		win32k!NtUserPaintMenuBar
+[     239]: 		[bf999ce0 --&gt; bf8f81f3] 		win32k!NtUserTranslateAccelerator
+[     23a]: 		[bf999ce4 --&gt; bf870be0] 		win32k!NtUserTranslateMessage
+[     23b]: 		[bf999ce8 --&gt; bf8ba646] 		win32k!NtUserUnhookWindowsHookEx
+[     23c]: 		[bf999cec --&gt; bf8edc3f] 		win32k!NtUserUnhookWinEvent
+[     23d]: 		[bf999cf0 --&gt; bf912c24] 		win32k!NtUserUnloadKeyboardLayout
+[     23e]: 		[bf999cf4 --&gt; bf8911ed] 		win32k!NtUserUnlockWindowStation
+[     23f]: 		[bf999cf8 --&gt; bf81fd00] 		win32k!NtUserUnregisterClass
+[     240]: 		[bf999cfc --&gt; bf89d748] 		win32k!NtUserUnregisterUserApiHook
+[     241]: 		[bf999d00 --&gt; bf91246c] 		win32k!NtUserUnregisterHotKey
+[     242]: 		[bf999d04 --&gt; bf91445b] 		win32k!NtUserUpdateInputContext
+[     243]: 		[bf999d08 --&gt; bf9112cd] 		win32k!NtUserUpdateInstance
+[     244]: 		[bf999d0c --&gt; bf874e3f] 		win32k!NtUserUpdateLayeredWindow
+[     245]: 		[bf999d10 --&gt; bf915017] 		win32k!NtUserGetLayeredWindowAttributes
+[     246]: 		[bf999d14 --&gt; bf845afb] 		win32k!NtUserSetLayeredWindowAttributes
+[     247]: 		[bf999d18 --&gt; bf8a2f52] 		win32k!NtUserUpdatePerUserSystemParameters
+[     248]: 		[bf999d1c --&gt; bf91297e] 		win32k!NtUserUserHandleGrantAccess
+[     249]: 		[bf999d20 --&gt; bf8018ac] 		win32k!NtUserValidateHandleSecure
+[     24a]: 		[bf999d24 --&gt; bf8f8bd9] 		win32k!NtUserValidateRect
+[     24b]: 		[bf999d28 --&gt; bf807eba] 		win32k!NtUserValidateTimerCallback
+[     24c]: 		[bf999d2c --&gt; bf8c3d69] 		win32k!NtUserVkKeyScanEx
+[     24d]: 		[bf999d30 --&gt; bf90d432] 		win32k!NtUserWaitForInputIdle
+[     24e]: 		[bf999d34 --&gt; bf90c444] 		win32k!NtUserWaitForMsgAndEvent
+[     24f]: 		[bf999d38 --&gt; bf8037a7] 		win32k!NtUserWaitMessage
+[     250]: 		[bf999d3c --&gt; bf911020] 		win32k!NtUserWin32PoolAllocationStats
+[     251]: 		[bf999d40 --&gt; bf821530] 		win32k!NtUserWindowFromPoint
+[     252]: 		[bf999d44 --&gt; bf90db86] 		win32k!NtUserYieldTask
+[     253]: 		[bf999d48 --&gt; bf899f9e] 		win32k!NtUserRemoteConnect
+[     254]: 		[bf999d4c --&gt; bf910ea7] 		win32k!NtUserRemoteRedrawRectangle
+[     255]: 		[bf999d50 --&gt; bf910ef4] 		win32k!NtUserRemoteRedrawScreen
+[     256]: 		[bf999d54 --&gt; bf910f48] 		win32k!NtUserRemoteStopScreenUpdates
+[     257]: 		[bf999d58 --&gt; bf910f95] 		win32k!NtUserCtxDisplayIOCtl
+[     258]: 		[bf999d5c --&gt; bf8fbcf2] 		win32k!NtGdiEngAssociateSurface
+[     259]: 		[bf999d60 --&gt; bf8fc6a2] 		win32k!NtGdiEngCreateBitmap
+[     25a]: 		[bf999d64 --&gt; bf8fbcbf] 		win32k!NtGdiEngCreateDeviceSurface
+[     25b]: 		[bf999d68 --&gt; bf952de1] 		win32k!NtGdiEngCreateDeviceBitmap
+[     25c]: 		[bf999d6c --&gt; bf8defe9] 		win32k!NtGdiEngCreatePalette
+[     25d]: 		[bf999d70 --&gt; bf90635f] 		win32k!NtGdiEngComputeGlyphSet
+[     25e]: 		[bf999d74 --&gt; bf952f37] 		win32k!NtGdiEngCopyBits
+[     25f]: 		[bf999d78 --&gt; bf8dfb75] 		win32k!NtGdiEngDeletePalette
+[     260]: 		[bf999d7c --&gt; bf8fbc45] 		win32k!NtGdiEngDeleteSurface
+[     261]: 		[bf999d80 --&gt; bf953d9a] 		win32k!NtGdiEngEraseSurface
+[     262]: 		[bf999d84 --&gt; bf8ffefb] 		win32k!NtGdiEngUnlockSurface
+[     263]: 		[bf999d88 --&gt; bf8fc0f7] 		win32k!NtGdiEngLockSurface
+[     264]: 		[bf999d8c --&gt; bf904ee3] 		win32k!NtGdiEngBitBlt
+[     265]: 		[bf999d90 --&gt; bf9002d4] 		win32k!NtGdiEngStretchBlt
+[     266]: 		[bf999d94 --&gt; bf95332f] 		win32k!NtGdiEngPlgBlt
+[     267]: 		[bf999d98 --&gt; bf8fc798] 		win32k!NtGdiEngMarkBandingSurface
+[     268]: 		[bf999d9c --&gt; bf8fd592] 		win32k!NtGdiEngStrokePath
+[     269]: 		[bf999da0 --&gt; bf953526] 		win32k!NtGdiEngFillPath
+[     26a]: 		[bf999da4 --&gt; bf8fe227] 		win32k!NtGdiEngStrokeAndFillPath
+[     26b]: 		[bf999da8 --&gt; bf953691] 		win32k!NtGdiEngPaint
+[     26c]: 		[bf999dac --&gt; bf9537ad] 		win32k!NtGdiEngLineTo
+[     26d]: 		[bf999db0 --&gt; bf9538d6] 		win32k!NtGdiEngAlphaBlend
+[     26e]: 		[bf999db4 --&gt; bf953a55] 		win32k!NtGdiEngGradientFill
+[     26f]: 		[bf999db8 --&gt; bf953c2e] 		win32k!NtGdiEngTransparentBlt
+[     270]: 		[bf999dbc --&gt; bf8fed98] 		win32k!NtGdiEngTextOut
+[     271]: 		[bf999dc0 --&gt; bf9530d3] 		win32k!NtGdiEngStretchBltROP
+[     272]: 		[bf999dc4 --&gt; bf95454c] 		win32k!NtGdiXLATEOBJ_cGetPalette
+[     273]: 		[bf999dc8 --&gt; bf954608] 		win32k!NtGdiXLATEOBJ_iXlate
+[     274]: 		[bf999dcc --&gt; bf9544fe] 		win32k!NtGdiXLATEOBJ_hGetColorTransform
+[     275]: 		[bf999dd0 --&gt; bf8fda8f] 		win32k!NtGdiCLIPOBJ_bEnum
+[     276]: 		[bf999dd4 --&gt; bf8fdb3c] 		win32k!NtGdiCLIPOBJ_cEnumStart
+[     277]: 		[bf999dd8 --&gt; bf953e64] 		win32k!NtGdiCLIPOBJ_ppoGetPath
+[     278]: 		[bf999ddc --&gt; bf953ea2] 		win32k!NtGdiEngDeletePath
+[     279]: 		[bf999de0 --&gt; bf953edc] 		win32k!NtGdiEngCreateClip
+[     27a]: 		[bf999de4 --&gt; bf953f0e] 		win32k!NtGdiEngDeleteClip
+[     27b]: 		[bf999de8 --&gt; bf8fd0fa] 		win32k!NtGdiBRUSHOBJ_ulGetBrushColor
+[     27c]: 		[bf999dec --&gt; bf953f48] 		win32k!NtGdiBRUSHOBJ_pvAllocRbrush
+[     27d]: 		[bf999df0 --&gt; bf953f99] 		win32k!NtGdiBRUSHOBJ_pvGetRbrush
+[     27e]: 		[bf999df4 --&gt; bf9063e5] 		win32k!NtGdiBRUSHOBJ_hGetColorTransform
+[     27f]: 		[bf999df8 --&gt; bf905d2e] 		win32k!NtGdiXFORMOBJ_bApplyXform
+[     280]: 		[bf999dfc --&gt; bf8fafef] 		win32k!NtGdiXFORMOBJ_iGetXform
+[     281]: 		[bf999e00 --&gt; bf905eef] 		win32k!NtGdiFONTOBJ_vGetInfo
+[     282]: 		[bf999e04 --&gt; bf8faf55] 		win32k!NtGdiFONTOBJ_pxoGetXform
+[     283]: 		[bf999e08 --&gt; bf905993] 		win32k!NtGdiFONTOBJ_cGetGlyphs
+[     284]: 		[bf999e0c --&gt; bf8fb160] 		win32k!NtGdiFONTOBJ_pifi
+[     285]: 		[bf999e10 --&gt; bf9546c3] 		win32k!NtGdiFONTOBJ_pfdg
+[     286]: 		[bf999e14 --&gt; bf9547ca] 		win32k!NtGdiFONTOBJ_pQueryGlyphAttrs
+[     287]: 		[bf999e18 --&gt; bf95442e] 		win32k!NtGdiFONTOBJ_pvTrueTypeFontFile
+[     288]: 		[bf999e1c --&gt; bf953fe7] 		win32k!NtGdiFONTOBJ_cGetAllGlyphHandles
+[     289]: 		[bf999e20 --&gt; bf9548a2] 		win32k!NtGdiSTROBJ_bEnum
+[     28a]: 		[bf999e24 --&gt; bf90611d] 		win32k!NtGdiSTROBJ_bEnumPositionsOnly
+[     28b]: 		[bf999e28 --&gt; bf8fb273] 		win32k!NtGdiSTROBJ_bGetAdvanceWidths
+[     28c]: 		[bf999e2c --&gt; bf90613b] 		win32k!NtGdiSTROBJ_vEnumStart
+[     28d]: 		[bf999e30 --&gt; bf9540b2] 		win32k!NtGdiSTROBJ_dwGetCodePage
+[     28e]: 		[bf999e34 --&gt; bf9541a3] 		win32k!NtGdiPATHOBJ_vGetBounds
+[     28f]: 		[bf999e38 --&gt; bf9548c0] 		win32k!NtGdiPATHOBJ_bEnum
+[     290]: 		[bf999e3c --&gt; bf954234] 		win32k!NtGdiPATHOBJ_vEnumStart
+[     291]: 		[bf999e40 --&gt; bf954278] 		win32k!NtGdiPATHOBJ_vEnumStartClipLines
+[     292]: 		[bf999e44 --&gt; bf954325] 		win32k!NtGdiPATHOBJ_bEnumClipLines
+[     293]: 		[bf999e48 --&gt; bf952daf] 		win32k!NtGdiGetDhpdev
+[     294]: 		[bf999e4c --&gt; bf95465a] 		win32k!NtGdiEngCheckAbort
+[     295]: 		[bf999e50 --&gt; bf9057d8] 		win32k!NtGdiHT_Get8BPPFormatPalette
+[     296]: 		[bf999e54 --&gt; bf952e23] 		win32k!NtGdiHT_Get8BPPMaskPalette
+[     297]: 		[bf999e58 --&gt; bf9414e4] 		win32k!NtGdiUpdateTransform
+[     298]: 		[bf999e5c --&gt; bf8dd701] 		win32k!NtGdiSetPUMPDOBJ
+[     299]: 		[bf999e60 --&gt; bf954100] 		win32k!NtGdiBRUSHOBJ_DeleteRbrush
+[     29a]: 		[bf999e64 --&gt; bf952dd6] 		win32k!NtGdiUnmapMemFont
+[     29b]: 		[bf999e68 --&gt; bf8177ad] 		win32k!NtGdiDrawStream
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>&nbsp;</p></body>
 </html>

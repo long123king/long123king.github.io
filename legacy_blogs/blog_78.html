@@ -1,41 +1,423 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Pin&#x7684;&#x529F;&#x80FD;&#x6D4B;&#x8BD5;</title>
-<body><h3>1. 通过XXX_AddInstrumentFunction增加的回调函数</h3> <p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">INS_AddInstrumentFunction (INSCALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">TRACE_AddInstrumentFunction (TRACECALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">RTN_AddInstrumentFunction (RTNCALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">IMG_AddInstrumentFunction (IMGCALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">PIN_AddFiniFunction (FINICALLBACK fun, VOID *val) </pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">PIN_AddDetachFunction (DETACHCALLBACK fun, VOID *val)</pre><!--CRLF--></div></div></p>
+<title>Python&#x5B57;&#x8282;&#x7801;&#x4E0E;&#x89E3;&#x91CA;&#x5668;&#x5B66;&#x4E60;</title>
+<body><p>参考：<a href="http://blog.jobbole.com/55327/">http://blog.jobbole.com/55327/</a></p>
+<p><a href="http://blog.jobbole.com/56300/">http://blog.jobbole.com/56300/</a></p>
+<p><a href="http://blog.jobbole.com/56761/">http://blog.jobbole.com/56761/</a></p>
 <p>&nbsp;</p>
-<p>可以定义为Callback_XXX， 为了意义更加明确，可以将Callback_XXX定义成Enconter_XXX</p>
-<p>这些回调函数是在Pin线程内运行的，只有检测到新出现的情况时，才会被调用。</p>
-<p>或者说，一条相同的指令（即指令内容和地址都相同）只会在这里触发一次，而不管它在Application中实际运行时被执行了多少次。</p>
+<h1>1. 在交互式命令行中执行命令的内部过程</h1>
+<blockquote>
+<pre class="brush:csharp;gutter:true;">当你敲下return键的时候，python完成了以下四步：词法分析、句法分析、编译、解释。词法分析的工作就是将你刚才输入的那行代码分解为一些符号token（译者注：包括标示符，关键字，数字, 操作符等）。句法分析程序再接收这些符号，并用一种结构来展现它们之间的关系（在这种情况下使用的抽象语法树）。然后编译器接收这棵抽象语法树，并将它转化为一个（或多个）代码对象。最后，解释器逐个接收这些代码对象，并执行它们所代表的代码。</pre>
+</blockquote>
 <p>&nbsp;</p>
-<p>很显然，这些Callback中不适合统计应用程序的动态运行数据。</p>
+<p>每一行我们输入的命令，都要经过上面的四个步骤，才能够被执行。</p>
 <p>&nbsp;</p>
-<p>这里面只适合通过InsertCall添加Instrument回调函数。</p>
+<h1>2. 函数对象</h1>
+<p>对象是面向对象理论中的基本元素，在一些动态或者解释性语言中，函数也可以看作是一种对象，比如在JavaScript，以及功能性编程语言Haskell/Ocaml中，函数都是一种特殊的对象。</p>
 <p>&nbsp;</p>
-<h3>2. 在Callback_XXX中通过InsertCall添加的回调函数</h3>
-<p>可以定义为Instrument_XXX</p>
+<p>函数是对象，就意味着函数可以像对象一样被执行各种操作，比如分配，释放，复制，赋值......</p>
+<blockquote>
+<p>&ldquo;函数是最好的对象&rdquo;说明函数是一种对象。它就如同一个列表或者举个例子来说&nbsp;：MyObject&nbsp;就是一个对象。既然 foo&nbsp;是一个对象，那么我们就能在不调用它的情况下使用它（也就是说，foo&nbsp;和&nbsp;foo()&nbsp;是大相径庭的）。我们能够将&nbsp;foo&nbsp;当作一个参数传递给另一个函数或者赋值给一个新函数名（&nbsp;other_function = foo&nbsp;）。有了如此棒的函数，一切皆为可能！</p>
+</blockquote>
 <p>&nbsp;</p>
-<p>这些回调函数是在Application实际运行时，会动态地Invoke到的，是在Application线程内运行的。</p>
-<p>应用程序每执行了一次指令，就会调用一下这些回调函数。</p>
+<p>另外，函数作为对象出现的时候，就是和函数调用有区别的，函数调用是一个动态的过程；而函数作为一个对象，是一个静态的实体概念，意思是你可以对这个对象施予一些操作，这与这个对象的类型有关，或者以面向对象的思想来说，你可以执行这个对象提供的各种接口操作（函数）。</p>
 <p>&nbsp;</p>
-<p>对于应用程序的运行数据，可以在这些函数中进行统计。</p>
+<p>既然是对象，那么函数对象有哪些成员呢?</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; dir
+&lt;built-in function dir&gt;
+&gt;&gt;&gt; dir(dir)
+['__call__', '__class__', '__cmp__', '__delattr__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__le__', '__lt__', '__module__', '__name__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__self__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__']
+&gt;&gt;&gt; dir(dir.func_code)
+
+Traceback (most recent call last):
+  File "&lt;pyshell#2&gt;", line 1, in &lt;module&gt;
+    dir(dir.func_code)
+AttributeError: 'builtin_function_or_method' object has no attribute 'func_code'
+&gt;&gt;&gt; def foo(a):
+	x = 3
+	return x + a
+
+&gt;&gt;&gt; foo
+&lt;function foo at 0x0000000002E8F128&gt;
+&gt;&gt;&gt; dir(foo)
+['__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__doc__', '__format__', '__get__', '__getattribute__', '__globals__', '__hash__', '__init__', '__module__', '__name__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'func_closure', 'func_code', 'func_defaults', 'func_dict', 'func_doc', 'func_globals', 'func_name']
+&gt;&gt;&gt; 
+</pre>
+</div>
+<p>其中，内置函数dir的功能描述如下：</p>
+<blockquote>
+<p><tt class="descname">dir</tt><big>(</big><span class="optional">[<em>object</em><span class="optional">]<big>)</big> </span></span></p>
+<p>Without arguments, return the list of names in the current local scope. With an argument, attempt to return a list of valid attributes for that object.</p>
+<p>If the object has a method named <tt class="xref py py-meth docutils literal">__dir__()</tt>, this method will be called and must return the list of attributes. This allows objects that implement a custom <a class="reference internal" title="object.__getattr__" href="http://i.cnblogs.com/"><tt class="xref py py-func docutils literal">__getattr__()</tt></a> or <a class="reference internal" title="object.__getattribute__" href="http://i.cnblogs.com/"><tt class="xref py py-func docutils literal">__getattribute__()</tt></a> function to customize the way <a class="reference internal" title="dir" href="mk:@MSITStore:D:\Python27\Doc\python274.chm::/library/functions.html#dir"><tt class="xref py py-func docutils literal">dir()</tt></a> reports their attributes.</p>
+<p>If the object does not provide <tt class="xref py py-meth docutils literal">__dir__()</tt>, the function tries its best to gather information from the object&rsquo;s <tt class="xref py py-attr docutils literal">__dict__</tt> attribute, if defined, and from its type object. The resulting list is not necessarily complete, and may be inaccurate when the object has a custom <a class="reference internal" title="object.__getattr__" href="http://i.cnblogs.com/"><tt class="xref py py-func docutils literal">__getattr__()</tt></a>.</p>
+<p>The default <a class="reference internal" title="dir" href="mk:@MSITStore:D:\Python27\Doc\python274.chm::/library/functions.html#dir"><tt class="xref py py-func docutils literal">dir()</tt></a> mechanism behaves differently with different types of objects, as it attempts to produce the most relevant, rather than complete, information:</p>
+<ul class="simple">
+<li>If the object is a module object, the list contains the names of the module&rsquo;s attributes.</li>
+<li>If the object is a type or class object, the list contains the names of its attributes, and recursively of the attributes of its bases.</li>
+<li>Otherwise, the list contains the object&rsquo;s attributes&rsquo; names, the names of its class&rsquo;s attributes, and recursively of the attributes of its class&rsquo;s base classes.</li>
+</ul>
+<p>The resulting list is sorted alphabetically.</p>
+</blockquote>
+<p>　　</p>
+<p>除此之外，help内置函数也很重要，可以查看内置函数的帮助内容。</p>
 <p>&nbsp;</p>
-<h3>3. 粒度</h3>
-<p>RTN ---&gt; TRACE ---&gt; INS</p>
-<p>代表着从大到小的粒度级别。</p>
+<p>首先，查看当前Python程序加载了哪些模块</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; for i in sys.modules.keys():
+...     print "%20s:\t%s\n" % (i, sys.modules[i])
+...     print "*"*100
+</pre>
+</div>
 <p>&nbsp;</p>
-<p>每一种级别的Instrument都可以代表程序被实际执行的路径。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">            copy_reg:	&lt;module 'copy_reg' from '/usr/lib/python2.7/copy_reg.pyc'&gt;
+
+****************************************************************************************************
+         sre_compile:	&lt;module 'sre_compile' from '/usr/lib/python2.7/sre_compile.pyc'&gt;
+
+****************************************************************************************************
+                _sre:	&lt;module '_sre' (built-in)&gt;
+
+****************************************************************************************************
+           encodings:	&lt;module 'encodings' from '/usr/lib/python2.7/encodings/__init__.pyc'&gt;
+
+****************************************************************************************************
+                site:	&lt;module 'site' from '/usr/lib/python2.7/site.pyc'&gt;
+
+****************************************************************************************************
+         __builtin__:	&lt;module '__builtin__' (built-in)&gt;
+
+****************************************************************************************************
+           sysconfig:	&lt;module 'sysconfig' from '/usr/lib/python2.7/sysconfig.pyc'&gt;
+
+****************************************************************************************************
+            __main__:	&lt;module '__main__' (built-in)&gt;
+
+****************************************************************************************************
+ encodings.encodings:	None
+
+****************************************************************************************************
+                 abc:	&lt;module 'abc' from '/usr/lib/python2.7/abc.pyc'&gt;
+
+****************************************************************************************************
+           posixpath:	&lt;module 'posixpath' from '/usr/lib/python2.7/posixpath.pyc'&gt;
+
+****************************************************************************************************
+         _weakrefset:	&lt;module '_weakrefset' from '/usr/lib/python2.7/_weakrefset.pyc'&gt;
+
+****************************************************************************************************
+               errno:	&lt;module 'errno' (built-in)&gt;
+
+****************************************************************************************************
+    encodings.codecs:	None
+
+****************************************************************************************************
+       sre_constants:	&lt;module 'sre_constants' from '/usr/lib/python2.7/sre_constants.pyc'&gt;
+
+****************************************************************************************************
+                  re:	&lt;module 're' from '/usr/lib/python2.7/re.pyc'&gt;
+
+****************************************************************************************************
+             _abcoll:	&lt;module '_abcoll' from '/usr/lib/python2.7/_abcoll.pyc'&gt;
+
+****************************************************************************************************
+               types:	&lt;module 'types' from '/usr/lib/python2.7/types.pyc'&gt;
+
+****************************************************************************************************
+             _codecs:	&lt;module '_codecs' (built-in)&gt;
+
+****************************************************************************************************
+encodings.__builtin__:	None
+
+****************************************************************************************************
+           _warnings:	&lt;module '_warnings' (built-in)&gt;
+
+****************************************************************************************************
+         genericpath:	&lt;module 'genericpath' from '/usr/lib/python2.7/genericpath.pyc'&gt;
+
+****************************************************************************************************
+                stat:	&lt;module 'stat' from '/usr/lib/python2.7/stat.pyc'&gt;
+
+****************************************************************************************************
+           zipimport:	&lt;module 'zipimport' (built-in)&gt;
+
+****************************************************************************************************
+      _sysconfigdata:	&lt;module '_sysconfigdata' from '/usr/lib/python2.7/_sysconfigdata.pyc'&gt;
+
+****************************************************************************************************
+            warnings:	&lt;module 'warnings' from '/usr/lib/python2.7/warnings.pyc'&gt;
+
+****************************************************************************************************
+            UserDict:	&lt;module 'UserDict' from '/usr/lib/python2.7/UserDict.pyc'&gt;
+
+****************************************************************************************************
+     encodings.utf_8:	&lt;module 'encodings.utf_8' from '/usr/lib/python2.7/encodings/utf_8.pyc'&gt;
+
+****************************************************************************************************
+                 sys:	&lt;module 'sys' (built-in)&gt;
+
+****************************************************************************************************
+              codecs:	&lt;module 'codecs' from '/usr/lib/python2.7/codecs.pyc'&gt;
+
+****************************************************************************************************
+            readline:	&lt;module 'readline' from '/usr/lib/python2.7/lib-dynload/readline.i386-linux-gnu.so'&gt;
+
+****************************************************************************************************
+   _sysconfigdata_nd:	&lt;module '_sysconfigdata_nd' from '/usr/lib/python2.7/plat-i386-linux-gnu/_sysconfigdata_nd.pyc'&gt;
+
+****************************************************************************************************
+             os.path:	&lt;module 'posixpath' from '/usr/lib/python2.7/posixpath.pyc'&gt;
+
+****************************************************************************************************
+       sitecustomize:	&lt;module 'sitecustomize' from '/usr/lib/python2.7/sitecustomize.pyc'&gt;
+
+****************************************************************************************************
+              signal:	&lt;module 'signal' (built-in)&gt;
+
+****************************************************************************************************
+           traceback:	&lt;module 'traceback' from '/usr/lib/python2.7/traceback.pyc'&gt;
+
+****************************************************************************************************
+           linecache:	&lt;module 'linecache' from '/usr/lib/python2.7/linecache.pyc'&gt;
+
+****************************************************************************************************
+               posix:	&lt;module 'posix' (built-in)&gt;
+
+****************************************************************************************************
+   encodings.aliases:	&lt;module 'encodings.aliases' from '/usr/lib/python2.7/encodings/aliases.pyc'&gt;
+
+****************************************************************************************************
+          exceptions:	&lt;module 'exceptions' (built-in)&gt;
+
+****************************************************************************************************
+           sre_parse:	&lt;module 'sre_parse' from '/usr/lib/python2.7/sre_parse.pyc'&gt;
+
+****************************************************************************************************
+                  os:	&lt;module 'os' from '/usr/lib/python2.7/os.pyc'&gt;
+
+****************************************************************************************************
+            _weakref:	&lt;module '_weakref' (built-in)&gt;
+
+****************************************************************************************************
+</pre>
+</div>
+<p>　　</p>
+<p>可以通过下面代码查看__builtin__模块中的成员</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; num = 0
+&gt;&gt;&gt; for i in dir(sys.modules["__builtin__"]):
+...     print "%20s\t" % i,
+...     num += 1
+...     if num == 5:
+...             print ""
+...             num = 0
+... 
+     ArithmeticError	      AssertionError	      AttributeError	       BaseException	         BufferError	
+        BytesWarning	  DeprecationWarning	            EOFError	            Ellipsis	    EnvironmentError	
+           Exception	               False	  FloatingPointError	       FutureWarning	       GeneratorExit	
+             IOError	         ImportError	       ImportWarning	    IndentationError	          IndexError	
+            KeyError	   KeyboardInterrupt	         LookupError	         MemoryError	           NameError	
+                None	      NotImplemented	 NotImplementedError	             OSError	       OverflowError	
+PendingDeprecationWarning	      ReferenceError	        RuntimeError	      RuntimeWarning	       StandardError	
+       StopIteration	         SyntaxError	       SyntaxWarning	         SystemError	          SystemExit	
+            TabError	                True	           TypeError	   UnboundLocalError	  UnicodeDecodeError	
+  UnicodeEncodeError	        UnicodeError	UnicodeTranslateError	      UnicodeWarning	         UserWarning	
+          ValueError	             Warning	   ZeroDivisionError	                   _	           __debug__	
+             __doc__	          __import__	            __name__	         __package__	                 abs	
+                 all	                 any	               apply	          basestring	                 bin	
+                bool	              buffer	           bytearray	               bytes	            callable	
+                 chr	         classmethod	                 cmp	              coerce	             compile	
+             complex	           copyright	             credits	             delattr	                dict	
+                 dir	              divmod	           enumerate	                eval	            execfile	
+                exit	                file	              filter	               float	              format	
+           frozenset	             getattr	             globals	             hasattr	                hash	
+                help	                 hex	                  id	               input	                 int	
+              intern	          isinstance	          issubclass	                iter	                 len	
+             license	                list	              locals	                long	                 map	
+                 max	          memoryview	                 min	                next	              object	
+                 oct	                open	                 ord	                 pow	               print	
+            property	                quit	               range	           raw_input	              reduce	
+              reload	                repr	            reversed	               round	                 set	
+             setattr	               slice	              sorted	        staticmethod	                 str	
+                 sum	               super	               tuple	                type	              unichr	
+             unicode	                vars	              xrange	                 zip	&gt;&gt;&gt; 
+</pre>
+</div>
+<p>　　</p>
+<p>　　</p>
+<h1>&nbsp;3. dir内置命令是怎么实现的</h1>
+<p>在/Python-2.7.8/Objects/object.c中</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">1963 /* Implementation of dir() -- if obj is NULL, returns the names in the current
+1964    (local) scope.  Otherwise, performs introspection of the object: returns a
+1965    sorted list of attribute names (supposedly) accessible from the object
+1966 */
+1967 PyObject *
+1968 PyObject_Dir(PyObject *obj)
+1969 {
+1970     PyObject * result;
+1971 
+1972     if (obj == NULL)
+1973         /* no object -- introspect the locals */
+1974         result = _dir_locals();
+1975     else
+1976         /* object -- introspect the object */
+1977         result = _dir_object(obj);
+1978 
+1979     assert(result == NULL || PyList_Check(result));
+1980 
+1981     if (result != NULL &amp;&amp; PyList_Sort(result) != 0) {
+1982         /* sorting the list failed */
+1983         Py_DECREF(result);
+1984         result = NULL;
+1985     }
+1986 
+1987     return result;
+1988 }
+</pre>
+</div>
+<p>　　</p>
+<p>可见，与help(dir)描述的基本一致。</p>
 <p>&nbsp;</p>
-<p>粒度越大，需要添加的Instrument就越少，因此，监控程序的额外开销就越小。</p>
-<p>粒度越小，需要添加的Instrument就越多，开销也就越大，但是对于程序的运行情况的掌握就越精确。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; def foo(a):
+...     if a &gt; x:
+...             return a/1024
+...     else:
+...             return a
+... 
+&gt;&gt;&gt; type(foo)
+&lt;type 'function'&gt;
+&gt;&gt;&gt; dir(foo)
+['__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__doc__', '__format__', '__get__', '__getattribute__', '__globals__', '__hash__', '__init__', '__module__', '__name__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'func_closure', 'func_code', 'func_defaults', 'func_dict', 'func_doc', 'func_globals', 'func_name']
+&gt;&gt;&gt; foo.__call__
+&lt;method-wrapper '__call__' of function object at 0xb7420df4&gt;
+&gt;&gt;&gt; foo.__str__
+&lt;method-wrapper '__str__' of function object at 0xb7420df4&gt;
+&gt;&gt;&gt; foo
+&lt;function foo at 0xb7420df4&gt;
+&gt;&gt;&gt; foo.func_closure
+&gt;&gt;&gt; type(foo.func_closure)
+&lt;type 'NoneType'&gt;
+&gt;&gt;&gt; type(foo.func_code)
+&lt;type 'code'&gt;
+&gt;&gt;&gt; foo.func_code
+&lt;code object foo at 0xb7409d10, file "&lt;stdin&gt;", line 1&gt;
+&gt;&gt;&gt; dir(foo.func_code)
+['__class__', '__cmp__', '__delattr__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'co_argcount', 'co_cellvars', 'co_code', 'co_consts', 'co_filename', 'co_firstlineno', 'co_flags', 'co_freevars', 'co_lnotab', 'co_name', 'co_names', 'co_nlocals', 'co_stacksize', 'co_varnames']
+&gt;&gt;&gt; foo.func_code.co_argcount
+1
+&gt;&gt;&gt; foo.func_code.co_cellvars
+()
+&gt;&gt;&gt; foo.func_code.co_code
+'|\x00\x00t\x00\x00k\x04\x00r\x14\x00|\x00\x00d\x01\x00\x15S|\x00\x00Sd\x00\x00S'
+&gt;&gt;&gt; foo.func_code.co_consts
+(None, 1024)
+&gt;&gt;&gt; foo.func_code.co_filename
+'&lt;stdin&gt;'
+&gt;&gt;&gt; foo.func_code.co_firstlineno
+1
+&gt;&gt;&gt; foo.func_code.co_flags
+67
+&gt;&gt;&gt; foo.func_code.co_freevars
+()
+&gt;&gt;&gt; foo.func_code.co_lnotab
+'\x00\x01\x0c\x01\x08\x02'
+&gt;&gt;&gt; foo.func_code.co_name
+'foo'
+&gt;&gt;&gt; foo.func_code.co_names
+('x',)
+&gt;&gt;&gt; foo.func_code.co_nlocals
+1
+&gt;&gt;&gt; foo.func_code.co_stacksize
+2
+&gt;&gt;&gt; foo.func_code.co_varnames
+('a',)
+&gt;&gt;&gt; 
+</pre>
+</div>
+<p>　　</p>
+<p>其中，foo.func_code.co_code打印出来的就是Python的字节码。</p>
 <p>&nbsp;</p>
-<p>对于符号信息比较少的Release版本应用程序来说，使用RTN显然不合适，会漏掉大部分甚至全部的应用程序例程。</p>
-<p>对于包含符号信息的系统dll库及语言运行时库来说，使用RTN可以有效地利用公开的、有意义的API定义，从而大幅提高插桩效率。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Help on built-in function ord in module __builtin__:
+
+ord(...)
+    ord(c) -&gt; integer
+    
+    Return the integer ordinal of a one-character string.
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; [ord(i) for i in foo.func_code.co_code]
+[124, 0, 0, 116, 0, 0, 107, 4, 0, 114, 20, 0, 124, 0, 0, 100, 1, 0, 21, 83, 124, 0, 0, 83, 100, 0, 0, 83]
+</pre>
+</div>
 <p>&nbsp;</p>
-<p>对于应用程序来说，TRACE级别的粒度监控是比较合适的，即不会漏掉细节，也可以提高监控效率。</p>
+<blockquote>
+<p align="left">这就是那些组成python字节码的字节。解释器会循环接收各个字节，查找每个字节的指令然后执行这个指令。需要注意的是，字节码本身并不包括任何python对象,或引用任何对象。</p>
+<p align="left">如果你想知道python字节码的意思，可以去找到CPython解释器文件(ceval.c)，然后查阅100的意思、1的意思、0的意思，等等。　　</p>
+</blockquote>
 <p>&nbsp;</p>
-<p>在实际操作过程中，可以以IMG为单位，进行信息收集，以确定使用哪种粒度进行监控。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; import dis
+&gt;&gt;&gt; dir(dis)
+['EXTENDED_ARG', 'HAVE_ARGUMENT', '__all__', '__builtins__', '__doc__', '__file__', '__name__', '__package__', '_have_code', '_test', 'cmp_op', 'dis', 'disassemble', 'disassemble_string', 'disco', 'distb', 'findlabels', 'findlinestarts', 'hascompare', 'hasconst', 'hasfree', 'hasjabs', 'hasjrel', 'haslocal', 'hasname', 'opmap', 'opname', 'sys', 'types']
+&gt;&gt;&gt; type(dis.dis)
+&lt;type 'function'&gt;
+&gt;&gt;&gt; dir(dis.dis)
+['__call__', '__class__', '__closure__', '__code__', '__defaults__', '__delattr__', '__dict__', '__doc__', '__format__', '__get__', '__getattribute__', '__globals__', '__hash__', '__init__', '__module__', '__name__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'func_closure', 'func_code', 'func_defaults', 'func_dict', 'func_doc', 'func_globals', 'func_name']
+&gt;&gt;&gt; [ord(i) for i in dis.dis.func_code.co_code]
+[124, 0, 0, 100, 1, 0, 107, 8, 0, 114, 23, 0, 116, 1, 0, 131, 0, 0, 1, 100, 1, 0, 83, 116, 2, 0, 124, 0, 0, 116, 3, 0, 106, 4, 0, 131, 2, 0, 114, 53, 0, 124, 0, 0, 106, 5, 0, 125, 0, 0, 110, 0, 0, 116, 6, 0, 124, 0, 0, 100, 2, 0, 131, 2, 0, 114, 80, 0, 124, 0, 0, 106, 7, 0, 125, 0, 0, 110, 0, 0, 116, 6, 0, 124, 0, 0, 100, 3, 0, 131, 2, 0, 114, 107, 0, 124, 0, 0, 106, 8, 0, 125, 0, 0, 110, 0, 0, 116, 6, 0, 124, 0, 0, 100, 4, 0, 131, 2, 0, 114, 246, 0, 124, 0, 0, 106, 9, 0, 106, 10, 0, 131, 0, 0, 125, 1, 0, 124, 1, 0, 106, 11, 0, 131, 0, 0, 1, 120, 174, 0, 124, 1, 0, 68, 93, 85, 0, 92, 2, 0, 125, 2, 0, 125, 3, 0, 116, 2, 0, 124, 3, 0, 116, 12, 0, 131, 2, 0, 114, 154, 0, 100, 5, 0, 124, 2, 0, 22, 71, 72, 121, 14, 0, 116, 13, 0, 124, 3, 0, 131, 1, 0, 1, 87, 110, 28, 0, 4, 116, 14, 0, 107, 10, 0, 114, 234, 0, 1, 125, 4, 0, 1, 100, 6, 0, 71, 124, 4, 0, 71, 72, 110, 1, 0, 88, 72, 113, 154, 0, 113, 154, 0, 87, 110, 78, 0, 116, 6, 0, 124, 0, 0, 100, 7, 0, 131, 2, 0, 114, 18, 1, 116, 15, 0, 124, 0, 0, 131, 1, 0, 1, 110, 50, 0, 116, 2, 0, 124, 0, 0, 116, 16, 0, 131, 2, 0, 114, 46, 1, 116, 17, 0, 124, 0, 0, 131, 1, 0, 1, 110, 22, 0, 116, 14, 0, 100, 8, 0, 116, 18, 0, 124, 0, 0, 131, 1, 0, 106, 19, 0, 22, 130, 2, 0, 100, 1, 0, 83]
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; dir(dis.dis.func_code)
+['__class__', '__cmp__', '__delattr__', '__doc__', '__eq__', '__format__', '__ge__', '__getattribute__', '__gt__', '__hash__', '__init__', '__le__', '__lt__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', 'co_argcount', 'co_cellvars', 'co_code', 'co_consts', 'co_filename', 'co_firstlineno', 'co_flags', 'co_freevars', 'co_lnotab', 'co_name', 'co_names', 'co_nlocals', 'co_stacksize', 'co_varnames']
+&gt;&gt;&gt; dis.dis.func_code.co_filename
+'/usr/lib/python2.7/dis.py'
+&gt;&gt;&gt; dis.dis.func_code.co_consts
+('Disassemble classes, methods, functions, or code.\n\n    With no argument, disassemble the last traceback.\n\n    ', None, 'im_func', 'func_code', '__dict__', 'Disassembly of %s:', 'Sorry:', 'co_code', "don't know how to disassemble %s objects")
+&gt;&gt;&gt; dis.dis.func_code.co_names
+('None', 'distb', 'isinstance', 'types', 'InstanceType', '__class__', 'hasattr', 'im_func', 'func_code', '__dict__', 'items', 'sort', '_have_code', 'dis', 'TypeError', 'disassemble', 'str', 'disassemble_string', 'type', '__name__')
+&gt;&gt;&gt; dis.dis.func_code.co_varnames
+('x', 'items', 'name', 'x1', 'msg')
+&gt;&gt;&gt; dis.dis.func_code.co_stacksize
+6
+&gt;&gt;&gt; dis.dis.func_code.co_nlocals
+5
+</pre>
+</div>
+<p>　　</p>
+<p>其实dis.dis也不过就是是一连串的字节码而已，它被Python解释器执行，从而完成指定的功能。</p>
+<p>下面我们就使用dis.dis来反汇编一下字节码</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">&gt;&gt;&gt; dis.dis(foo.func_code.co_code)
+          0 LOAD_FAST           0 (0)
+          3 LOAD_GLOBAL         0 (0)
+          6 COMPARE_OP          4 (&gt;)
+          9 POP_JUMP_IF_FALSE    20
+         12 LOAD_FAST           0 (0)
+         15 LOAD_CONST          1 (1)
+         18 BINARY_DIVIDE  
+         19 RETURN_VALUE   
+    &gt;&gt;   20 LOAD_FAST           0 (0)
+         23 RETURN_VALUE   
+         24 LOAD_CONST          0 (0)
+         27 RETURN_VALUE  
+</pre>
+</div>
+<p>　　</p>
 <p>&nbsp;</p>
-<h3>批处理文件</h3>
-<div id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">copy /y F:\pintools\Coverit.dll C:\pintools\Coverit.dll</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">call run.bat Coverit.dll target_r.exe</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">copy /y *.clg F:\clgs\</pre><!--CRLF--></div></div></body>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p></body>
 </html>

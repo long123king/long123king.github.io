@@ -1,92 +1,255 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>IO Processing</title>
-<body><h2>Types of IO</h2>
-<h3>IRP Buffer Management</h3>
-<p>首先区分一下page的内存与nonpaged的内存，内存如果用页管理，就难免面对被swap out的命运；但是如果用nonpaged管理，就会一直存在在物理内存中。</p>
-<p>一般来说，内核以及驱动承担繁重的工作，因此常用nonpaged内存，以保证效率。</p>
+<title>iText&#x4F8B;&#x5B50;</title>
+<body><p>参考：<a href="http://itextpdf.com/book/examples.php" target="_blank">http://itextpdf.com/book/examples.php</a></p>
 <p>&nbsp;</p>
-<p><span style="color: #800000;">当application或者driver通过调用下列API/函数创建一个IRP请求数据包时，</span></p>
-<ol>
-<li><strong>ReadFile/NtReadFile</strong></li>
-<li><strong>WriteFile/NtWriteFile</strong></li>
-<li><strong>DeviceIoControl/NtDeviceIoControl</strong></li>
-</ol>
-<p><span style="color: #800000;">IO manager会根据情况选用不同的buffer管理机制：</span></p>
-<ul>
-<li><strong>Buffered IO</strong></li>
-</ul>
-<p>由IO manager直接在nonpaged pool中分配内存，分配的buffer供driver使用，并且在适当的时机，将这块内存与用户态应用程序指定的内存进行同步。</p>
-<ul>
-<li><strong>Direct IO</strong></li>
-</ul>
-<p><span style="line-height: 1.5;">将用户态应用程序传递进来的内存进行转化，由paged转化为nonpaged，转化的过程又称作lock。</span></p>
-<p><span style="line-height: 1.5;">转化之后的内存通过MDL（Memory Description List）进行维护，MDL描述的是物理内存。</span></p>
-<p><span style="line-height: 1.5;">如果driver不需要访问这段物理内存中的内容，比如DMA驱动，它不需要CPU的参与便可以在物理内存与IO设备之间进行传输数据，那么直接使用MDL就可以了；</span></p>
-<p><span style="line-height: 1.5;">但是如果driver需要访问这段物理内存中的内容，可以将物理内存map到system address space中的某段上，再进行访问。</span></p>
-<ul>
-<li><strong><span style="line-height: 1.5;">Neither IO</span></strong></li>
-</ul>
-<p>即不同于以上两种方式的其他类型，<span style="text-decoration: line-through;">就是不需要IO Manager的参与，由driver自己来管理缓存</span>。</p>
-<p>基本上意味着驱动直接访问用户态内存，这种情况下必须保证是访问用户态的缓存的驱动是同步驱动代码或者APC例程，即当前正在执行的线程就是请求IO操作的线程，可以访问该线程的页表描述的用户态地址空间，而不是ISR/DPC等异步例程。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext/daniel $ cat HelloWorldNarrow.java 
+import java.io.FileOutputStream;
+import java.io.IOException;
+ 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.pdf.PdfWriter;
+ 
+/**
+ * Hello World: document constructor.
+ */
+public class HelloWorldNarrow {
+ 
+    /** Path to the resulting PDF file. */
+    public static final String RESULT
+        = "daniel.pdf";
+ 
+    /**
+     * Creates a PDF file: hello_narrow.pdf
+     * @param    args    no arguments needed
+     */
+    public static void main(String[] args)
+         throws DocumentException, IOException {
+        // step 1
+    	// Using a custom page size
+        Rectangle pagesize = new Rectangle(480f, 720f);
+        Document document = new Document(pagesize, 36f, 72f, 108f, 180f);
+        // step 2
+        PdfWriter.getInstance(document, new FileOutputStream(RESULT));
+        // step 3
+        document.open();
+        // step 4
+        document.add(new Paragraph(
+            "Hello World! Hello People! " +
+            "Hello Sky! Hello Sun! Hello Moon! Hello Stars!"));
+        // step 5
+        document.close();
+    }
+}
+daniel@daniel-mint ~/latex/linux/itext/daniel $ 
+</pre>
+</div>
+<p>　　</p>
 <p>&nbsp;</p>
-<p><span style="color: #800000;">具体选用什么类型的Buffer management方式，由<strong>driver</strong>在初始化时，指定在创建的device object对象里。</span></p>
-<p>对于DeviceIoControl来说，buffer management的方式由相应的参数决定。</p>
 <p>&nbsp;</p>
-<p><span style="color: #800000;">对于buffer management方式的选择，有以下规律：</span></p>
-<p>1. 如果申请的是小于一页内存(4KB)，选用Buffered IO，因为这时在用户态与内核态进行拷贝的代价还不是很大。</p>
-<p>2. 如果申请的是大于一页内存，选用Direct IO。</p>
-<p>一页内存可以看作是Buffered IO在用户态与内核态之间拷贝内存，与Direct IO锁定一块内存的开销的平衡点(trade-off)。</p>
-<p>3. 文件系统驱动一般会使用Neither IO，因为该驱动只要保证对应用户态程序的进程被切换执行时，它将文件系统中的文件内容拷贝到用户态程序指定的内存中去就好了，因为这时的页表对于驱动来说是有效的（因为已经任务切换到该driver代表的用户态进程了）；</p>
-<p>4. 但是大多数的驱动不能使用Neither IO，比如driver如果需要在ISR/DPC routine中传递数据时，就没有办法保证当前状态下的页表对应的是正确的用户态应用程序。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext/daniel $ 
+daniel@daniel-mint ~/latex/linux/itext/daniel $ ls
+HelloWorldNarrow.java  run.sh
+daniel@daniel-mint ~/latex/linux/itext/daniel $ cat run.sh 
+javac -cp ../itextpdf-5.5.2.jar:. $1.java
+java -cp ../itextpdf-5.5.2.jar:. $1 
+rm $1.class
+daniel@daniel-mint ~/latex/linux/itext/daniel $ bash run.sh HelloWorldNarrow
+daniel@daniel-mint ~/latex/linux/itext/daniel $ ls
+daniel.pdf  HelloWorldNarrow.java  run.sh
+daniel@daniel-mint ~/latex/linux/itext/daniel $ 
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext/daniel $ 
+daniel@daniel-mint ~/latex/linux/itext/daniel $ cat daniel.pdf 
+%PDF-1.4
+%���
+2 0 obj
+&lt;&lt;/Length 96/Filter/FlateDecode&gt;&gt;stream
+x�+�r
+�26S034I�2P�5�1��
+                 @Bi\�99
+��E9)�
+N@j~AN*��]	g�������0�fH�d
+                                 4�K����\C����&amp;
+endstream
+endobj
+4 0 obj
+&lt;&lt;/Parent 3 0 R/Contents 2 0 R/Type/Page/Resources&lt;&lt;/Font&lt;&lt;/F1 1 0 R&gt;&gt;&gt;&gt;/MediaBox[0 0 480 720]&gt;&gt;
+endobj
+1 0 obj
+&lt;&lt;/BaseFont/Helvetica/Type/Font/Encoding/WinAnsiEncoding/Subtype/Type1&gt;&gt;
+endobj
+3 0 obj
+&lt;&lt;/Type/Pages/Count 1/Kids[4 0 R]&gt;&gt;
+endobj
+5 0 obj
+&lt;&lt;/Type/Catalog/Pages 3 0 R&gt;&gt;
+endobj
+6 0 obj
+&lt;&lt;/Producer(iText� 5.5.2 �2000-2014 iText Group NV \(AGPL-version\))/ModDate(D:20140819175007+08'00')/CreationDate(D:20140819175007+08'00')&gt;&gt;
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000289 00000 n 
+0000000015 00000 n 
+0000000377 00000 n 
+0000000177 00000 n 
+0000000428 00000 n 
+0000000473 00000 n 
+trailer
+&lt;&lt;/Root 5 0 R/ID [&lt;8f313f0b956c31e86d082ed4ab592eeb&gt;&lt;8f313f0b956c31e86d082ed4ab592eeb&gt;]/Info 6 0 R/Size 7&gt;&gt;
+%iText-5.5.2
+startxref
+630
+%%EOF
+daniel@daniel-mint ~/latex/linux/itext/daniel $ 
+</pre>
+</div>
+<p>　　</p>
+<p>通过Rups解析出stream内容</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">q
+BT
+36 612 Td
+0 -18 Td
+/F1 12 Tf
+(Hello World! Hello People! Hello Sky! Hello Sun! Hello Moon! Hello) Tj
+0 0 Td
+0 -18 Td
+(Stars!) Tj
+0 0 Td
+ET
+Q
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext/daniel $ awk '/stream/ {p=1}; p; /endstream/ {p=0}' daniel.pdf | sed -re '{s/.*stream.*//g}' | awk 'NF!=0' | hexdump -C
+00000000  78 9c 2b e4 72 0a e1 32  36 53 30 33 34 52 08 49  |x.+.r..26S034R.I|
+00000010  e1 32 50 d0 35 b4 00 31  f4 dd 0c 15 40 42 69 5c  |.2P.5..1....@Bi\|
+00000020  1a 1e a9 39 39 f9 0a e1  f9 45 39 29 8a 0a 10 4e  |...99....E9)...N|
+00000030  40 6a 7e 41 4e 2a 8c 17  9c 5d 09 67 96 e6 c1 98  |@j~AN*...].g....|
+00000040  be f9 f9 30 b6 66 48 16  d0 64 03 14 0b 34 82 4b  |...0.fH..d...4.K|
+00000050  12 8b 8a 15 91 a4 5c 43  b8 02 b9 00 fc 98 26 ef  |......\C......&amp;.|
+00000060  0a                                                |.|
+00000061
+daniel@daniel-mint ~/latex/linux/itext/daniel $ 
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext/daniel $ awk '/stream/ {p=1}; p; /endstream/ {p=0}' daniel.pdf | sed -re '{s/.*stream.*//g}' | awk 'NF!=0' | zlib-flate -uncompress
+q
+BT
+36 612 Td
+0 -18 Td
+/F1 12 Tf
+(Hello World! Hello People! Hello Sky! Hello Sun! Hello Moon! Hello)Tj
+0 0 Td
+0 -18 Td
+(Stars!)Tj
+0 0 Td
+ET
+Q
+</pre>
+</div>
+<p>　　</p>
+<p>其中zlib-flate是在qpdf程序包中。</p>
 <p>&nbsp;</p>
-<p><span style="color: #800000;">当driver使用Neither IO（即意味着直接访问用户态内存）时，需要格外注意：</span></p>
-<p>1. 用户态的地址是否valid，即是否已经映射，而不是内存区域间的间隙或者空洞，可以通过try/catch来捕获segmentation fault/access denied等待内存相关的异常；</p>
-<p>2. 用户态的应用程序传递进来的地址是否包含内核空间地址，如果是的话，就可以从一个设备（比如文件、网络）中inject数据、代码到内核地址空间，这是非常危险的行为；driver可以使用ProbeForRead/ProbeForWrite来测试用户态应用程序传递进来的内存地址是否是单纯的用户态内存区域。</p>
-<p>3. 用户态传递进来的内存是否可能被用户态应用程序作为其他用途，因此最好由内核态的缓存来捕获IO设备的输入；</p>
+<p>直接修改pdf文件</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext/daniel $ awk '/stream/ {p=1}; p; /endstream/ {p=0}' daniel.pdf | sed -re '{s/.*stream.*//g}' | awk 'NF!=0' | zlib-flate -uncompress &gt; de.bin
+daniel@daniel-mint ~/latex/linux/itext/daniel $ cat de.bin 
+q
+BT
+36 612 Td
+0 -18 Td
+/F1 12 Tf
+(Hello World! Hello People! Hello Sky! Hello Sun! Hello Moon! Hello)Tj
+0 0 Td
+0 -18 Td
+(Stars!)Tj
+0 0 Td
+ET
+Q
+daniel@daniel-mint ~/latex/linux/itext/daniel $ sed -e 's/Hello.*Hello/Daniel King is a software engineer!/g' de.bin 
+q
+BT
+36 612 Td
+0 -18 Td
+/F1 12 Tf
+(Daniel King is a software engineer!)Tj
+0 0 Td
+0 -18 Td
+(Stars!)Tj
+0 0 Td
+ET
+Q
+daniel@daniel-mint ~/latex/linux/itext/daniel $ sed -e 's/Hello.*Hello/Daniel King is a software engineer!/g' de.bin &gt; de1.bin
+daniel@daniel-mint ~/latex/linux/itext/daniel $ cat daniel.pdf | awk 'BEGIN{p=1}; p; /stream/{p=0};' &gt; reassembled.pdf
+daniel@daniel-mint ~/latex/linux/itext/daniel $ cat de1.bin | zlib-flate -compress &gt;&gt; reassembled.pdf <br />daniel@daniel-mint ~/latex/linux/itext/daniel $ echo -e '\nendstream' &gt;&gt; reassembled.pdf
+daniel@daniel-mint ~/latex/linux/itext/daniel $ cat daniel.pdf | awk 'BEGIN{p=0}; p; /endstream/{p=1};' &gt;&gt; reassembled.pdf 
+</pre>
+</div>
+<p>　　</p>
+<p>结果虽然能在pdf viewer中显示，但是用pdf2txt处理会失败，因此还是hack的不完美。</p>
 <p>&nbsp;</p>
-<hr />
-<p>&nbsp;</p>
-<h2>IO Request to Single-Layered Driver</h2>
-<p><span style="color: #800000;">ISR DPC APC</span></p>
-<ul>
-<li><span style="color: #000000;">ISR: Interrupt Servicing Rountine</span></li>
-<li><span style="color: #000000;">DPC: Defered Procedure Call</span></li>
-<li><span style="color: #000000;">APC: Asynchronous Procedure Call</span></li>
-</ul>
-<p><span style="color: #000000;">驱动与IO设备交互的方式可以分为两种：同步和异步</span></p>
-<p><span style="color: #000000;">同步很简单，直接调用HAL提供的API就可以向IO设备下达各种操作命令，或者读取IO设备的状态信息；</span></p>
-<p><span style="color: #000000;">但是很多时候，驱动无法预知IO设备会何时发出请求或者完成IO操作，因此只有依赖于&ldquo;中断机制&rdquo;来通知驱动。</span></p>
-<p>&nbsp;</p>
-<p><span style="color: #000000;">可以认为driver中正常的函数调用是同步的，而driver注册的ISR例程，以及ISR又注册的DPC例程，以及APC例程都是异步的。</span></p>
-<p><span style="color: #000000;">异步的意思，就是无法确定它们的执行与driver中同步执行的一条指令之间的先后顺序。</span></p>
-<p>&nbsp;</p>
-<p><span style="color: #800000;">中断服务</span></p>
-<p><span style="color: #000000;">首先，驱动需要在IDT(Interrupt Dispatch Table)中注册相应的ISR例程；</span></p>
-<p><span style="color: #000000;">当中断发生时，ISR被调用，ISR运行在相应的中断对应的特权级别，这是高于普通情况的特权级别，在ISR中通常需要尽可能地少做停留，只要获取到IO设备的状态，就应该退出ISR，剩余的操作由一个DPC例程来完成，DPC例程被queue到IO Manager中，当其他高于DPC特权级别的任务（ISR任务）都被完成了，IO Manager就会逐个处理DPC例程。</span></p>
-<p>&nbsp;</p>
-<p><span style="color: #000000;">ISR与DPC例程在执行时，都与当前正在执行的线程Context没有关系，也就是说，它们不与具体的线程相关联，因此它们无法访问用户态地址空间；</span></p>
-<p>&nbsp;</p>
-<p><span style="color: #800000;">Complete IO Request</span></p>
-<p><span style="color: #000000;">当驱动完成了IRP的请求后，它需要调用IoCompleteRequest函数通知IO Manager，IO Manager需要把本次IRP的结果返回给用户态的应用程序。但是在异步操作中，此时正在执行的用户态应用程序很可以不是发起IRP请求的应用程序，那么IO Manager需要一种机制，在下一次用户态的应用程序被调度执行时，通知应用程序完成IO操作，并且将内核态中的结果拷贝回用户态内存地址空间中。</span></p>
-<p><span style="color: #000000;">这种机制叫做APC。</span></p>
-<p><span style="color: #000000;">APC可以分为用户态与内核态两种，都与具体的线程Context相关联。APC的运行级别低于DPC，但是高于正常的代码执行级别。</span></p>
-<p>&nbsp;</p>
-<p><span style="color: #800000;">Synchronization</span></p>
-<p><span style="color: #000000;">当driver中的同步代码与ISR/DPC/APC中异步代码同时访问一些全局数据时，需要在二者之间进行同步协调操作，以免使全局数据发生不一致现象。</span></p>
-<p><span style="color: #000000;">driver可以调用KeSynchronizeExecution，该函数会在driver同步代码访问全局数据时，阻止ISR等异步例程被执行。</span></p>
-<p>&nbsp;</p>
-<p><span style="color: #000000;">除此之外，在多核系统中，driver同步代码也可能在多个processor上运行，因此只要driver访问到全局数据时，就需要使用SpinLock，以防止全局数据发生不一致现象。</span></p>
-<h2>IO Request to Layered Drivers</h2>
-<p>多层驱动模型与单层驱动模型在本质上是一样的，唯一的区别在于，需要多层的驱动之间需要互动和通信，那么它们之间通信的媒介也还是IRP，区别在于IRP是复用驱动收到的IRP，还是新生成一个新的IRP。</p>
-<p>&nbsp;</p>
-<p>对于新生成的IRP，那么与单层驱动模型就更加相似了，就是一个过程重复了几次而已；</p>
-<p>而对于复用IRP，这里关键的是复用机制。</p>
-<p>&nbsp;</p>
-<p><span style="color: #800000;">复用IRP</span></p>
-<p><span style="color: #000000;">IRP在创建的时候，可以有几种方法，或者说可以创建不同大小的IRP，IRP由定长的header和不定长的几个stack locations组成，但是对于一个具体的IRP来说，在header中会保存整个IRP的长度。</span></p>
-<p>简单来说，每个stack location是为一层driver而保留的，因为虽然是同一个IRP，但是对于不同的driver，IRP中包含的消息是不同的，最显而易见的是MAJOR_CODE就不可能一样，举例来说，读文件操作的IRP，在文件系统驱动这一层，是读取几个的cluster操作，而在磁盘驱动这一层，就是读取几个sector的操作，也就是说在应用程序看来相同的IO操作，分解到不同层次的驱动上，就是完成不同的操作。</p>
-<h2>IO Cancellatio</h2>
-<h2>IO Completion Ports</h2>
-<h2>IO Priority</h2></body>
+<p>我们再看一下<a href="http://podofo.sourceforge.net/" target="_blank">PoDoFo</a>的实现</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"> 802   
+ 803   
+ 804   
+ 805     m_oss.str("");
+ 806     m_oss &lt;&lt; "BT" &lt;&lt; std::endl &lt;&lt; "/" &lt;&lt; m_pFont-&gt;GetIdentifier().GetName()
+ 807           &lt;&lt; " "  &lt;&lt; m_pFont-&gt;GetFontSize() 
+ 808           &lt;&lt; " Tf" &lt;&lt; std::endl;         
+ 809   
+ 810     if (currentTextRenderingMode != ePdfTextRenderingMode_Fill) {
+ 811         SetCurrentTextRenderingMode(); 
+ 812     }
+ 813   
+ 814     //if( m_pFont-&gt;GetFontScale() != 100.0F ) - this value is kept between text blocks
+ 815     m_oss &lt;&lt; m_pFont-&gt;GetFontScale() &lt;&lt; " Tz" &lt;&lt; std::endl;
+ 816   
+ 817     //if( m_pFont-&gt;GetFontCharSpace() != 0.0F )  - this value is kept between text blocks
+ 818     m_oss &lt;&lt; m_pFont-&gt;GetFontCharSpace() * m_pFont-&gt;GetFontSize() / 100.0 &lt;&lt; " Tc" &lt;&lt; std::endl; 
+ 819   
+ 820     m_oss &lt;&lt; dX &lt;&lt; std::endl
+ 821           &lt;&lt; dY &lt;&lt; std::endl &lt;&lt; "Td ";   
+ 822   
+ 823     m_pCanvas-&gt;Append( m_oss.str() );
+ 824     m_pFont-&gt;WriteStringToStream( sString, m_pCanvas );
+ 825   
+ 826     /*
+ 827     char* pBuffer;
+ 828     std::auto_ptr&lt;PdfFilter&gt; pFilter = PdfFilterFactory::Create( ePdfFilter_ASCIIHexDecode );
+ 829     pFilter-&gt;Encode( sString.GetString(), sString.GetLength(), &amp;pBuffer, &amp;lLen );
+ 830   
+ 831     m_pCanvas-&gt;Append( pBuffer, lLen );
+ 832     free( pBuffer );
+ 833     */
+ 834   
+ 835     m_pCanvas-&gt;Append( " Tj\nET\n" );
+ 836 } 
+</pre>
+</div>
+<p>可以看到，它依次调用了</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Tf :     选择字体，设置字体大小
+Tz:     设置横向缩放比例因子
+Tc:     设置字符间距离
+Td:     设置位置
+Tj:      显示字符串
+</pre>
+</div>
+<p>　　</p></body>
 </html>

@@ -1,8 +1,186 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>linux get current thread count and system threads limit</title>
-<body><p>get current thread count</p> <div id="codeSnippetWrapper"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet">grep -s <span style="color: #006080">'^Threads'</span> /proc/[0-9]*/status | awk <span style="color: #006080">'{ sum += $2; } END { print sum; }'</span></pre><br></div>
-
-<p>get the system thread limit</p>
-<div id="codeSnippetWrapper"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet">cat /proc/sys/kernel/threads-max</pre><br></div></body>
+<title>KiFastCallEntry patch</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; u nt!KiFastCallEntry L21
+nt!KiFastCallEntry:
+8053dad0 b923000000      mov     ecx,23h
+8053dad5 6a30            push    30h
+8053dad7 0fa1            pop     fs
+8053dad9 8ed9            mov     ds,cx
+8053dadb 8ec1            mov     es,cx
+8053dadd 8b0d40f0dfff    mov     ecx,dword ptr ds:[0FFDFF040h]
+8053dae3 8b6104          mov     esp,dword ptr [ecx+4]
+8053dae6 6a23            push    23h
+8053dae8 52              push    edx
+8053dae9 9c              pushfd
+8053daea 6a02            push    2
+8053daec 83c208          add     edx,8
+8053daef 9d              popfd
+8053daf0 804c240102      or      byte ptr [esp+1],2
+8053daf5 6a1b            push    1Bh
+8053daf7 ff350403dfff    push    dword ptr ds:[0FFDF0304h]
+8053dafd 6a00            push    0
+8053daff 55              push    ebp
+8053db00 53              push    ebx
+8053db01 56              push    esi
+8053db02 57              push    edi
+8053db03 8b1d1cf0dfff    mov     ebx,dword ptr ds:[0FFDFF01Ch]
+8053db09 6a3b            push    3Bh
+8053db0b 8bb324010000    mov     esi,dword ptr [ebx+124h]
+8053db11 ff33            push    dword ptr [ebx]
+8053db13 c703ffffffff    mov     dword ptr [ebx],0FFFFFFFFh
+8053db19 8b6e18          mov     ebp,dword ptr [esi+18h]
+8053db1c 6a01            push    1
+8053db1e 83ec48          sub     esp,48h
+8053db21 81ed9c020000    sub     ebp,29Ch
+8053db27 c6864001000001  mov     byte ptr [esi+140h],1
+8053db2e 3bec            cmp     ebp,esp
+8053db30 759a            jne     nt!KiFastCallEntry2+0x47 (8053dacc)
+</pre>
+</div>
+<p>　　</p>
+<p>0x30 -&gt; fs</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; dg 30
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0030 ffdff000 00001fff Data RW Ac 0 Bg Pg P  Nl 00000c93
+</pre>
+</div>
+<p>0x23 -&gt; ds, es</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; dg 23
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0023 00000000 ffffffff Data RW Ac 3 Bg Pg P  Nl 00000cf3
+</pre>
+</div>
+<p>　　</p>
+<p>[0xFFDFF040] = 0x80042000</p>
+<p>[0x80042004] = 0xF45F6DE0</p>
+<p>&nbsp;</p>
+<p>0xF45F6DE0 -&gt; esp</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; r ss
+ss=00000010
+kd&gt; dg 10
+                                  P Si Gr Pr Lo
+Sel    Base     Limit     Type    l ze an es ng Flags
+---- -------- -------- ---------- - -- -- -- -- --------
+0010 00000000 ffffffff Data RW Ac 0 Bg Pg P  Nl 00000c93
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; dd ffdf0304
+ffdf0304  7c92eb94 00000000 00000000 00000000
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">nt!KiFastCallEntry2+0x47:
+8053dacc ebdb            jmp     nt!KiFastCallEntry2+0x24 (8053daa9)
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">nt!KiFastCallEntry2+0x24:
+8053daa9 8b0d40f0dfff    mov     ecx,dword ptr ds:[0FFDFF040h]
+8053daaf 8b6104          mov     esp,dword ptr [ecx+4]
+8053dab2 6a00            push    0
+8053dab4 6a00            push    0
+8053dab6 6a00            push    0
+8053dab8 6a00            push    0
+8053daba 6a23            push    23h
+8053dabc 6a00            push    0
+8053dabe 6802020200      push    20202h
+8053dac3 6a1b            push    1Bh
+8053dac5 6a00            push    0
+8053dac7 e9f8150000      jmp     nt!KiTrap06 (8053f0c4)
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">kd&gt; u nt!KiFastCallEntry L49
+nt!KiFastCallEntry:
+8053dad0 b923000000      mov     ecx,23h
+8053dad5 6a30            push    30h
+8053dad7 0fa1            pop     fs
+8053dad9 8ed9            mov     ds,cx
+8053dadb 8ec1            mov     es,cx
+8053dadd 8b0d40f0dfff    mov     ecx,dword ptr ds:[0FFDFF040h]
+8053dae3 8b6104          mov     esp,dword ptr [ecx+4]
+8053dae6 6a23            push    23h
+8053dae8 52              push    edx
+8053dae9 9c              pushfd
+8053daea 6a02            push    2
+8053daec 83c208          add     edx,8
+8053daef 9d              popfd
+8053daf0 804c240102      or      byte ptr [esp+1],2
+8053daf5 6a1b            push    1Bh
+8053daf7 ff350403dfff    push    dword ptr ds:[0FFDF0304h]
+8053dafd 6a00            push    0
+8053daff 55              push    ebp
+8053db00 53              push    ebx
+8053db01 56              push    esi
+8053db02 57              push    edi
+8053db03 8b1d1cf0dfff    mov     ebx,dword ptr ds:[0FFDFF01Ch]
+8053db09 6a3b            push    3Bh
+8053db0b 8bb324010000    mov     esi,dword ptr [ebx+124h]
+8053db11 ff33            push    dword ptr [ebx]
+8053db13 c703ffffffff    mov     dword ptr [ebx],0FFFFFFFFh
+8053db19 8b6e18          mov     ebp,dword ptr [esi+18h]
+8053db1c 6a01            push    1
+8053db1e 83ec48          sub     esp,48h
+8053db21 81ed9c020000    sub     ebp,29Ch
+8053db27 c6864001000001  mov     byte ptr [esi+140h],1
+8053db2e 3bec            cmp     ebp,esp
+8053db30 759a            jne     nt!KiFastCallEntry2+0x47 (8053dacc)
+8053db32 83652c00        and     dword ptr [ebp+2Ch],0
+8053db36 f6462cff        test    byte ptr [esi+2Ch],0FFh
+8053db3a 89ae34010000    mov     dword ptr [esi+134h],ebp
+8053db40 0f854afeffff    jne     nt!Dr_FastCallDrSave (8053d990)
+8053db46 8b5d60          mov     ebx,dword ptr [ebp+60h]
+8053db49 8b7d68          mov     edi,dword ptr [ebp+68h]
+8053db4c 89550c          mov     dword ptr [ebp+0Ch],edx
+8053db4f c74508000ddbba  mov     dword ptr [ebp+8],0BADB0D00h
+8053db56 895d00          mov     dword ptr [ebp],ebx
+8053db59 897d04          mov     dword ptr [ebp+4],edi
+8053db5c fb              sti
+8053db5d 8bf8            mov     edi,eax
+8053db5f c1ef08          shr     edi,8
+8053db62 83e730          and     edi,30h
+8053db65 8bcf            mov     ecx,edi
+8053db67 03bee0000000    add     edi,dword ptr [esi+0E0h]
+8053db6d 8bd8            mov     ebx,eax
+8053db6f 25ff0f0000      and     eax,0FFFh
+8053db74 3b4708          cmp     eax,dword ptr [edi+8]
+8053db77 0f8345fdffff    jae     nt!KiBBTUnexpectedRange (8053d8c2)
+8053db7d 83f910          cmp     ecx,10h
+8053db80 751a            jne     nt!KiFastCallEntry+0xcc (8053db9c)
+8053db82 8b0d18f0dfff    mov     ecx,dword ptr ds:[0FFDFF018h]
+8053db88 33db            xor     ebx,ebx
+8053db8a 0b99700f0000    or      ebx,dword ptr [ecx+0F70h]
+8053db90 740a            je      nt!KiFastCallEntry+0xcc (8053db9c)
+8053db92 52              push    edx
+8053db93 50              push    eax
+8053db94 ff15c4355580    call    dword ptr [nt!KeGdiFlushUserBatch (805535c4)]
+8053db9a 58              pop     eax
+8053db9b 5a              pop     edx
+8053db9c ff0538f6dfff    inc     dword ptr ds:[0FFDFF638h]
+8053dba2 8bf2            mov     esi,edx
+8053dba4 8b5f0c          mov     ebx,dword ptr [edi+0Ch]
+8053dba7 33c9            xor     ecx,ecx
+8053dba9 8a0c18          mov     cl,byte ptr [eax+ebx]
+8053dbac 8b3f            mov     edi,dword ptr [edi]
+8053dbae 8b1c87          mov     ebx,dword ptr [edi+eax*4]
+8053dbb1 2be1            sub     esp,ecx
+8053dbb3 c1e902          shr     ecx,2
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p></body>
 </html>

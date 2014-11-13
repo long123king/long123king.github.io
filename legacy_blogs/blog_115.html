@@ -1,5 +1,11 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>UNetBootin&#x5B89;&#x88C5;CentOS&#x7684;&#x6CE2;&#x6298;</title>
-<body><p>详情参考：<a title="http://liuzhigong.blog.163.com/blog/static/17827237520125154053753/" href="http://liuzhigong.blog.163.com/blog/static/17827237520125154053753/">http://liuzhigong.blog.163.com/blog/static/17827237520125154053753/</a></p> <p>解决方法也类似</p></body>
+<title>ubuntu apt-get proxy</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">daniel@daniel-mint ~/Desktop $ cat /etc/apt/apt.conf
+Acquire::http::Proxy "http://cnnjproxy-ha.tw.trendnet.org:8080";
+Acquire::https::Proxy "https://cnnjproxy-ha.tw.trendnet.org:8080";
+</pre>
+</div>
+<p>　　</p></body>
 </html>

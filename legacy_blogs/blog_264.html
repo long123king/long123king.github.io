@@ -1,0 +1,5 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Xen&#x7684;&#x534A;&#x865A;&#x62DF;&#x5316;&#xFF08;Paravirtualization&#xFF09;</title>
+<body><h3>三个特权级</h3> <p>IA-32体系提供了4个特权级别，正常情况下只用了2个， 操作系统运行在Ring 0，而应用程序运行在Ring 3。</p> <p>Xen让自己运行在Ring 0， 而操作系统运行在Ring 1， 应用程序运行在Ring 3，这样操作系统变成没有那么Powerful了，不能执行特权指令了。</p> <p>&nbsp;</p> <p>改变的方法，就是对操作系统代码进行Patch，将原来需要运行在特权级别的指令，换成相应的Hypercall，像系统调用一样，请求VMM来提供相应的服务。</p> <p>&nbsp;</p> <p>由于对操作系统的Patch是在Compile Time，而不是在Run Time，可以很大程序地提高效率。</p></body>
+</html>

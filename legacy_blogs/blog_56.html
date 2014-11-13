@@ -1,39 +1,549 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Valgrind&#x5B66;&#x4E60;</title>
-<body><h2>Valgrind与其他DBI(Pin, DynamoRIO)的区别</h2> <p>我们需要了解DBI的几个</p> <h2>D&amp;R</h2> <h6>Disassemble-and-Resynthesise</h6> <h6>反汇编后重新组装</h6> <p>&nbsp;</p> <p>Valgrind采用这种方式，将Client中的代码全部翻译成IR，然后在IR级别进行instrument，最后将IR翻译成机器代码执行。</p> <p>如果Client中的一段代码被翻译成IR，那么原来的native code就不再存在了，以后也不会再使用到。</p> <p>&nbsp;</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Native Code --&gt; IR --&gt; IR --&gt; Machine Code</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">            ^        ^      ^</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">            |        |      |</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">            |        |      |</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">        translate    |      |</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">                     |      |</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">                instrument  |</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">                            |</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">                         translate  </pre><!--CRLF--></div></div>
-
+<title>MSDN&#x4E0A;&#x5173;&#x4E8E;WinDbg&#x7684;&#x624B;&#x518C;</title>
+<body><p>参考：<a href="http://msdn.microsoft.com/en-us/library/windows/hardware/ff540507(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/hardware/ff540507(v=vs.85).aspx</a></p>
+<p>这是最靠谱的参考了，比.hh要直观。</p>
 <p>&nbsp;</p>
-<h2>C&amp;A</h2>
-<h6>Copy-and-Annotate</h6>
-<h6>拷贝并添加注解</h6>
+<p>在Linux上稍作编辑</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/windbg $ awk 'BEGIN{maxIndex=0}{idx = index($0, "("); if (idx &gt; maxIndex) maxIndex = idx;}END{print maxIndex}' commands 
+57
+daniel@daniel-mint ~/windbg $ awk 'FS="[()]"{printf("%60s\t%s\n", $1, $2)}' commands &gt; commands_formated
+</pre>
+</div>
+<p>　　</p>
+<h1>Basic Commands</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/windbg $ awk 'FS="[()]"{printf("%60s\t%s\n", $1, $2)}' commands 
+                                                       ENTER	(Repeat
+                                  $&lt;, $&gt;&lt;, $$&lt;, $$&gt;&lt;, $$&gt;a&lt; 	Run Script File
+                                                          ? 	Command Help
+                                                          ? 	Evaluate Expression
+                                                         ?? 	Evaluate C++ Expression
+                                                          # 	Search for Disassembly Pattern
+                                                         || 	System Status
+                                                        ||s 	Set Current System
+                                                          | 	Process Status
+                                                         |s 	Set Current Process
+                                                          ~ 	Thread Status
+                                                         ~e 	Thread-Specific Command
+                                                         ~f 	Freeze Thread
+                                                         ~u 	Unfreeze Thread
+                                                         ~n 	Suspend Thread
+                                                         ~m 	Resume Thread
+                                                         ~s 	Set Current Thread
+                                                         ~s 	Change Current Processor
+                                                          a 	Assemble
+                                                         ad 	Delete Alias
+                                                         ah 	Assertion Handling
+                                                         al 	List Aliases
+                                                     as, aS 	Set Alias
+                                                         ba 	Break on Access
+                                                         bc 	Breakpoint Clear
+                                                         bd 	Breakpoint Disable
+                                                         be 	Breakpoint Enable
+                                                         bl 	Breakpoint List
+                                                 bp, bu, bm 	Set Breakpoint
+                                                         br 	Breakpoint Renumber
+                                                         bs 	Update Breakpoint Command
+                                                        bsc 	Update Conditional Breakpoint
+                                                          c 	Compare Memory
+    d, da, db, dc, dd, dD, df, dp, dq, du, dw, dW, dyb, dyd 	Display Memory
+                dda, ddp, ddu, dpa, dpp, dpu, dqa, dqp, dqu 	Display Referenced Memory
+                                              dds, dps, dqs 	Display Words and Symbols
+                                                         dg 	Display Selector
+                                                         dl 	Display Linked List
+                                                     ds, dS 	Display String
+                                                         dt 	Display Type
+                                                         dv 	Display Local Variables
+            e, ea, eb, ed, eD, ef, ep, eq, eu, ew, eza, ezu 	Enter Values
+                                                      f, fp 	Fill Memory
+                                                          g 	Go
+                                                         gc 	Go from Conditional Breakpoint
+                                                         gh 	Go with Exception Handled
+                                                     gn, gN 	Go with Exception Not Handled
+                                                         gu 	Go Up
+                                                 ib, iw, id 	Input from Port
+                                                          j 	Execute If - Else
+                                  k, kb, kc, kd, kp, kP, kv 	Display Stack Backtrace
+                                                     l+, l- 	Set Source Options
+                                                         ld 	Load Symbols
+                                                         lm 	List Loaded Modules
+                                                         ln 	List Nearest Symbols
+                                                    ls, lsa 	List Source Lines
+                                                        lsc 	List Current Source
+                                                        lse 	Launch Source Editor
+                                                  lsf, lsf- 	Load or Unload Source File
+                                                        lsp 	Set Number of Source Lines
+                                                          m 	Move Memory
+                                                          n 	Set Number Base
+                                                 ob, ow, od 	Output to Port
+                                                          p 	Step
+                                                         pa 	Step to Address
+                                                         pc 	Step to Next Call
+                                                        pct 	Step to Next Call or Return
+                                                         ph 	Step to Next Branching Instruction
+                                                         pt 	Step to Next Return
+                                                      q, qq 	Quit
+                                                         qd 	Quit and Detach
+                                                          r 	Registers
+                                                      rdmsr 	Read MSR
+                                                         rm 	Register Mask
+                                                          s 	Search Memory
+                                                         so 	Set Kernel Debugging Options
+                                                         sq 	Set Quiet Mode
+                                                         ss 	Set Symbol Suffix
+                           sx, sxd, sxe, sxi, sxn, sxr, sx- 	Set Exceptions
+                                                          t 	Trace
+                                                         ta 	Trace to Address
+                                                         tb 	Trace to Next Branch
+                                                         tc 	Trace to Next Call
+                                                        tct 	Trace to Next Call or Return
+                                                         th 	Trace to Next Branching Instruction
+                                                         tt 	Trace to Next Return
+                                                          u 	Unassemble
+                                                         uf 	Unassemble Function
+                                                         up 	Unassemble from Physical Memory
+                                                         ur 	Unassemble Real Mode BIOS
+                                                         ux 	Unassemble x86 BIOS
+                                                 vercommand 	Show Debugger Command Line
+                                                    version 	Show Debugger Version
+                                                  vertarget 	Show Target Computer Version
+                                                      wrmsr 	Write MSR
+                                                         wt 	Trace and Watch Data
+                                                          x 	Examine Symbols
+                                                          z 	Execute While
+</pre>
+</div>
+<p>　　</p>
+<h1>&nbsp;meta commands</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/windbg $ awk 'FS="[()]"{printf("%30s\t%s\n", $1, $2)}' meta_commands 
+                      .abandon	(Abandon
+             .allow_exec_cmds 	Allow Execution Commands
+         .allow_image_mapping 	Allow Image Mapping
+                   .apply_dbp 	Apply Data Breakpoint to Context
+                         .asm 	Change Disassembly Options
+                      .attach 	Attach to Process
+                        .beep 	Speaker Beep
+                      .bpcmds 	Display Breakpoint Commands
+                      .bpsync 	Synchronize Threads at Breakpoint
+                     .breakin 	Break to the Kernel Debugger
+                      .browse 	Display Command in Browser
+                    .bugcheck 	Display Bug Check Data
+                       .cache 	Set Cache Size
+                        .call 	Call Function
+                       .chain 	List Debugger Extensions
+                    .childdbg 	Debug Child Processes
+                     .clients 	List Debugging Clients
+                 .closehandle 	Close Handle
+                         .cls 	Clear Screen
+                     .context 	Set User-Mode Address Context
+                     .copysym 	Copy Symbol Files
+                      .cordll 	Control CLR Debugging
+                       .crash 	Force System Crash
+                      .create 	Create Process
+                   .createdir 	Set Created Process Directory
+                         .cxr 	Display Context Record
+                      .dbgdbg 	Debug Current Debugger
+                      .detach 	Detach from Process
+                    .dml_flow 	Unassemble with Links
+                   .dml_start 	Display DML Starting Point
+                        .dump 	Create Dump File
+                     .dumpcab 	Create Dump File CAB
+                     .dvalloc 	Allocate Memory
+                      .dvfree 	Free Memory
+                        .echo 	Echo Comment
+                  .echocpunum 	Show CPU Number
+                    .echotime 	Show Current Time
+              .echotimestamps 	Show Time Stamps
+                        .ecxr 	Display Exception Context Record
+                     .effmach 	Effective Machine
+          .enable_long_status 	Enable Long Integer Display
+              .enable_unicode 	Enable Unicode Display
+                     .endpsrv 	End Process Server
+                      .endsrv 	End Debugging Server
+                     .enumtag 	Enumerate Secondary Callback Data
+                  .event_code 	Display Event Code
+                    .eventlog 	Display Recent Events
+                     .exepath 	Set Executable Path
+                        .expr 	Choose Expression Evaluator
+                       .exptr 	Display Exception Pointers
+                         .exr 	Display Exception Record
+                    .extmatch 	Display All Matching Extensions
+                     .extpath 	Set Extension Path
+                     .f+, .f- 	Shift Local Context
+                       .fiber 	Set Fiber Context
+                  .fiximports 	Fix Target Module Imports
+              .flash_on_break 	Flash on Break
+                       .fnent 	Display Function Data
+                       .fnret 	Display Function Return Value
+          .force_radix_output 	Use Radix for Integers
+                    .force_tb 	Forcibly Allow Branch Tracing
+                     .formats 	Show Number Formats
+                         .fpo 	Control FPO Overrides
+                       .frame 	Set Local Context
+                        .help 	Meta-Command Help
+                          .hh 	Open HTML Help File
+            .hideinjectedcode 	Hide Injected Code
+                     .holdmem 	Hold and Compare Memory
+                    .idle_cmd 	Set Idle Command
+        .ignore_missing_pages 	Suppress Missing Page Errors
+                      .inline 	Toggle Inline Function Debugging
+                     .imgscan 	Find Image Headers
+                     .kdfiles 	Set Driver Replacement Map
+                     .kframes 	Set Stack Length
+                        .kill 	Kill Process
+                   .lastevent 	Display Last Event
+                       .lines 	Toggle Source Line Support
+               .load, .loadby 	Load Extension DLL
+                      .locale 	Set Locale
+                   .logappend 	Append Log File
+                    .logclose 	Close Log File
+                     .logfile 	Display Log File Status
+                     .logopen 	Open Log File
+                      .netuse 	Control Network Connections
+                     .noshell 	Prohibit Shell Commands
+                   .noversion 	Disable Version Checking
+                    .ocommand 	Expect Commands from Target
+                     .ofilter 	Filter Target Output
+                        .open 	Open Source File
+                    .opendump 	Open Dump File
+                     .outmask 	Control Output Mask
+                      .pagein 	Page In Memory
+                        .pcmd 	Set Prompt Command
+                         .pop 	Restore Debugger State
+                  .prefer_dml 	Prefer Debugger Markup Language
+                     .process 	Set Process Context
+                .prompt_allow 	Control Prompt Display
+                        .push 	Save Debugger State
+                   .quit_lock 	Prevent Accidental Quit
+                     .readmem 	Read Memory from File
+                      .reboot 	Reboot Target Computer
+             .record_branches 	Enable Branch Recording
+                      .reload 	Reload Module
+                      .remote 	Create Remote.exe Server
+                 .remote_exit 	Exit Debugging Client
+                     .restart 	Restart Target Application
+                     .restart 	Restart Kernel Connection
+                    .rrestart 	Register for Restart
+                .scroll_prefs 	Control Source Scrolling Preferences
+                      .secure 	Activate Secure Mode
+                   .send_file 	Send File
+                      .server 	Create Debugging Server
+                     .servers 	List Debugging Servers
+                      .setdll 	Set Default Extension DLL
+                       .shell 	Command Shell
+           .show_read_failures	
+            .show_sym_failures	
+                       .sleep 	Pause Debugger
+                .sound_notify 	Use Notification Sound
+            .srcfix, .lsrcfix 	Use Source Server
+                    .srcnoisy 	Noisy Source Loading
+          .srcpath, .lsrcpath 	Set Source Path
+                 .step_filter 	Set Step Filter
+                  .suspend_ui 	Suspend WinDbg Interface
+                      .symfix 	Set Symbol Store Path
+                      .symopt 	Set Symbol Options
+                     .sympath 	Set Symbol Path
+                      .thread 	Set Register Context
+                        .time 	Display System Time
+                       .tlist 	List Process IDs
+                        .trap 	Display Trap Frame
+                         .tss 	Display Task State Segment
+                       .ttime 	Display Thread Times
+                     .typeopt 	Set Type Options
+                      .unload 	Unload Extension DLL
+                   .unloadall 	Unload All Extension DLLs
+                    .urestart 	Unregister for Restart
+                        .wake 	Wake Debugger
+              .write_cmd_hist 	Write Command History
+                    .writemem 	Write Memory to File
+                      .wtitle 	Set Window Title
+</pre>
+</div>
+<p>　　</p>
+<h1>Kernel Mode Extensions</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">!ahcache
+!alignmentfaults
+!analyzebugcheck
+!apc
+!apicerr
+!arbinst
+!arbiter
+!ate
+!bcb
+!blockeddrv
+!bpid
+!btb
+!bth
+!bugdump
+!bushnd
+!ca
+!callback
+!calldata
+!can_write_kdump
+!cbreg
+!cchelp
+!chklowmem
+!cmreslist
+!cpuinfo
+!db, !dc, !dd, !dp, !dq, !du, !dw
+!dbgprint
+!dblink
+!dcr
+!dcs
+!deadlock
+!defwrites
+!devext
+!devhandles
+!devnode
+!devobj
+!devstack
+!dflink
+!diskspace
+!dma
+!dpa
+!dpcs
+!driveinfo
+!drivers
+!drvobj
+!dskheap
+!eb, !ed
+!ecb, !ecd, !ecw
+!ecs
+!errlog
+!errpkt
+!errrec
+!exca
+!filecache
+!filelock
+!fileobj
+!filetime
+!finddata
+!findfilelockowner
+!for_each_process
+!for_each_thread
+!fpsearch
+!frag
+!frozen
+!fwver
+!gbl
+!gentable
+!hidppd
+!ib, !id, !iw
+!icpleak
+!idt
+!ih
+!ihs
+!ioresdes
+!ioreslist
+!iovirp
+!ipi
+!irp
+!irpfind
+!irpzone
+!irql
+!isainfo
+!isr
+!ivt
+!job
+!kb, !kv
+!loadermemorylist
+!lockedpages
+!locks (!kdext*.locks)
+!logonsession
+!lookaside
+!lpc
+!mca
+!memlist
+!memusage
+!mps
+!mtrr
+!npx
+!ob, !od, !ow
+!object
+!obtrace
+!openmaps
+!pars
+!pat
+!pci
+!pciir
+!pcitree
+!pcm
+!pcr
+!pcrs
+!pfn
+!pmc
+!pmssa
+!pnpevent
+!pocaps
+!pool
+!poolfind
+!poolused
+!poolval
+!popolicy
+!pplookaside
+!ppmidle
+!ppmidleaccounting
+!ppmperf
+!ppmperfpolicy
+!ppmstate
+!prcb
+!process
+!processfields
+!processirps
+!psp
+!pte
+!pte2va
+!ptov
+!qlocks
+!ready
+!reg
+!regkcb
+!rellist
+!ruleinfo
+!running
+!scm
+!search
+!searchpte
+!sel
+!session
+!smt
+!spoolsum
+!spoolused
+!sprocess
+!srb
+!stacks
+!swd
+!sysinfo
+!sysptes
+!thread
+!threadfields
+!time
+!timer
+!tokenfields
+!trap
+!tss
+!tz
+!tzinfo
+!ubc
+!ubd
+!ube
+!ubl
+!ubp
+!urb
+!vad
+!vad_reload
+!validatelist
+!verifier
+!vm
+!vpb
+!vpdd
+!vtop
+!walklist
+!wdmaud
+!whattime
+!whatperftime
+!whea
+!wsle
+!xpoolmap
+!zombies
+</pre>
+</div>
 <p>&nbsp;</p>
-<p>将Client中的native code原封不动地拷贝过来，并且对于每条指令都添加相应的注解，以解释这条指令的效果。</p>
-<p>DynamoRIO是通过给每条指令添加一个额外的data structure；</p>
-<p>Intel Pin是通过提供相应的获取指令相关信息的API；</p>
-<p>&nbsp;</p>
-<p>这些添加的注解可以指导进行相应的instrument，并且底线是不影响原来的native code的执行效果。</p>
-<hr>
-
-<p>&nbsp;</p>
-<h2>Valgrind的IR</h2>
-<p>&nbsp;</p>
-<p>进行IR扫描时单元，在Valgrind 3.0.0版本之前，是basic block(单入口，单出口)；</p>
-<p>而在之后的版本中，换成了super block（单入口，多出口）；</p>
-<p>&nbsp;</p>
-<p>IR的特点是：</p>
-<div id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">architecture-neutral</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">D&amp;R</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">single-<span style="color: #0000ff">static</span>-assignment(SSA)</pre><!--CRLF--></div></div>
-
-<p>&nbsp;</p>
-<p>每个IR block包含一组statements的列表，而每个statement又包含多个expression。</p>
-<p>expression是pure的，即不依赖外部状态的。</p>
-<p>&nbsp;</p>
-<p>expression可以是tree-IR，也可以是flat-IR，二者的区别在于：</p>
-<div id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">tree-IR: complicated</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">flat-IR: simple, but need to introduce temporaries, and one tree-IR will expand to several flat-IR expressions.</pre><!--CRLF--></div></div>
-
-<blockquote style="margin-right: 0px" dir="ltr">
-<p><font style="background-color: #ffffff" color="#000000">but they(tree-IR) can also be flattened by introducing statements that write intermediate values to temporaries.</font></p>
-<p><font style="background-color: #ffffff" color="#000000"></font></p></blockquote></body>
+<h1>general extensions</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">!acl
+!address
+!analyze
+!asd
+!atom
+!bitcount
+!chksym
+!chkimg
+!cppexr
+!cpuid
+!cs
+!cxr
+!dh
+!dlls
+!dml_proc
+!dumpfa
+!elog_str
+!envvar
+!error
+!exchain
+!exr
+!findxmldata
+!for_each_frame
+!for_each_function
+!for_each_local
+!for_each_module
+!for_each_register
+!gflag
+!gle
+!gs
+!handle
+!heap
+!help
+!homedir
+!hstring
+!hstring2
+!htrace
+!imggp
+!imgreloc
+!kuser
+!list
+!lmi
+!mui
+!net_send
+!obja
+!owner
+!peb
+!rebase
+!rtlavl
+!sd
+!sid
+!slist
+!std_map
+!stl
+!str
+!sym
+!symsrv
+!teb
+!tls
+!token
+!tp
+!triage
+!ustr
+!version
+!winrterr
+</pre>
+</div>
+<p>　　</p>
+<h1>user mode extensions</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">!avrf
+!critsec
+!dp (!ntsdexts.dp)
+!dreg
+!dt
+!evlog
+!findstack
+!gatom
+!igrep
+!locks (!ntsdexts.locks)
+!mapped_file
+!runaway
+!threadtoken
+!uniqstack
+!vadump
+!vprot
+</pre>
+</div>
+<p>　　</p>
+<p>　　</p>
+<p>&nbsp;</p></body>
 </html>

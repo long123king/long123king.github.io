@@ -1,10 +1,102 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x5982;&#x4F55;&#x5728;vim&#x4E2D;&#x540C;&#x65F6;&#x7F16;&#x8F91;&#x591A;&#x4E2A;&#x6587;&#x4EF6;</title>
-<body><p>参考：<a href="http://stackoverflow.com/a/53668/941650">http://stackoverflow.com/a/53668/941650</a></p>
+<title>&#x7528;&#x4E8E;&#x62C6;&#x89E3;&#x548C;&#x7EC4;&#x5408;PDF&#x4E2D;&#x5404;&#x4E2A;&#x5BF9;&#x8C61;&#x7684;shell&#x811A;&#x672C;</title>
+<body><p>拆解脚本</p>
 <div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">Why not use tabs (introduced in Vim 7)? You can switch between tabs with :tabn and :tabp, With :tabe &lt;filepath&gt; you can add a new tab; and with a regular :q or :wq you close a tab. If you map :tabn and :tabp to your F7/F8 keys you can easily switch between files.
+<pre class="brush:python;gutter:true;">header_start=0
+header_len=15
+ 
+xref_start=$(strings -a -t d $1 | grep -e "\bxref\b" | awk '{print $1}')
+trailer_start=$(strings -a -t d $1 | grep -e "\btrailer\b" | awk '{print $1}')
+#echo $xref_start
+#echo $trailer_start
+ 
+xref_len=$(echo "$trailer_start - $xref_start" | bc)
+#echo $xref_len
+ 
+header_dump=$(echo "$1" | sed -re 's/^(.*)\.pdf/tdis\_\1\_header\.bin/g')
+dd if=$1 of=$header_dump bs=1 skip=$header_start count=$header_len
+ 
+xref_dump=$(echo "$1" | sed -re 's/^(.*)\.pdf/tdis\_\1\_xref\.bin/g')
+dd if=$1 of=$xref_dump bs=1 skip=$xref_start count=$xref_len
+ 
+trailer_dump=$(echo "$1" | sed -re 's/^(.*)\.pdf/tdis\_\1\_trailer\.bin/g')
+dd if=$1 of=$trailer_dump bs=1 skip=$trailer_start
+ 
+#cat tdis_"$1"_xref.bin | awk 'NF==3' | awk 'NR!=1{printf("%d 0 obj is at offset: %d\n", NR-1, $1);}'
+cat $xref_dump | awk 'NF==3' | awk 'NR!=1{printf("%08d %08d\n", $1, NR-1);}' | sort &gt; tdis_"$xref_dump"
+#echo "$xref_start 0" &gt;&gt; tdis_"$xref_dump"
+printf "%08d %08d\n" $xref_start 0 &gt;&gt; tdis_"$xref_dump"
+
+cat tdis_$xref_dump | awk 'BEGIN{loffset=0;lobjnum=0;}{printf("%3d %3d %3d\n", loffset, $1-loffset, lobjnum);loffset=$1;lobjnum=$2;}' | awk 'NR!=1' &gt; tdis_metrics_"$xref_dump"
+ 
+if [ ! -d objects ]
+then
+    mkdir objects
+fi
+cat tdis_metrics_"$xref_dump" | while read offset len objn
+do
+#echo $offset, $len, $objn
+obj_name=$(printf "%s_%03d" $1 $objn | sed -re 's/^(.*)\.pdf/tdis\_\1\_obj/g' | awk '{printf("objects/%s.bin", $0);}')
+#echo $obj_name
+dd if=$1 of=$obj_name bs=1 skip=$offset count=$len
+done
 </pre>
 </div>
-<p>　　</p></body>
+<p>　　</p>
+<p>&nbsp;</p>
+<p>组合脚本</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">target=$1
+dd if=$(ls -1 | grep "header.bin") of=$target bs=1 count=15
+
+obj_offset=15
+obj_nums=0
+for file in $(ls -1 objects)
+do
+    #echo $file
+    obj_len=$(wc objects/$file | awk '{print $3}')
+    dd if=objects/$file of=$target bs=1 count=$obj_len seek=$obj_offset
+    printf "%010d %05d n\n" $obj_offset 0 &gt;&gt; "tas_generated_"$1"_xref.bin" 
+    obj_offset=$[ $obj_offset + $obj_len ]
+    obj_nums=$[ $obj_nums + 1 ]
+done
+echo "xref" &gt;&gt; $target
+printf "0 %d\n" $obj_nums &gt;&gt; $target
+echo "0000000000 65535 f" &gt;&gt; $target
+cat "tas_generated_"$1"_xref.bin" &gt;&gt; $target
+
+awk 'NR&lt;=2' $(ls -1 | grep "trailer.bin") &gt;&gt; $target
+echo "startxref" &gt;&gt; $target
+echo $obj_offset &gt;&gt; $target
+echo "%%EOF" &gt;&gt; $target
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>这样，我们就可以对解析出来的单个pdf对象进行单独操作了。</p>
+<p>手动找出包含graphic operators stream的对象，使用下面脚本解压stream</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">target=$(ls -1 objects | grep "_obj_"$1".bin")
+grep -Ubo --binary-file=text stream objects/$target | sed -e 's/:/ /g' | awk 'NR==1{printf("%d ",$1+7);}NR==2{printf("%d ", $1-10);}' &gt; tdeflate_stream.bin
+read xstart xend &lt; tdeflate_stream.bin
+dd if=objects/$target of=flated.bin bs=1 skip=$xstart count=$[ $xend - $xstart ]
+cat flated.bin | zlib-flate -uncompress &gt; deflated.bin
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>重新编辑deflated.bin文件，再使用下面脚本压缩</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">printf "%d 0 obj\n" $1 &gt; tflate_"$1".bin
+printf "&lt;&lt;/Length %d/Filter/FlateDecode&gt;&gt;stream\n" &gt;&gt; tflate_"$1".bin
+cat deflated.bin | zlib-flate -compress &gt;&gt; tflate_"$1".bin
+echo "" &gt;&gt; tflate_"$1".bin
+echo "endstream" &gt;&gt; tflate_"$1".bin
+echo "endobj" &gt;&gt; tflate_"$1".bin
+
+target=$(ls -1 objects | grep "_obj_"$1".bin") 
+rm objects/$target
+mv tflate_"$1".bin objects/$target
+</pre>
+</div>
+<p>&nbsp;</p></body>
 </html>

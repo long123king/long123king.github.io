@@ -1,5 +1,121 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x4E25;&#x91CD;&#x7684;&#x5185;&#x5B58;&#x6CC4;&#x6F0F;</title>
-<body><div id="codeSnippetWrapper"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet">Name: _liteserver_str<br>State: S (sleeping)<br>SleepAVG: 98%<br>Tgid: 31402<br>Pid: 31402<br>PPid: 20294<br>TracerPid: 0<br>Uid: 0 0 0 0<br>Gid: 0 0 0 0<br>FDSize: 512<br>Groups: 0 1 2 3 4 6 10 <br>VmPeak:  4161080 kB<br>VmSize:  4161080 kB<br>VmLck:        0 kB<br>VmHWM:    21016 kB<br>VmRSS:    21016 kB<br>VmData:  4153104 kB<br>VmStk:       84 kB<br>VmExe:     3148 kB<br>VmLib:     2576 kB<br>VmPTE:     1660 kB<br>StaBrk: 08365000 kB<br>Brk: 089b4000 kB<br>StaStk: ffae9950 kB<br>Threads: 17<br>SigQ: 1/14014<br>SigPnd: 0000000000000000<br>ShdPnd: 0000000000000000<br>SigBlk: 0000000000000000<br>SigIgn: 0000000000011000<br>SigCgt: 0000000180004203<br>CapInh: 0000000000000000<br>CapPrm: 00000000fffffeff<br>CapEff: 00000000fffffeff<br>Cpus_allowed: 00000000,00000000,00000000,00000000,00000000,00000000,00000000,00000001<br>Mems_allowed: 1<br></pre><br></div>导致了pthread_create失败，抛出异常。</body>
+<title>sysenter&#x5185;&#x6838;&#x5165;&#x53E3;&#x70B9;&#x4EE3;&#x7801;&#x5206;&#x6790;</title>
+<body><p>参考：<a href="http://www.mouseos.com/windows/kernel/KiFastCallEntry.html#04">http://www.mouseos.com/windows/kernel/KiFastCallEntry.html</a></p>
+<p><a href="http://www.mouseos.com/windows/kernel/%E4%B8%80%E4%BA%9B%E9%80%86%E5%90%91%E5%87%BA%E6%9D%A5%E7%9A%84%E5%87%BD%E6%95%B0%E5%AE%9E%E7%8E%B0.html">http://www.mouseos.com/windows/kernel/%E4%B8%80%E4%BA%9B%E9%80%86%E5%90%91%E5%87%BA%E6%9D%A5%E7%9A%84%E5%87%BD%E6%95%B0%E5%AE%9E%E7%8E%B0.html</a></p>
+<p>&nbsp;</p>
+<h1>KiFastCallEntry</h1>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">nt!KiFastCallEntry:
+8053dad0 b923000000      mov     ecx,23h
+8053dad5 6a30            push    30h
+8053dad7 0fa1            pop     fs
+8053dad9 8ed9            mov     ds,cx
+8053dadb 8ec1            mov     es,cx
+8053dadd 8b0d40f0dfff    mov     ecx,dword ptr ds:[0FFDFF040h]
+8053dae3 8b6104          mov     esp,dword ptr [ecx+4]
+8053dae6 6a23            push    23h
+8053dae8 52              push    edx
+8053dae9 9c              pushfd
+8053daea 6a02            push    2
+8053daec 83c208          add     edx,8
+8053daef 9d              popfd
+8053daf0 804c240102      or      byte ptr [esp+1],2
+8053daf5 6a1b            push    1Bh
+8053daf7 ff350403dfff    push    dword ptr ds:[0FFDF0304h]
+8053dafd 6a00            push    0
+8053daff 55              push    ebp
+8053db00 53              push    ebx
+8053db01 56              push    esi
+8053db02 57              push    edi
+8053db03 8b1d1cf0dfff    mov     ebx,dword ptr ds:[0FFDFF01Ch]
+8053db09 6a3b            push    3Bh
+8053db0b 8bb324010000    mov     esi,dword ptr [ebx+124h]
+8053db11 ff33            push    dword ptr [ebx]
+8053db13 c703ffffffff    mov     dword ptr [ebx],0FFFFFFFFh
+8053db19 8b6e18          mov     ebp,dword ptr [esi+18h]
+8053db1c 6a01            push    1
+8053db1e 83ec48          sub     esp,48h
+8053db21 81ed9c020000    sub     ebp,29Ch
+8053db27 c6864001000001  mov     byte ptr [esi+140h],1
+8053db2e 3bec            cmp     ebp,esp
+8053db30 759a            jne     nt!KiFastCallEntry2+0x47 (8053dacc)
+8053db32 83652c00        and     dword ptr [ebp+2Ch],0
+8053db36 f6462cff        test    byte ptr [esi+2Ch],0FFh
+8053db3a 89ae34010000    mov     dword ptr [esi+134h],ebp
+8053db40 0f854afeffff    jne     nt!Dr_FastCallDrSave (8053d990)
+8053db46 8b5d60          mov     ebx,dword ptr [ebp+60h]
+8053db49 8b7d68          mov     edi,dword ptr [ebp+68h]
+8053db4c 89550c          mov     dword ptr [ebp+0Ch],edx
+8053db4f c74508000ddbba  mov     dword ptr [ebp+8],0BADB0D00h
+8053db56 895d00          mov     dword ptr [ebp],ebx
+8053db59 897d04          mov     dword ptr [ebp+4],edi
+8053db5c fb              sti
+8053db5d 8bf8            mov     edi,eax
+8053db5f c1ef08          shr     edi,8
+8053db62 83e730          and     edi,30h
+8053db65 8bcf            mov     ecx,edi
+8053db67 03bee0000000    add     edi,dword ptr [esi+0E0h]
+8053db6d 8bd8            mov     ebx,eax
+8053db6f 25ff0f0000      and     eax,0FFFh
+8053db74 3b4708          cmp     eax,dword ptr [edi+8]
+8053db77 0f8345fdffff    jae     nt!KiBBTUnexpectedRange (8053d8c2)
+8053db7d 83f910          cmp     ecx,10h
+8053db80 751a            jne     nt!KiFastCallEntry+0xcc (8053db9c)
+8053db82 8b0d18f0dfff    mov     ecx,dword ptr ds:[0FFDFF018h]
+8053db88 33db            xor     ebx,ebx
+8053db8a 0b99700f0000    or      ebx,dword ptr [ecx+0F70h]
+8053db90 740a            je      nt!KiFastCallEntry+0xcc (8053db9c)
+8053db92 52              push    edx
+8053db93 50              push    eax
+8053db94 ff15c4355580    call    dword ptr [nt!KeGdiFlushUserBatch (805535c4)]
+8053db9a 58              pop     eax
+8053db9b 5a              pop     edx
+8053db9c ff0538f6dfff    inc     dword ptr ds:[0FFDFF638h]
+8053dba2 8bf2            mov     esi,edx
+8053dba4 8b5f0c          mov     ebx,dword ptr [edi+0Ch]
+8053dba7 33c9            xor     ecx,ecx
+8053dba9 8a0c18          mov     cl,byte ptr [eax+ebx]
+8053dbac 8b3f            mov     edi,dword ptr [edi]
+8053dbae 8b1c87          mov     ebx,dword ptr [edi+eax*4]
+8053dbb1 2be1            sub     esp,ecx
+8053dbb3 c1e902          shr     ecx,2
+8053dbb6 8bfc            mov     edi,esp
+8053dbb8 3b35b48f5580    cmp     esi,dword ptr [nt!MmUserProbeAddress (80558fb4)]
+8053dbbe 0f83a8010000    jae     nt!KiSystemCallExit2+0x9f (8053dd6c)
+8053dbc4 f3a5            rep movs dword ptr es:[edi],dword ptr [esi]
+8053dbc6 ffd3            call    ebx
+8053dbc8 8be5            mov     esp,ebp
+8053dbca 8b0d24f1dfff    mov     ecx,dword ptr ds:[0FFDFF124h]
+8053dbd0 8b553c          mov     edx,dword ptr [ebp+3Ch]
+8053dbd3 899134010000    mov     dword ptr [ecx+134h],edx
+</pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/bap/bap-0.7/libasmir/apps $ hexdump -C kifastcallentry.dump | cut -b 10-60 | sed -re 's/[0-9a-f]{2}/\\x&amp;/g' | sed -re 's/ //g' | sed -e 's/^/"/g' | sed -e 's/$/"/g'
+"\xb9\x23\x00\x00\x00\x6a\x30\x0f\xa1\x8e\xd9\x8e\xc1\x8b\x0d\x40"
+"\xf0\xdf\xff\x8b\x61\x04\x6a\x23\x52\x9c\x6a\x02\x83\xc2\x08\x9d"
+"\x80\x4c\x24\x01\x02\x6a\x1b\xff\x35\x04\x03\xdf\xff\x6a\x00\x55"
+"\x53\x56\x57\x8b\x1d\x1c\xf0\xdf\xff\x6a\x3b\x8b\xb3\x24\x01\x00"
+"\x00\xff\x33\xc7\x03\xff\xff\xff\xff\x8b\x6e\x18\x6a\x01\x83\xec"
+"\x48\x81\xed\x9c\x02\x00\x00\xc6\x86\x40\x01\x00\x00\x01\x3b\xec"
+"\x75\x9a\x83\x65\x2c\x00\xf6\x46\x2c\xff\x89\xae\x34\x01\x00\x00"
+"\x0f\x85\x4a\xfe\xff\xff\x8b\x5d\x60\x8b\x7d\x68\x89\x55\x0c\xc7"
+"\x45\x08\x00\x0d\xdb\xba\x89\x5d\x00\x89\x7d\x04\xfb\x8b\xf8\xc1"
+"\xef\x08\x83\xe7\x30\x8b\xcf\x03\xbe\xe0\x00\x00\x00\x8b\xd8\x25"
+"\xff\x0f\x00\x00\x3b\x47\x08\x0f\x83\x45\xfd\xff\xff\x83\xf9\x10"
+"\x75\x1a\x8b\x0d\x18\xf0\xdf\xff\x33\xdb\x0b\x99\x70\x0f\x00\x00"
+"\x74\x0a\x52\x50\xff\x15\xc4\x35\x55\x80\x58\x5a\xff\x05\x38\xf6"
+"\xdf\xff\x8b\xf2\x8b\x5f\x0c\x33\xc9\x8a\x0c\x18\x8b\x3f\x8b\x1c"
+"\x87\x2b\xe1\xc1\xe9\x02\x8b\xfc\x3b\x35\xb4\x8f\x55\x80\x0f\x83"
+"\xa8\x01\x00\x00\xf3\xa5\xff\xd3\x8b\xe5\x8b\x0d\x24\xf1\xdf\xff"
+"\x8b\x55\x3c\x89\x91\x34\x01\x00\x00"
+""
+</pre>
+</div>
+<p>　　</p>
+<p>call ebx会最终跳转到真正的System Service服务例程处执行， 如果我们hook了任一SSDT项目，那么它的返回地址一定是在8053dbc8处。</p>
+<p>　　</p>
+<p>&nbsp;</p></body>
 </html>

@@ -1,99 +1,29 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Process Hacker&#x6E90;&#x7801;&#x4E2D;&#x7684;&#x7528;&#x6237;&#x6001;hook&#x7684;&#x505A;&#x6CD5;</title>
-<body><p>processhacker-code-5632\1.x\trunk\NProcessHacker\hook.h</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">typedef struct _PH_HOOK
-{
-    PVOID Function;
-    PVOID Target;
-    BOOLEAN Hooked;
-    CHAR Bytes[5];
-} PH_HOOK, *PPH_HOOK;
-</pre>
-</div>
-<p>这个结构体用来保存每个Hook的信息，Function是hook点的地址， Target是Trampoline的地址，Bytes用来备份Function点处原来的5个字节。</p>
-<p>processhacker-code-5632\1.x\trunk\NProcessHacker\hook.c</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">VOID PHAPI PhInitializeHook(
-    PPH_HOOK Hook,
-    PVOID Function,
-    PVOID Target
-    )
-{
-    memset(Hook, 0, sizeof(PH_HOOK));
-    Hook-&gt;Function = Function;
-    Hook-&gt;Target = Target;
-}
-</pre>
-</div>
-<p>初始化Hook结构体，指定hook点与Trampoline的地址。</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">NTSTATUS PHAPI PhHook(
-    PPH_HOOK Hook
-    )
-{
-    NTSTATUS status = STATUS_SUCCESS;
-    ULONG oldProtection;
-    PCHAR function;
-
-    /* Change the page protection of the target page so we can write to it. */
-    if (!VirtualProtect(Hook-&gt;Function, 5, PAGE_EXECUTE_READWRITE, &amp;oldProtection))
-        return STATUS_ACCESS_VIOLATION;
-
-    __try
-    {
-        function = (PCHAR)Hook-&gt;Function;
-        /* Copy the original five bytes for unhooking. */
-        memcpy(Hook-&gt;Bytes, function, 5);
-        /* Hook the function by writing a jump instruction. */
-        Hook-&gt;Hooked = TRUE;
-        /* jmp Target */
-        *function = 0xe9;
-        *(PULONG_PTR)(function + 1) = (ULONG_PTR)Hook-&gt;Target - (ULONG_PTR)Hook-&gt;Function - 5;
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        status = GetExceptionCode();
-    }
-
-    /* Restore the old page protection. */
-    VirtualProtect(Hook-&gt;Function, 5, oldProtection, NULL);
-
-    return status;
-}
-</pre>
-</div>
-<p>用于完成对Hook点的5个字节的替换，替换成<span style="color: #ff0000;">e9 XXXXXXXX</span>[Trampoline与Hook点之间的偏移距离]。</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">NTSTATUS PHAPI PhUnhook(
-    PPH_HOOK Hook
-    )
-{
-    NTSTATUS status = STATUS_SUCCESS;
-    ULONG oldProtection;
-
-    /* Change the page protection of the target page so we can write to it. */
-    if (!VirtualProtect(Hook-&gt;Function, 5, PAGE_EXECUTE_READWRITE, &amp;oldProtection))
-        return STATUS_ACCESS_VIOLATION;
-
-    __try
-    {
-        /* Unpatch the function by restoring the original first 5 bytes. */
-        memcpy(Hook-&gt;Function, Hook-&gt;Bytes, 5);
-        Hook-&gt;Hooked = FALSE;
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        status = GetExceptionCode();
-    }
-
-    /* Restore the old page protection. */
-    VirtualProtect(Hook-&gt;Function, 5, oldProtection, NULL);
-
-    return status;
-}
-</pre>
-</div>
-<p>Unhook的过程恰好相反，用备份的5个字节恢复Hook点。</p></body>
+<title>Tex&#x4E0E;PDF</title>
+<body><p>由Knuth Donald开发的tex.web会生成DVI文件，<a href="http://en.wikipedia.org/wiki/DVI_file_format" target="_blank">DVI</a>也是Knuth自己实现的（虽然概念是其他人提出的）一种文件格式，目标是与设备无关。</p>
+<p>通过dvips程序可以将DVI格式转化成PostScript格式，而PostScript格式是Adobe公司起家的产品，也是PDF格式的前身，甚至PDF现在的绘画机制与PostScript也相差无几。</p>
+<p>可以使用ps2pdf将PostScript文件转化成PDF格式文件。</p>
+<p>&nbsp;</p>
+<p>Tex的机制基本上就可以这样描述。</p>
+<p>因为Tex的产生比较早，当时PostScript还只是个雏形，因此tex没有直接输出PostScript文件格式也是情理之中，不过Knuth还真是有远见，选择了一种与PDF的Portable类似的思想，生成DVI格式。然后，接下来的事其实也理所当然，PostScript以至PDF成了行业的标准，Tex就在不断地向PDF靠拢，直到最后出现了<a href="http://en.wikipedia.org/wiki/PdfTeX" target="_blank">pdftex</a>。</p>
+<blockquote>
+<p>The main difference between TeX and pdfTeX is that whereas TeX outputs&nbsp;<a class="mw-redirect" title="DVI file format" href="http://en.wikipedia.org/wiki/DVI_file_format">DVI</a>files, pdfTeX can output&nbsp;<a title="Portable Document Format" href="http://en.wikipedia.org/wiki/Portable_Document_Format">PDF</a>&nbsp;files directly.</p>
+</blockquote>
+<p>&nbsp;</p>
+<p>Pdftex能够直接将tex程序输出成PDF格式。</p>
+<p>&nbsp;</p>
+<p>那么事情发展到这个地步已经很完美了，但是问题出在tex脚本语言本身，它太自限了，很难扩展或者与其他语言兼容，因此出现了<a href="http://en.wikipedia.org/wiki/LuaTeX" target="_blank">LuaTex</a>。</p>
+<blockquote>
+<p>The main objective of the project is to provide a version of TeX where all internals are accessible from Lua.</p>
+</blockquote>
+<p><a href="http://zh.wikipedia.org/wiki/Lua" target="_blank">Lua</a>是一门很容易嵌入到其他语言中的语言<span style="text-decoration: line-through;">，那么它应该可以成为tex与其他语言结合的桥梁。</span></p>
+<p>LuaTex之间的结合方式参考：<a href="http://wiki.contextgarden.net/Programming_in_LuaTeX" target="_blank">Programming in LuaTeX</a></p>
+<blockquote>
+<p>There are two main ways to execute Lua code in a ConTeXt document: The command&nbsp;<code>\ctxlua</code>, and the environment&nbsp;<code>\startluacode...\stopluacode</code>. Both are wrappers around the LuaTeX primitive<code>\directlua</code>, which you should never need to use. In general, you will define a function inside a<code>\startluacode</code>&nbsp;block, and then define a TeX command that calls the function using&nbsp;<code>\ctxlua</code>, especially because&nbsp;<code>\ctxlua</code>&nbsp;has a few idiosyncracies.</p>
+<p>&nbsp;</p>
+<p>Most commands that you would type with a backslash in plain ConTeXt, you can access from Lua with<code>context.<em>command</em></code>. Unadorned strings end up in TeX as arguments in curly braces; Lua tables end up in TeX as paramater blocks in square brackets.&nbsp;</p>
+</blockquote>
+<p>不过看起来，Lua只是被嵌入到了tex中去，毕竟Lua只有一个比较小的核心，也基本上无法自己独立生存。</p>
+<p>所以LuaTex只是tex自身的一个提升，而并不是向外界的开放接口。</p></body>
 </html>

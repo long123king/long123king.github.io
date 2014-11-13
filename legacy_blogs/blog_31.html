@@ -1,9 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x5206;&#x6790;/proc/[pid]/maps&#x4E2D;&#x7684;&#x5404;&#x4E2A;&#x5185;&#x5B58;&#x533A;&#x57DF;&#x7684;&#x5927;&#x5C0F;</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">cat maps | sed -e "s/\([0-9a-f]\{8\}\)-\([0-9a-f]\{8\}\)/0x\1 0x\2/" | awk '{printf("\033[0;33m[%8d Page]\033[0m \033[0;35m[%8d KB]\033[0m %s\n", (strtonum($2) - strtonum($1))/4096, (strtonum($2) - strtonum($1))/1024, $0)}'
-</pre>
-</div>
-<p>　　</p></body>
+<title>Free&#x7248;&#x672C;&#x7684;driver&#x51FA;&#x73B0;error C2220: warning treated as error - no 'object' file generated</title>
+<body><p>这些错误可能在Checked的版本中并不出现，其实是一些比较严重的Warning，可以通过查看在源码路径下生成的error日志文件来解决相应的问题。</p></body>
 </html>

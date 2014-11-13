@@ -1,195 +1,131 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x4F7F;&#x7528;Bochs&#x5B66;&#x4E60;&#x786C;&#x4EF6;&#x539F;&#x7406;</title>
-<body><h3>什么是Bochs？</h3>
-<p>简单地说，Bochs是一款仿真软件，可以用软件的方式模拟硬件的工作。同类软件有Qemu，仿真软件与虚拟机(hypervisor)还不完全相同，仿真软件是完全软件模拟硬件，而虚拟机软件(比如Vmware, VirtualBox)是利用主机的硬件进行工作。</p>
-<p>Bochs的主页地址：<a href="http://bochs.sourceforge.net/">http://bochs.sourceforge.net/</a></p>
-<p>Bochs软件的下载地址：<a href="http://sourceforge.net/projects/bochs/files/bochs/">http://sourceforge.net/projects/bochs/files/bochs/</a></p>
-<h3>Bochs的使用</h3>
-<p>Bochs的使用依赖配置文件，通过配置文件指定不同的硬件，以及指定存储介质的映像文件(BIOS的ROM文件、磁盘文件等)。</p>
-<p>在Windows环境下安装过Bochs后，在配置文件上右键菜单会出现Run, Debug的菜单选项，从而启动运行或者调试。</p>
-<h3>Bochs调试器</h3>
-<p>Bochs的调试器命令与gdb命令十分相似，但是更加强大。简单介绍几条命令的使用：</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> #流程控制</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> c             #<span style="color: #0000ff;">continue</span>, 继续执行</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> s [count]     #step, 单步执行count次</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> #断点</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> vb seg:off    #设置逻辑地址断点</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> lb addr       #设置物理地址断点</pre>
-<!--CRLF-->
-<pre><span id="lnum7" style="color: #606060;">   7:</span> info <span style="color: #0000ff;">break</span>    #查看断点</pre>
-<!--CRLF-->
-<pre><span id="lnum8" style="color: #606060;">   8:</span> d n           #删除断点</pre>
-<!--CRLF-->
-<pre><span id="lnum9" style="color: #606060;">   9:</span> #查看内存</pre>
-<!--CRLF-->
-<pre><span id="lnum10" style="color: #606060;">  10:</span> x/n[bhwg][xduotc] #查看内存</pre>
-<!--CRLF-->
-<pre><span id="lnum11" style="color: #606060;">  11:</span> [bhwg]        #显示单元大小，分别代表byte, half, word, giant word</pre>
-<!--CRLF-->
-<pre><span id="lnum12" style="color: #606060;">  12:</span> [xduotc]      #显示格式，分别代表hex, dec, unsigned, octal, binary, <span style="color: #0000ff;">char</span></pre>
-<!--CRLF-->
-<pre><span id="lnum13" style="color: #606060;">  13:</span> #查看寄存器</pre>
-<!--CRLF-->
-<pre><span id="lnum14" style="color: #606060;">  14:</span> r             #查看基本寄存器</pre>
-<!--CRLF-->
-<pre><span id="lnum15" style="color: #606060;">  15:</span> sreg          #查看段寄存器</pre>
-<!--CRLF--></div>
+<title>Linux&#x6E90;&#x7801;&#x4E0E;&#x7F16;&#x8BD1;&#x51FA;&#x7684;&#x76EE;&#x6807;&#x6587;&#x4EF6;&#x6C47;&#x7F16;&#x4EE3;&#x7801;&#x7684;&#x4E00;&#x81F4;&#x6027;&#x95EE;&#x9898;</title>
+<body><p>start_kernel是内核启动时比较重要的一个函数，然而我发现一个问题，我编译出来的目标文件中的汇编代码与C源码并不完全对应，这是怎么一回事呢？</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">asmlinkage void __init start_kernel(void)
+{
+        char * command_line;
+        extern const struct kernel_param __start___param[], __stop___param[];
+
+        /*
+         * Need to run as early as possible, to initialize the
+         * lockdep hash:
+         */
+        lockdep_init();
+        smp_setup_processor_id();
+        debug_objects_early_init();
+
+        /*
+         * Set up the the initial canary ASAP:
+         */
+        boot_init_stack_canary();
+
+        cgroup_init_early();
+
+        local_irq_disable();
+        early_boot_irqs_disabled = true;<br />
+/*<br />&nbsp;* Interrupts are still disabled. Do necessary setups, then<br />&nbsp;* enable them<br />&nbsp;*/<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; boot_cpu_init();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; page_address_init();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; pr_notice("%s", linux_banner);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_arch(&amp;command_line);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mm_init_owner(&amp;init_mm, &amp;init_task);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; mm_init_cpumask(&amp;init_mm);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_command_line(command_line);<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_nr_cpu_ids();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; setup_per_cpu_areas();<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; smp_prepare_boot_cpu(); /* arch-specific boot-cpu hooks */</pre>
 </div>
-<h3>&nbsp;</h3>
-<p>更多的命令，请输入help查看。</p>
-<h3>在Windows环境下编译Bochs源代码</h3>
-<p>首先说一下编译源码的动机，当我们安装了Bochs之后就已经可以使用它来运行或者调试一个被仿真的系统了。 这种调试类似于gdb，调试目标是运行在Bochs之上的系统。</p>
-<p>然而，我们知道，既然Bochs是一个开源的项目，以通过软件的方式仿真了硬件系统，那么我们就可以通过查看Bochs的源码来学习相关的硬件知识(比如Intel体系结构，BIOS，DMA等)了。</p>
-<p>从上面的下载地址下载一份源代码，解压后，能看到vs2008/bochs.sln文件，从而打开Visual Studio项目进行编译。</p>
-<p>默认配置选项中没有包含对bochsdbg的支持，因此我们需要重新运行configure程序，悲剧的是configure是Linux下面的程序，我们可以通过以下方式来达到同样的目的：</p>
-<ol>
-<li>1. 安装mingw，以及msys，将msys/bin目录添加到系统PATH环境变量中；</li>
-<li>2. 修改源码目录下的.conf.win32_vcpp文件，添加
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> --enable-debugger --enable-disasm</pre>
-<!--CRLF--></div>
-</div>
-</li>
-<li>3. 打开Visual Studio的Prompt命令行，cd到源码目录下，运行
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> bash.exe .conf.win32_vcpp</pre>
-<!--CRLF--></div>
-</div>
-</li>
-</ol>
-<p>完成以上步骤之后，就可以编译出具有debug功能的Bochs可执行程序了。</p>
-<h3>Bochs是怎样处理调试命令的？</h3>
-<p>我们可以在位置上设置断点：</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #0000ff;">void</span> bx_dbg_user_input_loop(<span style="color: #0000ff;">void</span>) <span style="color: #008000;">/*dbg_main.cc*/</span></pre>
-<!--CRLF--></div>
-</div>
-<p>然后在调试窗口中输入命令</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> r</pre>
-<!--CRLF--></div>
-</div>
-<p>程序会在这两个断点处中断，这个bx_dbg_user_input_loop函数就是不断接收调试命令的循环体，它会把接收到的调试命令经过lex&amp;yacc框架进行解析，然后调用到相应的handler来处理调试请求。</p>
-<p>这些handler都在debug.h文件中进行声明，比如处理r命令的handler定义为</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #0000ff;">void</span> bx_dbg_info_registers_command(<span style="color: #0000ff;">int</span>);</pre>
-<!--CRLF--></div>
-</div>
-<p>在该函数的定义处设置断点，我们就能够了解到Bochs是怎样处理r这样的调试请求的。</p>
-<p>通过跟踪几个调试命令的实现，我们发现了三个重要的全局变量：</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> BOCHSAPI BX_CPU_C bx_cpu;</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> BOCHSAPI BX_MEM_C bx_mem;</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> bx_devices_c bx_devices;</pre>
-<!--CRLF--></div>
-</div>
-<p>分别保存着用来描述CPU、内存和外部设备的数据结构。</p>
-<h3>指令IN和OUT是如何处理的？</h3>
-<p>由于我们希望通过Bochs来学习硬件相关的内容，所以会对IN和OUT这两条指令很感兴趣，因为CPU就是通过这两条指令与外部设备之间进行协调工作的。</p>
-<p>我们通过尝试，找到了下面这个函数</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #008000;">/*</span></pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> <span style="color: #008000;"> * Write a byte of data to the IO memory address space.</span></pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> <span style="color: #008000;"> */</span></pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span>&nbsp; </pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span>   <span style="color: #0000ff;">void</span> BX_CPP_AttrRegparmN(3)</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> bx_devices_c::outp(Bit16u addr, Bit32u value, <span style="color: #0000ff;">unsigned</span> io_len)</pre>
-<!--CRLF--></div>
-</div>
-<p>bx_devices会在内部维护一个外设端口对应的读和写的handler的数组</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #0000ff;">struct</span> io_handler_struct **read_port_to_handler;</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> <span style="color: #0000ff;">struct</span> io_handler_struct **write_port_to_handler;</pre>
-<!--CRLF--></div>
-</div>
-<p>这是两个二维指针数组，用端口号作为下标可以找到某个端口对应的读写处理函数，默认会把每个handler都设置成io_write_handlers</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #008000;">/* set handlers to the default one */</span></pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span>  <span style="color: #0000ff;">for</span> (i=0; i &lt; PORTS; i++) {</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span>    read_port_to_handler[i] = &amp;io_read_handlers;</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span>    write_port_to_handler[i] = &amp;io_write_handlers;</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span>  }</pre>
-<!--CRLF--></div>
-</div>
-<p>通过查找函数</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #cc6633;">#define</span> DEV_register_ioread_handler(b,c,d,e,f) bx_devices.register_io_read_handler(b,c,d,e,f)</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> <span style="color: #cc6633;">#define</span> DEV_register_iowrite_handler(b,c,d,e,f) bx_devices.register_io_write_handler(b,c,d,e,f)</pre>
-<!--CRLF--></div>
-</div>
-<p>我们可以找到哪些设备支持了自己的IO读写功能，以及其对应的handler。</p>
-<p>以DMA为例，我们可以找到如下的注册handler代码</p>
-<div id="codeSnippetWrapper" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; margin: 20px 0px 10px; width: 97.5%; font-family: 'Courier New', courier, monospace; direction: ltr; max-height: 200px; font-size: 8pt; overflow: auto; cursor: text; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="text-align: left; line-height: 12pt; background-color: #f4f4f4; width: 100%; font-family: 'Courier New', courier, monospace; direction: ltr; color: black; font-size: 8pt; overflow: visible; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> <span style="color: #008000;">// 0000..000F</span></pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> <span style="color: #0000ff;">for</span> (i=0x0000; i&lt;=0x000F; i++) {</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span>   DEV_register_ioread_handler(<span style="color: #0000ff;">this</span>, read_handler, i, <span style="color: #006080;">"DMA controller"</span>, 1);</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span>   DEV_register_iowrite_handler(<span style="color: #0000ff;">this</span>, write_handler, i, <span style="color: #006080;">"DMA controller"</span>, 3);</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> }</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span>&nbsp; </pre>
-<!--CRLF-->
-<pre><span id="lnum7" style="color: #606060;">   7:</span> <span style="color: #008000;">// 00080..008F</span></pre>
-<!--CRLF-->
-<pre><span id="lnum8" style="color: #606060;">   8:</span> <span style="color: #0000ff;">for</span> (i=0x0080; i&lt;=0x008F; i++) {</pre>
-<!--CRLF-->
-<pre><span id="lnum9" style="color: #606060;">   9:</span>   DEV_register_ioread_handler(<span style="color: #0000ff;">this</span>, read_handler, i, <span style="color: #006080;">"DMA controller"</span>, 1);</pre>
-<!--CRLF-->
-<pre><span id="lnum10" style="color: #606060;">  10:</span>   DEV_register_iowrite_handler(<span style="color: #0000ff;">this</span>, write_handler, i, <span style="color: #006080;">"DMA controller"</span>, 3);</pre>
-<!--CRLF-->
-<pre><span id="lnum11" style="color: #606060;">  11:</span> }</pre>
-<!--CRLF-->
-<pre><span id="lnum12" style="color: #606060;">  12:</span>&nbsp; </pre>
-<!--CRLF-->
-<pre><span id="lnum13" style="color: #606060;">  13:</span> <span style="color: #008000;">// 000C0..00DE</span></pre>
-<!--CRLF-->
-<pre><span id="lnum14" style="color: #606060;">  14:</span> <span style="color: #0000ff;">for</span> (i=0x00C0; i&lt;=0x00DE; i+=2) {</pre>
-<!--CRLF-->
-<pre><span id="lnum15" style="color: #606060;">  15:</span>   DEV_register_ioread_handler(<span style="color: #0000ff;">this</span>, read_handler, i, <span style="color: #006080;">"DMA controller"</span>, 1);</pre>
-<!--CRLF-->
-<pre><span id="lnum16" style="color: #606060;">  16:</span>   DEV_register_iowrite_handler(<span style="color: #0000ff;">this</span>, write_handler, i, <span style="color: #006080;">"DMA controller"</span>, 3);</pre>
-<!--CRLF-->
-<pre><span id="lnum17" style="color: #606060;">  17:</span> }</pre>
-<!--CRLF--></div>
-</div>
-<p>只要在DMA模块的read_handler和write_handler处理设置断点，我们就可以动态地调试DMA的处理逻辑了。</p>
 <p>&nbsp;</p>
-<p>经过了以上的准备工作之后，我们就可以开始调试一个具体的系统了。我是以DLX为目标进行调试的，在调试过程中，我们可以一步一步地了解到从计算机加电后执行BIOS开机自检程序，到加载MBR，通过LILO一步一步地把Linux操作系统启动起来的全过程，一个奇妙的旅程即将开始！</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">objdump -d main.o
+</pre>
+</div>
 <p>&nbsp;</p>
-<p>有人已经这样做了，并且根据Bochs的代码，出了一本书：<a href="http://www.mouseos.com/books/x86-64/index.html">http://www.mouseos.com/books/x86-64/index.html</a></p></body>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">00000337 &lt;start_kernel&gt;:
+ 337:	55                   	push   %ebp
+ 338:	89 e5                	mov    %esp,%ebp
+ 33a:	53                   	push   %ebx
+ 33b:	83 ec 14             	sub    $0x14,%esp
+ 33e:	e8 fc ff ff ff       	call   33f &lt;start_kernel+0x8&gt;
+ 343:	e8 fc ff ff ff       	call   344 &lt;start_kernel+0xd&gt;
+ 348:	ff 15 08 00 00 00    	call   *0x8
+ 34e:	64 8b 1d 00 00 00 00 	mov    %fs:0x0,%ebx
+ 355:	ba 01 00 00 00       	mov    $0x1,%edx
+ 35a:	89 d8                	mov    %ebx,%eax
+ 35c:	c6 05 00 00 00 00 01 	movb   $0x1,0x0
+ 363:	e8 fc ff ff ff       	call   364 &lt;start_kernel+0x2d&gt;
+ 368:	89 d8                	mov    %ebx,%eax
+ 36a:	ba 01 00 00 00       	mov    $0x1,%edx
+ 36f:	e8 fc ff ff ff       	call   370 &lt;start_kernel+0x39&gt;
+ 374:	89 d8                	mov    %ebx,%eax
+ 376:	ba 01 00 00 00       	mov    $0x1,%edx
+ 37b:	e8 fc ff ff ff       	call   37c &lt;start_kernel+0x45&gt;
+ 380:	ba 01 00 00 00       	mov    $0x1,%edx
+ 385:	89 d8                	mov    %ebx,%eax
+ 387:	e8 fc ff ff ff       	call   388 &lt;start_kernel+0x51&gt;
+ 38c:	e8 fc ff ff ff       	call   38d &lt;start_kernel+0x56&gt;
+ 391:	c7 44 24 04 00 00 00 	movl   $0x0,0x4(%esp)
+</pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">objdump -r main.o
+</pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">00000309 R_386_32          boot_command_line
+0000030e R_386_32          .init.data
+00000313 R_386_PC32        strlcpy
+00000318 R_386_32          .init.data
+0000031d R_386_PC32        parse_early_options
+00000324 R_386_32          .init.data
+0000033f R_386_PC32        smp_setup_processor_id
+00000344 R_386_PC32        cgroup_init_early
+0000034a R_386_32          pv_irq_ops
+00000351 R_386_32          cpu_number
+0000035e R_386_32          early_boot_irqs_disabled
+00000364 R_386_PC32        set_cpu_online
+00000370 R_386_PC32        set_cpu_active
+0000037c R_386_PC32        set_cpu_present
+00000388 R_386_PC32        set_cpu_possible
+0000038d R_386_PC32        page_address_init
+00000395 R_386_32          linux_banner
+0000039c R_386_32          .rodata.str1.1
+000003a1 R_386_PC32        printk
+000003a9 R_386_PC32        setup_arch
+000003ae R_386_32          init_task
+000003b3 R_386_32          init_mm
+000003b8 R_386_PC32        mm_init_owner
+000003bd R_386_32          boot_command_line
+</pre>
+</div>
+<p>那么，lockdep_init函数哪里去了呢，start_kernel究竟有没有调用到它呢。</p>
+<p>首先可以肯定的是，lockdep_init没有被内核导出，因为在System.map中找不到它。</p>
+<p>然后，在重定位信息中也找不到lockdep_init。</p>
+<p>lockdep_init是在哪个文件中定义的？</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">kernel/locking/lockdep.c
+</pre>
+</div>
+<p>&nbsp;但是在kernel/locking目录下并没有生成lockdep.o，这又是为什么？</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">void lockdep_init(void)
+{
+        int i;
+
+        /*
+         * Some architectures have their own start_kernel()
+         * code which calls lockdep_init(), while we also
+         * call lockdep_init() from the start_kernel() itself,
+         * and we want to initialize the hashes only once:
+         */
+        if (lockdep_initialized)
+                return;
+
+        for (i = 0; i &lt; CLASSHASH_SIZE; i++)
+                INIT_LIST_HEAD(classhash_table + i);
+
+        for (i = 0; i &lt; CHAINHASH_SIZE; i++)
+                INIT_LIST_HEAD(chainhash_table + i);
+
+        lockdep_initialized = 1;
+}
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p></body>
 </html>

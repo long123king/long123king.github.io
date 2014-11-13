@@ -1,9 +1,42 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x4E0B;&#x8F7D;ftp&#x4E0A;&#x6587;&#x4EF6;</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">wget ftp://username:passwd@host_ip/dir/file
-</pre>
-</div>
-<p>　　</p></body>
+<title>vim&#x53EF;&#x89C6;&#x6A21;&#x5F0F;</title>
+<body><p>参考：&nbsp;<a href="http://xw2423.byr.edu.cn/blog/archives/232">http://xw2423.byr.edu.cn/blog/archives/232</a></p>
+<p><a href="http://www.pythonclub.org/linux/vim/visual-mode">http://www.pythonclub.org/linux/vim/visual-mode</a></p>
+<p>&nbsp;</p>
+<p>Vim的多行编辑技巧都在"Visual Mode"里面。</p>
+<p>&nbsp;</p>
+<h1>可以通过三种方式进入Visual Mode:</h1>
+<p>1. v　　　　按字节选择</p>
+<p>2. V　　　　按行选择</p>
+<p>3. Ctrl+v　 按矩形区域选择</p>
+<p>&nbsp;</p>
+<p>被选择的文件可以作为一个&ldquo;文本对象&rdquo;进行整体操作</p>
+<h1>比较简单明了的操作如</h1>
+<p>1. d　　　　删除这个文本对象</p>
+<p>2. y　　　　拷贝这个文本对象</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>关于大小写的操作</h1>
+<p>1. ~　　　　切换大小写</p>
+<p>2. U　　　　全部变大写</p>
+<p>3. u　　　　全部变小写</p>
+<p>&nbsp;</p>
+<h1>在&ldquo;文本对象&rdquo;前面或者后面插入</h1>
+<p>这就是多行操作的经典场景</p>
+<p>1. I　　　　在&ldquo;文本对象&rdquo;的每一行前面插入</p>
+<p>2. A　　　　在"文本对象"的每一行后面插入</p>
+<p>3. c　　　　将"文本对象"的每一行改写为新的内容</p>
+<p>&nbsp;</p>
+<p>这种多行的插入一只针对两侧竖直对齐的"文本对象"有效，而且操作是在按下Esc键回到普通模式完成。</p>
+<p>&nbsp;</p>
+<h1>Indent前进与后退</h1>
+<p>1. &gt;　　　　Indent前进</p>
+<p>2. &lt;　　　　Indent后退</p>
+<p>&nbsp;</p>
+<p>可以通过命令:set shiftwidth=n设置Indent的递进量</p>
+<p>&nbsp;</p>
+<h1>多行并成一行</h1>
+<p>1. J　　　　将&ldquo;文本对象&rdquo;所在的所有行都合并成一行</p>
+<p>&nbsp;</p></body>
 </html>

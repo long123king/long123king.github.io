@@ -1,8 +1,8 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Linux&#x4E0A;&#x8C03;&#x8BD5;python&#x7A0B;&#x5E8F;</title>
+<title>windbg show args after breakpoint</title>
 <body><div class="cnblogs_Highlighter">
-<pre class="brush:cpp;gutter:true;">python -m pdb target.py
+<pre class="brush:csharp;gutter:true;">bp ntdll!NtOpenFile ".echo ####################;du poi(ebp+8);.echo ########################;"
 </pre>
 </div>
 <p>　　</p></body>

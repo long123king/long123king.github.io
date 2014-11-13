@@ -1,5 +1,24 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Windows&#x7684;&#x5B89;&#x5168;&#x6A21;&#x578B;</title>
-<body><h3>1. 安全身份</h3> <p>Windows的安全模型是以用户为线索的，用户的身份是在登录系统时验证的。</p> <p>除了用户外，还可以有一些特殊实体需要拥有安全的身份，以便进行验证，比如groups, domain等等。</p> <p>&nbsp;</p> <p>Windows通过使用SID来标识一个实体的安全身份，重装过系统的同学会有类似的经验，对于上一个Windows系统留下来的文件夹，它的Owner会是一串以S-开头的数字，它就是上一个系统的用户的SID。</p> <p>&nbsp;</p> <p>在注册表HKEY_USERS中，以及DACL属性页中都能够看到SID的身影。</p> <p>&nbsp;</p> <h3>2. 令牌(Access Token)</h3> <p>Access Token是一个内核对象，是用来标识一个进程或者线程所拥有的安全权限的对象。</p> <p>通常这个权限是继承来的，CreateProcess/CreateThread时，允许设置Security Descriptor来限定子进程的权限，如果不加限定，那么子进程就继承了父进程的权限。</p> <p>&nbsp;</p> <p>这些权限规定了对于系统中的资源的访问能力。某项资源究竟允许谁来访问，是由这项资源的Owner说了算的，这也是Windows安全模型中的最重要的原则。</p> <p>&nbsp;</p> <h3>3. Impersonation</h3> <p>说白了，就是顶替某个用户的安全身份去做一件事，比如访问某项资源。</p> <p>这通常是必要的，因为当一个服务端的进程要代表某个客户端的程序去进行操作时，必须能够仿真这个客户端程序的安全身份，Impersonation就是这样一种机制。</p> <p>&nbsp;</p> <h3>4. 修改权限</h3> <p>这是一种终极的能力，如果你能修改任何人的权限，那么你就几乎能做任何事。通常这种能力仅限于系统管理员。</p> <p>&nbsp;</p> <p>可以使用AdjustTokenPrivileges来修改Token的权限。</p> <blockquote> <p>The <strong>AdjustTokenPrivileges</strong> function enables or disables privileges in the specified <a href="http://msdn.microsoft.com/en-us/library/windows/desktop/ms721532(v=vs.85).aspx#_security_access_token_gly"><em>access token</em></a>. Enabling or disabling privileges in an access token requires TOKEN_ADJUST_PRIVILEGES access.</p></blockquote> <p><a title="http://msdn.microsoft.com/en-us/library/windows/desktop/bb530716(v=vs.85).aspx" href="http://msdn.microsoft.com/en-us/library/windows/desktop/bb530716(v=vs.85).aspx">http://msdn.microsoft.com/en-us/library/windows/desktop/bb530716(v=vs.85).aspx</a>列出了令牌的特权列表。</p></body>
+<title>windbg bp condition</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">0:000&gt; bp 0012f2fc "j @ecx == 0 '';'gc'"
+0:000&gt; g
+</pre>
+</div>
+<p>　　</p>
+<p>j代表judgement，与c++中的condition?A:B类似。</p>
+<p>如果断点处ecx是0，则停下；否则go until next breakpoint（gc）.</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">bp 0012f2fc "j (@@c++(*(int*)(@esp+4) == 0x50)) 'dd esp';'gc'"
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">bp 0012f2fc "j (@@c++(*(int*)(@esp+4) != 0)) '? (dwo(@esp+4))';'gc'"</pre>
+</div>
+<p>　　</p>
+<p><a href="http://stackoverflow.com/questions/6097157/conditional-breakpoint-that-tests-multiple-stack-variables" target="_blank">http://stackoverflow.com/questions/6097157/conditional-breakpoint-that-tests-multiple-stack-variables</a></p></body>
 </html>

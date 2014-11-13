@@ -1,5 +1,25 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x6240;&#x60F3;&#x5373;&#x6240;&#x5F97;</title>
-<body><p>1. Graphviz</p> <p>通过dot语言来生成各种关系图， 教程参考：<a href="http://graphviz.org/Documentation.php">http://graphviz.org/Documentation.php</a></p> <p>&nbsp;</p> <p>2. LaTex</p> <p>用来排版文档，生成PDF文件。</p> <p>&nbsp;</p> <p>3. pyExcelerator</p> <p>通过Python脚本，生成xls文件。<a href="http://sourceforge.net/projects/pyexcelerator/">http://sourceforge.net/projects/pyexcelerator/</a></p> <p>&nbsp;</p> <p>4. iText</p> <p>通过Java或者C#语言，生成PDF文件。<a href="http://itextpdf.com/product">http://itextpdf.com/product</a></p></body>
+<title>&#x4ECE;pcap&#x6587;&#x4EF6;&#x4E2D;&#x5206;&#x6790;&#x51FA;&#x6570;&#x636E;&#x5305;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:cpp;gutter:true;">import dpkt
+import struct
+import sys,os
+
+f=file(sys.argv[1],"rb")
+pcap=dpkt.pcap.Reader(f)
+
+for ts, buf in pcap:
+    eth=dpkt.ethernet.Ethernet(buf)
+    ip=eth.data
+    tcp=ip.data
+
+    if eth.type == dpkt.ethernet.ETH_TYPE_IP:
+        src_tuple = map(ord, ip.src)
+        print "src ip addr: (%d.%d.%d.%d)" % ((src_tuple[0]), (src_tuple[1]), (src_tuple[2]), (src_tuple[3])),
+        dst_tuple = map(ord, ip.dst)
+        print "dst ip addr: (%d.%d.%d.%d)" % ((dst_tuple[0]), (dst_tuple[1]), (dst_tuple[2]), (dst_tuple[3]))
+</pre>
+</div>
+<p>使用dpkt库</p></body>
 </html>

@@ -1,5 +1,65 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Rop&#x653B;&#x51FB;</title>
-<body><p>参考：<a title="http://en.wikipedia.org/wiki/Return-oriented_programming" href="http://en.wikipedia.org/wiki/Return-oriented_programming">http://en.wikipedia.org/wiki/Return-oriented_programming</a></p> <p>&nbsp;</p> <p>Rop全称Return-Oriented Programming，就是对栈上的返回地址进行利用的一种攻击方式。</p> <p>对于栈的利用经历了几个阶段，都是在“道高一尺，魔高一丈”的正邪较量中不断地升级地。</p> <h4>1. Stack Smashing Attack</h4> <p>简单版本，主要是覆盖返回地址，将其指引到自己构造好的shellcode中去。</p> <p>因为自己的shellcode通常是存储在数据之中，所以可以通过DEP的机制来防御这种攻击。</p> <p>&nbsp;</p> <h4>2. Return Into Library</h4> <p>既然无法使用自己构造好的shellcode，那么就可以复用已经写好的library代码，因为这些代码是被信任地，加载到可以执行的内存区域中去的。通过精心构造的栈传递特定参数来调用library中特定函数的方式，来构建有效的攻击逻辑。</p> <p>这种机制可以通过限制library中的函数的破坏性的方式，以及64系统带来的新的函数调用方式（函数调用的第一个参数不再是通过栈传递，而是通过寄存器传递）来防御。</p> <p>&nbsp;</p> <h4>3. Borrowed Code Chunk</h4> <p>这一机制通过查找library中特定的指令序列，通过这些指令序列将构造好的参数传递到寄存器和栈中来完成攻击。</p> <p>&nbsp;</p> <h4>4. Return-Oriented Programming</h4> <p align="left">通过查找library中的代码来构造出可以执行任意逻辑的攻击链。</p> <p align="left">&nbsp;</p> <p align="left">有两种方式来防御：</p> <p align="left">ASLR, Address Space Layout Randomization, 通过随机化地布局library加载到内存中的地址，来增加构造攻击链的难度。</p> <p align="left">kBouncer, 通过检查返回指令是否返回到一个立即调用call指令的位置的方式来监控是否有攻击链的行为，缺点是性能太差。</p></body>
+<title>NtCallbackReturn&#x662F;&#x5426;&#x5BFC;&#x81F4;&#x4E86;&#x7528;&#x6237;&#x6001;&#x6808;&#x7684;&#x4E0D;&#x5E73;&#x8861;</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">0:000&gt; u ntdll!KiFastSystemCall
+ntdll!KiFastSystemCall:
+7c92eb8b 8bd4            mov     edx,esp
+7c92eb8d 0f34            sysenter
+ntdll!KiFastSystemCallRet:
+7c92eb8f 90              nop
+7c92eb90 90              nop
+7c92eb91 90              nop
+7c92eb92 90              nop
+7c92eb93 90              nop
+ntdll!KiFastSystemCallRet:
+7c92eb94 c3              ret
+</pre>
+</div>
+<p>而我们通过dump disasm得到的结果</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">0x77d1a146 :             FF 15 24 14 D1 77 		call dword ptr [0x77d11424]
+【ntdll.dll.[.text].NtCallbackReturn】
+0x7c92d51d :                B8 14 00 00 00 		mov eax, 0x14
+0x7c92d522 :                BA 00 03 FE 7F 		mov edx, 0x7ffe0300
+0x7c92d527 :                         FF 12 		call dword ptr [edx]<br />　　【ntdll.dll.[.text].KiFastSystemCall】
+　　0x7c92eb8b :                         8B D4 		mov edx, esp
+　　0x7c92eb8d :                         0F 34 		sysenter 
+　　0x7c92eb94 :                            C3 		ret <br />
+0x77ef67d4 :                            C3 		ret 
+</pre>
+</div>
+<p>根据上面的结果显示，KiFastSystemCall在执行结束本来应该返回到0x7c92d527的下一条指令即0x7c92d529处执行，但是为什么会返回到0x77ef67d4处呢？</p>
+<p>通过查看调用栈</p>
+<div class="cnblogs_Highlighter">
+<p> 　　　　 &nbsp; &nbsp;call [0x0012f43c] &nbsp; &nbsp; : &nbsp; &nbsp; 0x7c92d527 --&gt; 0x7c92eb8b<br />          　　　　return	[0x0012f458] &nbsp; &nbsp; : &nbsp; &nbsp; 0x77ef67d4 &lt;-- 0x7c92eb94</p>
+<p>	Thread 38:</p>
+<pre class="brush:csharp;gutter:true;">   <br /> <br />　　 [#       0] [0x0012fb20]:[0x7c941739 - 0x7c94173e] ==&gt; [0x7c93c9e4] ntdll.dll.[.text].LdrFindResourceDirectory_U_0x000000af
+    [#       1] [0x0012fa18]:[0x7c93cba6 - 0x7c93cbab] ==&gt; [0x7c921193] ntdll.dll.[.text].LdrInitializeThunk_0x00000015
+    [#       2] [0x0012f9f8]:[0x7c9211a4 - 0x7c9211a7] ==&gt; [0x77d1f518] USER32.dll.[.text].UserClientDllInitialize
+    [#       3] [0x0012f46c]:[0x77d1f76f - 0x77d1f774] ==&gt; [0x77d1f791] USER32.dll.[.text].UserClientDllInitialize_0x00000279
+    [#       4] [0x0012f460]:[0x77ef655e - 0x77ef6563] ==&gt; [0x77ef67c8] GDI32.dll.[.text].GdiProcessSetup_0x000001ac
+    [#       5] [0x0012f45c]:[0x77ef67d2 - 0x77ef67d4] ==&gt; [0x7c92eb8b] ntdll.dll.[.text].KiFastSystemCall
+    [#       6] [0x0012f450]:[0x7c92eae0 - 0x7c92eae3] ==&gt; [0x77d1a12e] USER32.dll.[.text].ClientThreadSetup_0x00000134
+    [#       7] [0x0012f440]:[0x77d1a146 - 0x77d1a14c] ==&gt; [0x7c92d51d] ntdll.dll.[.text].NtCallbackReturn
+--&gt; [#       8] [0x0012f43c]:[0x7c92d527 - 0x7c92d529] ==&gt; [0x7c92eb8b] ntdll.dll.[.text].KiFastSystemCall
+</pre>
+</div>
+<p>可见，0x77ef67d4是在第一次调用KiFastSystemCall的时候，保存在栈上的返回地址，当时的栈的位置是0x0012f45c(还没有将返回地址压到栈上时)；</p>
+<p>而在返回时，栈的位置是0x0012f458，因此正好是返回到了第一次调用KiFastSystemCall的位置。</p>
+<p>&nbsp;</p>
+<p>如果是这样，那么我们的影子调用栈出现了什么问题呢？</p>
+<p>我们知道，当用户态程序进入内核态执行后（通过sysenter），内核可能会调度到用户态的APC等等回调函数执行，这些回调函数的执行发起者是内核态代码，因此它们需要将执行流程返回给内核代码；</p>
+<p>Windows提供了一种机制，当用户态的回调函数没有提供显式的返回到内核的代码时，Windows会自动执行默认的返回到内核态的代码，而这一段代码恰好也是通过KiFastSystemCall机制完成的（因为KiFastSystemCall是用户态通向内核态的唯一入口），这一机制被称为NtCallbackReturn。</p>
+<p>&nbsp;</p>
+<p>因此，我们怀疑，NtCallbackReturn机制会使用户态的代码孤立起来看，是不符合栈平衡的，原因就是NtCallbackReturn的内核服务程序中会对用户态的栈做调整，以掩盖异步回调函数被执行过的痕迹。</p>
+<p>&nbsp;</p>
+<p>因此，我们相信，NtCallbackReturn的存在，使得我们单纯地依据用户态的call/ret指令建立起来的影子调用栈出现了不平衡的现象。</p>
+<p>&nbsp;</p>
+<p>解决方法，就是在调用过NtCallbackReturn之后，添加三次等效ret的效果，可以解决影子栈的不平衡问题。</p>
+<hr />
+<p>&nbsp;</p>
+<p>事情到了这里，还没有结束，因为还不知道有哪些系统调用会破坏用户态栈的平衡。</p>
+<p>比如NtContinue就很可疑（根据实现结果），那么用户态的影子调用栈要通过什么方式来保证其正确性呢？</p>
+<p>更普遍的做法，可以根据KiFastSystemCallRet来判断，它可以与KiFastSystemCall配对，从而消除中间的多余项目。</p></body>
 </html>

@@ -5,7 +5,7 @@ blog_tag=$(echo $blog | sed -e 's/\.html$//')
 origin_url=$(echo $url | sed -e 's/src="\(.*\)\"/\1/')
 img_name=$(echo $img | sed -e 's/"//')
 # 1. download original img files, save it to "img" folder
-#wget -O "img/$blog_tag"_"$img_name" $origin_url
+wget -O "img/$blog_tag"_"$img_name" $origin_url
 # 2. construct new url
 new_url="http://long123king.github.io/legacy_blogs/img/$blog_tag"_"$img_name"
 echo $new_url

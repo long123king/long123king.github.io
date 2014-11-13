@@ -1,0 +1,5 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>HVM&#xFF08;Hardware-Assisted Virtualization&#xFF09;</title>
+<body><blockquote> <p>A set of extra instructions is added that can be used by a process in VMX root<br>mode. These instructions do things like allocating a memory page on which to<br>store a full copy of the CPU state, start, and stop a VM. Finally, a set of bitmaps is<br>defined indicating whether a particular interrupt, instruction, or exception should<br>be passed to the virtual machine’s OS running in ring 0 or by the hypervisor<br>running in VMX root mode.</p></blockquote> <h3>VT</h3> <p>Intel VT提供了一种新的运行模式（VMX root mode），可以理解为Ring -1。</p> <p>&nbsp;</p> <p>同时提供几条新的指令，用来配置VMM的工作模式：</p> <ul> <li>分配一个内存页，用来存放CPU state的一个完整拷贝</li> <li>启动或者关闭一个VM</li> <li>设置一个位图，其中的每一位用来表示哪些interrupt/instruction/exception应该由Ring 0层的操作系统来执行，哪些指令由Ring -1层的VMM来执行。</li></ul></body>
+</html>

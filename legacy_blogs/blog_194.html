@@ -1,0 +1,96 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>&#x8C03;&#x8BD5;Bochs&#x5728;Linux Mint&#x4E0B;&#x9762;symbol not found&#x7684;&#x95EE;&#x9898;</title>
+<body><p>在我的Linux Mint上使用Bochs时出现了很奇怪的问题，按照<a href="http://www.cnblogs.com/long123king/p/3568575.html">http://www.cnblogs.com/long123king/p/3568575.html</a>步骤</p>
+<p>会提示：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">symbol not found
+</pre>
+</div>
+<p>&nbsp;因此，我决定使用gdb调试Bochs找出究竟发生了什么奇怪的问题。</p>
+<p>1. 如何配置.conf.linux</p>
+<p>添加-g -O0到CFLAGS/CXXFLAGS</p>
+<p>2. 重新生成bochs程序</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">sudo make bochs
+</pre>
+</div>
+<p>&nbsp;3. 参考：<a href="http://code.google.com/p/stl-debug/">http://code.google.com/p/stl-debug/</a></p>
+<p>添加对STL容器的调试支持</p>
+<p>调试:</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">sudo gdb --args ~/latest_bochs/bochs/bochs -q -f bxrc_custom -rc script_debug_custom
+</pre>
+</div>
+<p>&nbsp;4. 添加如下代码：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">symbol_entry_t* context_t::get_symbol_entry(const char *symbol) const
+{
+  if (m_rsyms.empty())
+    return 0;
+
+  symbol_entry_t probe(0, symbol);
+  rsym_set_t::const_iterator iter;
+  for (std::set&lt;symbol_entry_t*, lt_rsymbol_entry_t&gt;::iterator it = m_rsyms.begin();
+        it != m_rsyms.end();
+        it++)
+  {
+        unsigned long start = (*it)-&gt;start;
+        char* name = (*it)-&gt;name;
+        if (strncmp(name, "start_kernel", strlen("start_kernel")) == 0)
+        {
+                int kkk = 0;
+        }
+        dbg_printf("0x%08X : %s\n", start, name);
+        continue;
+  }
+  iter=m_rsyms.find(&amp;probe);
+  if(iter==m_rsyms.end()) // No symbol found
+    return 0;
+  return *iter;
+}
+    ++sym_name;<br /><br />    char *ending = (sym_name + strlen(sym_name) - 1);<br />    while ( isspace(*ending) &amp;&amp; ending != sym_name)<br />{<br />        *(ending--) = '\0';<br />}<br /><br />    symbol_entry_t* sym = new symbol_entry_t(addr + offset, sym_name);<br /><br /></pre>
+</div>
+<p>&nbsp;在int kkk=0;这一行设置断点，发现：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Breakpoint 1, context_t::get_symbol_entry (this=0x2860cf0, symbol=0x2860cd0 "start_kernel") at symbols.cc:213
+213			int kkk = 0;
+(gdb) info locals
+kkk = 0
+start = 3246113809
+name = 0x3155e30 "start_kernel\r"
+it = {_M_node = 0x3155e80}
+probe = {name = 0x2536e70 "start_kernel", start = 0}
+iter = {_M_node = 0x0}
+</pre>
+</div>
+<p>&nbsp;怎么会多了一个"\r"呢，相信这就是问题的所在。</p>
+<p>在add_symbol处设置断点，重新调试</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">Breakpoint 2, context_t::add_symbol (this=0x2860cf0, sym=0x2860fa0) at symbols.cc:226
+226	  m_syms.insert(sym);
+(gdb) print sym.start
+$1 = 0
+(gdb) print sym.name
+$2 = 0x2860fc0 "VDSO32_PRELINK\r"
+(gdb) 
+</pre>
+</div>
+<p>&nbsp;确认问题。</p>
+<p>&nbsp;</p>
+<p>解决方法：</p>
+<p>在bx_dbg_symbol_command函数中添加如下代码：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:csharp;gutter:true;">    ++sym_name;
+
+    char *ending = (sym_name + strlen(sym_name) - 1);
+    while ( isspace(*ending) &amp;&amp; ending != sym_name)
+{
+        *(ending--) = '\0';
+}
+
+    symbol_entry_t* sym = new symbol_entry_t(addr + offset, sym_name);
+</pre>
+</div>
+<p>&nbsp;</p></body>
+</html>

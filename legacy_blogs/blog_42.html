@@ -1,16 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>linux shell&#x8BBE;&#x7F6E;&#x989C;&#x8272;</title>
-<body><p>使用echo或者printf时，可以添加输出文本的颜色设置</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">echo -e "Maximum \e[1;31m" $max_threads "\e[0mthreads allowed!" &gt;&gt; $term_dir/summary</pre>
-</div>
-<p>或者</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">printf("\033[;34mfile\033[0m")</pre>
-</div>
-<p>&nbsp;awk 参考：<a href="http://stackoverflow.com/questions/14482101/awk-adding-color-code-to-text">http://stackoverflow.com/questions/14482101/awk-adding-color-code-to-text</a></p>
-<p>31开始代表前景色， 41开始代表背景色，至于具体颜色取决于当前shell的设置</p>
-<p><img src="http://long123king.github.io/legacy_blogs/img/blog_42_301028144318397.png" alt="" /></p>
-<p>&nbsp;</p></body>
+<title>&#x5185;&#x6838;&#x8C03;&#x8BD5;&#x7684;&#x51E0;&#x4E2A;&#x5C0F;&#x7A8D;&#x95E8;</title>
+<body><p>1. Driver设置成demand，或者说不要设置成auto</p>
+<p>这样的好处在于，如果需要重新编译driver时，只要在Windbg中输入.reboot，就可以释放对.pdb文件的占用</p>
+<p>而且一边编译driver，一边虚拟机重启，两不耽误。</p>
+<p>&nbsp;</p>
+<p>2.&nbsp;</p></body>
 </html>

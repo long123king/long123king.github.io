@@ -1,46 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>interleave two text files with specified lines</title>
-<body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">a_file=$1
-a_step=$2
-b_file=$3
-b_step=$4
-
-a_start=1
-let a_end=$a_start+$a_step
-
-b_start=1
-let b_end=$b_start+$b_step
-
-a_lines=$(wc -l $a_file | awk '{print $1}')
-b_lines=$(wc -l $b_file | awk '{print $1}')
-
-while true
-do
-	awk "NR &gt;= $a_start &amp;&amp; NR &lt; $a_end {print}" $a_file
-	awk "NR &gt;= $b_start &amp;&amp; NR &lt; $b_end {print}" $b_file
-	let a_start=$a_start+$a_step
-	let a_end=$a_end+$a_step
-	let b_start=$b_start+$b_step
-	let b_end=$b_end+$b_step
-
-	if [ $a_start -ge $a_lines ] &amp;&amp; [ $b_start -ge $b_lines ]
-	then
-		break
-	fi
-
-	#echo "a_start:" $a_start "a_end:" $a_end "b_start:" $b_start "b_end:" $b_end
-	#echo "a_file:" $a_file "a_step:" $a_step
-	#echo "b_file:" $b_file "b_step:" $b_step
-done
-</pre>
-</div>
-<p>　　</p>
-<p>Usage:</p>
-<div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">bash interleave.sh file_a 7 file_b 1
-</pre>
-</div>
-<p>　　</p></body>
+<title>NTSTATUS</title>
+<body><p>参考：&nbsp;<a href="http://msdn.microsoft.com/en-us/library/cc704588.aspx">http://msdn.microsoft.com/en-us/library/cc704588.aspx</a></p></body>
 </html>

@@ -1,40 +1,59 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>&#x6B63;&#x5219;&#x8868;&#x8FBE;&#x5F0F;&#x5173;&#x4E8E;&#x6B21;&#x6570;&#x7684;&#x8BA1;&#x7B97;</title>
-<body><table cellspacing="0"><caption>表2.常用的限定符</caption>
-<thead>
-<tr><th rowspan="1" colspan="1">代码/语法</th><th rowspan="1" colspan="1">说明</th></tr>
-</thead>
-<tbody>
-<tr>
-<td rowspan="1" colspan="1">*</td>
-<td rowspan="1" colspan="1">重复零次或更多次</td>
-</tr>
-<tr>
-<td rowspan="1" colspan="1">+</td>
-<td rowspan="1" colspan="1">重复一次或更多次</td>
-</tr>
-<tr>
-<td rowspan="1" colspan="1">?</td>
-<td rowspan="1" colspan="1">重复零次或一次</td>
-</tr>
-<tr>
-<td rowspan="1" colspan="1">{n}</td>
-<td rowspan="1" colspan="1">重复n次</td>
-</tr>
-<tr>
-<td rowspan="1" colspan="1">{n,}</td>
-<td rowspan="1" colspan="1">重复n次或更多次</td>
-</tr>
-<tr>
-<td rowspan="1" colspan="1">{n,m}</td>
-<td rowspan="1" colspan="1">重复n到m次</td>
-</tr>
-</tbody>
-</table>
-<p>其中，* + ?容易混淆，可以借用0与1的关系来助记</p>
-<p>&nbsp;</p>
-<h1><span style="color: #800000;">* 代表重复多于0 * 1次</span></h1>
-<h1><span style="color: #800000;">+ 代表重复多于0 + 1次</span></h1>
-<h1><span style="color: #800000;">？代表重复0或者1次</span></h1></body>
+<title>itext starter example</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/itext $ cat daniel.java 
+import java.io.FileOutputStream;
+import java.io.IOException;
+ 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Font;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Rectangle;
+
+import com.itextpdf.text.pdf.PdfWriter;
+import com.itextpdf.text.pdf.BaseFont;
+ 
+public class daniel 
+{
+    public static final String RESULT = "daniel.pdf";
+ 
+    public static void main(String[] args)
+         throws DocumentException, IOException 
+    {
+        Document document = new Document(PageSize.A4);
+        PdfWriter.getInstance(document, new FileOutputStream(RESULT));
+        document.open();
+
+	BaseFont noto_hans_bold  = BaseFont.createFont("./fonts/kaiti.ttf", BaseFont.IDENTITY_H, BaseFont.NOT_EMBEDDED);
+	Font noto_hans_bold_24  = new Font(noto_hans_bold, 12);
+
+	BaseFont char_font  = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.NOT_EMBEDDED);
+	Font char_font_24  = new Font(noto_hans_bold, 12);
+
+        Paragraph par1 = new Paragraph(20);
+	par1.setLeading(20);
+	//par1.setAlignment(Element.ALIGN_RIGHT);
+
+	Chunk chk1 = new Chunk("Daniel King is a software engineer\n", char_font_24);
+	par1.add(chk1);
+
+	Chunk chk3 = new Chunk("The Bible is a canonical collection of texts sacred in Judaism and Christianity. There is no single Bible and many Bibles with varying contents exist.[1] The term Bible is shared between Judaism and Christianity, although the contents of each of their collections of canonical texts is not the same. Different religious groups include different books within their Biblical canons, in different orders, and sometimes divide or combine books, or incorporate additional material into canonical books.\n", char_font_24);
+	par1.add(chk3);
+
+	Chunk chk2 = new Chunk("\u8FD9\u4E2A\u4EBA\u662F\u4E2A\u7A0B\u5E8F\u5458\u554A", noto_hans_bold_24);
+	chk2.setUnderline(5, -10);
+	par1.add(chk2);
+
+	document.add(par1);
+        document.close();
+    }
+}
+</pre>
+</div>
+<p>　　</p></body>
 </html>

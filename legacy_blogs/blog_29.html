@@ -1,46 +1,14 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Windows IO System</title>
-<body><p>Windows IO System是由一些executive components组成，这些component可以认为是ntoskrnl.exe中相对独立的一些module。</p>
-<p>整个IO System是由IRP数据包驱动的， IRP(IO Request Packet)是IO请求数据包，是多个IO系统组件之间进行通信的数据包。</p>
-<p>IRP可以完全理解为与网络数据包相同的概念。</p>
-<hr />
-<p>&nbsp;</p>
-<h2>IO Manager</h2>
-<p>IO Manager是整个IO System的心脏。</p>
-<p><strong>1. 负责创建、回收IRP数据包，以及对IRP数据进行队列缓存、同步</strong></p>
-<p><strong>2. 封装一些driver常用的代码，供driver调用</strong></p>
-<p>&nbsp;</p>
-<p>但是IO Manager不管IRP的内容细节，这些由具体的Device Driver负责解析并且完成IRP请求的操作。</p>
-<p>&nbsp;</p>
-<hr />
-<p>&nbsp;</p>
-<h2>Device Driver</h2>
-<p>Driver接收IRP，并且按照IRP的指示，完成相应的操作。</p>
-<p>完成操作之后，Driver可以把IRP交给IO Manager回收，或者交由IO Manager转发给其他的Driver进行处理。</p>
-<hr />
-<p>&nbsp;</p>
-<h2>PnP Manager</h2>
-<p>Plug and Play，可以管理那些支持&ldquo;热插拔&rdquo;方式工作的硬件。</p>
-<hr />
-<p>&nbsp;</p>
-<h2>Power Manager</h2>
-<p>可以向各个driver改善电源相关的事件，比如笔记本电脑的在电池供电和有线电源供电之间进行转换时，显卡驱动可以作出相应的状态转换。</p>
-<hr />
-<p>&nbsp;</p>
-<h2>WMI support routines</h2>
-<p>WMI： Windows Management Instrumentation</p>
-<p>用户态的程序可以获取WMI的事件，这些事件是由WMI子系统产生。</p>
-<p>Windows允许驱动间接地作为WMI事件的providers，或者说过滤相应的事件。</p>
-<hr />
-<p>&nbsp;</p>
-<h2>与Driver相关的文件</h2>
-<p><strong>.inf　　安装文件</strong></p>
-<p><strong>.cat　　数字签名文件</strong></p>
-<hr />
-<p>&nbsp;</p>
-<h2><strong>HAL</strong></h2>
-<p>Hardware Abstraction Layer</p>
-<p>将driver从那些与平台相关的操作中解放出来，具体来说，由HAL来直接处理in/out指令，抽象driver与CPU Processor以及中断处理器之间的交互。</p>
-<p>HAL提供平台无关的API供driver使用。</p></body>
+<title>plan itext</title>
+<body><div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">daniel@daniel-mint ~/latex/linux/itext $ cat plan_itext 
+Cbeg vGrkgFunec grkg pbqr gb wnin.
+Jenc vgrkg gb n fgnaqnybar fpevcg ynathntr,
+be jenc vg gb n clguba cnpxntr.
+
+Naq jr pna hfr vg gb trarengr cqs svyrf nf jr jnag.
+</pre>
+</div>
+<p>　　</p></body>
 </html>

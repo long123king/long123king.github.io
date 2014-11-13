@@ -1,14 +1,54 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>centos&#x4E3A;&#x7528;&#x6237;&#x6DFB;&#x52A0;sudo&#x529F;&#x80FD;</title>
+<title>Task Explorer</title>
 <body><div class="cnblogs_Highlighter">
-<pre class="brush:csharp;gutter:true;">su
-chmod a+w /etc/sudoers
-vim /etc/sudoers
-[找到root    ALL=(ALL)       ALL这行]
-复制出新的一行，并且将root改为daniel（当前用户名）
-chmod 0440 /etc/sudoers
-exit
+<pre class="brush:python;gutter:true;">kd&gt; kv
+ChildEBP RetAddr  Args to Child              
+[hook]
+f4657948 804ff325 00000005 e10af248 00000bc0 nt!KiFastCallEntry+0xf8 (FPO: [0,0] TrapFrame @ f4657960)
+f46579d0 f73e15ca 00000005 e10af248 00000bc0 nt!ZwQuerySystemInformation+0x11 (FPO: [4,0,0])
+f4657bb0 f73e1868 00000000 00000000 862c33b0 KSecDD!GatherRandomKey+0x2a3 (FPO: [Non-Fpo])
+f4657bd4 f73dfc87 f4657bf4 862c33b0 00000100 KSecDD!NewGenRandomEx+0x55 (FPO: [Non-Fpo])
+f4657c08 f73dfe08 00000000 00000100 862c33b0 KSecDD!KsecDeviceControl+0x145 (FPO: [Non-Fpo])
+f4657c34 804ef0ef 865b9f18 00000100 806d0070 KSecDD!KsecDispatch+0xa6 (FPO: [Non-Fpo])
+f4657c58 80575ec1 865b9f18 86225c00 8641b2a8 nt!IopfCallDriver+0x31 (FPO: [0,0,0])
+f4657d00 8056e81e 0000003c 00000000 00000000 nt!IopXxxControlFile+0x5e7 (FPO: [Non-Fpo])
+f4657d34 8053dbc8 0000003c 00000000 00000000 nt!NtDeviceIoControlFile+0x2a (FPO: [Non-Fpo])
+f4657d34 7c92eb94 0000003c 00000000 00000000 nt!KiFastCallEntry+0xf8 (FPO: [0,0] TrapFrame @ f4657d64)
+0012f608 7c92d8ef 7c801671 0000003c 00000000 ntdll!KiFastSystemCallRet (FPO: [0,0,0])
+0012f700 7c93056d 00040000 00150000 00000000 ntdll!NtDeviceIoControlFile+0xc (FPO: [10,0,0])
+0012f7e4 00000000 0012f7f8 7c809f1f 00155bdc ntdll!RtlFreeHeap+0x647 (FPO: [Non-Fpo])
+</pre>
+</div>
+<p>　　</p>
+<p>证明它用到了driver【KSecDD】，这个driver是操作系统的组件，不要搞它。</p>
+<p>&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Pid: [HEX: 0x00000000 or DEC:      0]: 
+Pid: [HEX: 0x00000004 or DEC:      4]: System
+Pid: [HEX: 0x000001bc or DEC:    444]: smss.exe
+Pid: [HEX: 0x00000258 or DEC:    600]: csrss.exe
+Pid: [HEX: 0x00000270 or DEC:    624]: winlogon.exe
+Pid: [HEX: 0x0000029c or DEC:    668]: services.exe
+Pid: [HEX: 0x000002a8 or DEC:    680]: lsass.exe
+Pid: [HEX: 0x00000344 or DEC:    836]: VBoxService.exe
+Pid: [HEX: 0x00000358 or DEC:    856]: vmacthlp.exe
+Pid: [HEX: 0x00000388 or DEC:    904]: svchost.exe
+Pid: [HEX: 0x000003cc or DEC:    972]: svchost.exe
+Pid: [HEX: 0x0000042c or DEC:   1068]: svchost.exe
+Pid: [HEX: 0x00000464 or DEC:   1124]: svchost.exe
+Pid: [HEX: 0x0000048c or DEC:   1164]: svchost.exe
+Pid: [HEX: 0x000005fc or DEC:   1532]: explorer.exe
+Pid: [HEX: 0x00000634 or DEC:   1588]: spoolsv.exe
+Pid: [HEX: 0x000006c8 or DEC:   1736]: VBoxTray.exe
+Pid: [HEX: 0x000006e8 or DEC:   1768]: SystemExplorer.exe
+Pid: [HEX: 0x00000700 or DEC:   1792]: ctfmon.exe
+Pid: [HEX: 0x000007f0 or DEC:   2032]: DSRSvc.exe
+Pid: [HEX: 0x00000250 or DEC:    592]: wuauclt.exe
+Pid: [HEX: 0x00000244 or DEC:    580]: wmiprvse.exe
+Pid: [HEX: 0x00000418 or DEC:   1048]: SystemExplorerService.exe
+Pid: [HEX: 0x000005d8 or DEC:   1496]: alg.exe
+Pid: [HEX: 0x00000078 or DEC:    120]: conime.exe
 </pre>
 </div>
 <p>　　</p></body>

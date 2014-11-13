@@ -1,0 +1,5 @@
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
+<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
+<title>Linux&#x5185;&#x6838;&#x5B66;&#x4E60;</title>
+<body><h3>方法</h3> <p>自己写一个模块，加载到内核中，然后在模块里自己去抓感兴趣的模块里面的状态变量，然后通过proc文件系统，打印到用户态空间里。</p> <p>在熟练之后，可以通过proc文件系统提供操纵内核的方法和接口，以供用户态程序使用。</p> <p>&nbsp;</p> <h3>file, inode与dentry的区别</h3> <ul> <li>file是面向进程的，是fd(file descriptor)代表的entity，是属于进程的资源</li> <li>inode是块设备之间的联结，是与文件系统的接口</li> <li>dentry是对目录结构的组织与封装，是目录结构的构成</li></ul> <p>&nbsp;</p> <h3>mmap</h3> <p>是将文件映射到用户空间的某一段内存区域上</p></body>
+</html>

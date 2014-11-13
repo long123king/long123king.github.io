@@ -1,168 +1,46 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>NTFS&#x6587;&#x4EF6;&#x7CFB;&#x7EDF;&#x7684;UsnJrnl&#x5BF9;&#x4E8E;FileReference&#x7684;&#x5904;&#x7406;</title>
-<body><h3>1. 背景</h3>
-<p><a title="http://stackoverflow.com/q/20418694/941650" href="http://stackoverflow.com/q/20418694/941650">http://stackoverflow.com/q/20418694/941650</a></p>
-<p>这里面临的一个核心问题是，如果MFT Reference相等，能够表明这些记录代表的是同一个文件吗？</p>
+<title>Device Drivers</title>
+<body><h2>Types of Device Drivers</h2>
+<p>Windows可能会有User-mode的驱动，但是我们只关注Kernel-Mode的驱动。</p>
+<h3>WDM Drivers</h3>
+<p>WDM是一种驱动模型，是比较常用的驱动模型。</p>
+<p>WDM可以分为以下几类：</p>
+<ul>
+<li><strong>Bus Drivers</strong></li>
+</ul>
+<p>负责检测到连接到该总线的设备的与PnP/Power相关的事件，并且通知IO Manager, PnP Manager, Power Manager。</p>
+<ul>
+<li><strong>Function Drivers</strong></li>
+</ul>
+<p>负责某一具体设备的driver，是狭义上的driver。</p>
+<p>Function Driver是唯一了解某类硬件特性，并且与这类硬件直接(通过调用HAL提供的接口)打交道的driver。</p>
+<ul>
+<li><strong>Filter Drivers</strong></li>
+</ul>
+<p>过滤驱动，负责修改或者补充某些特定driver的功能。</p>
+<h3>Layered Drivers</h3>
+<hr />
 <p>&nbsp;</p>
-<p>对于这个问题，我们可以采取实验的方式来验证。</p>
+<h2>Structure of a Driver</h2>
+<p>由各种routine构成</p>
+<hr />
 <p>&nbsp;</p>
-<h3>2. 实验环境</h3>
-<p>在实验设备Windows 7操作系统下，D盘是NTFS格式，而且打开了UsnJrnl功能。</p>
-<p>使用fsutil usn工具来获取到关于UsnJrnl的信息：</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> C:\Windows\system32&gt;fsutil usn</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ---- USN Commands Supported ----</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span>&nbsp; </pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> createjournal   Create a USN journal</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> deletejournal   Delete a USN journal</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> enumdata        Enumerate USN data</pre>
-<!--CRLF-->
-<pre><span id="lnum7" style="color: #606060;">   7:</span> queryjournal    Query the USN data <span style="color: #0000ff;">for</span> a volume</pre>
-<!--CRLF-->
-<pre><span id="lnum8" style="color: #606060;">   8:</span> readdata        Read the USN data <span style="color: #0000ff;">for</span> a file</pre>
-<!--CRLF--></div>
-</div>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> C:\Windows\system32&gt;fsutil usn queryjournal D:</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> Usn Journal ID   : 0x01cd6ad7d5cd624e</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> First Usn        : 0x0000000028100000</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> Next Usn         : 0x000000002a38bc50</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Lowest Valid Usn : 0x0000000000000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Max Usn          : 0x7fffffffffff0000</pre>
-<!--CRLF-->
-<pre><span id="lnum7" style="color: #606060;">   7:</span> Maximum Size     : 0x0000000002000000</pre>
-<!--CRLF-->
-<pre><span id="lnum8" style="color: #606060;">   8:</span> Allocation Delta : 0x0000000000400000</pre>
-<!--CRLF--></div>
-</div>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> fsutil usn readdata 1 0 0x7fffffffffff0000 D:</pre>
-<!--CRLF--></div>
-</div>
-<h3>3. 实验</h3>
+<h2>Driver Objects and Device Objects</h2>
+<p>加载driver，会调用init routine。</p>
 <p>&nbsp;</p>
-<p>1. 创建一个文档daniel.txt</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> File Ref#       : 0x00050000000c6c3f</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ParentFile Ref# : 0x0005000000000005</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> Usn             : 0x000000002a38a7c8</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> SecurityId      : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Reason          : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Name (020)      : daniel.txt</pre>
-<!--CRLF--></div>
-</div>
-<p>可以看到它的File Ref为</p>
-<blockquote>
-<p>File Ref#&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; : 0x00050000000c6c3f</p>
+<p>对于PnP driver，新的设备plug到系统上时，driver的add device routine会被调用，此时driver可以创建一个Device Object;</p>
+<p>对于其他driver，通常driver在init routine时调用IoCreateDevice/IoCreateDeviceSecure创建Device Object;</p>
 <p>&nbsp;</p>
-</blockquote>
-<p>里面分解为更新号0x0005以及Mft Reference号0x0000000c6c3f</p>
-<p>将daniel.txt文件删除后，</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> File Ref#       : 0x00050000000c6c3f</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ParentFile Ref# : 0x003c00000000002a</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> Usn             : 0x000000002a38afa0</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> SecurityId      : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Reason          : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Name (024)      : $R2QW90X.txt</pre>
-<!--CRLF--></div>
-</div>
-<p>仍然可以找到这个文件的记录，因为只是放到了回收站而已。</p>
-<p>再在相同的位置创建一个同名的文件</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> File Ref#       : 0x00040000000c6c43</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ParentFile Ref# : 0x0005000000000005</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> Usn             : 0x000000002a38b050</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> SecurityId      : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Reason          : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Name (020)      : daniel.txt</pre>
-<!--CRLF--></div>
-</div>
-<p>可以看到这时文件名和位置虽然一致，但是File Reference号已经不同了。</p>
-<p>我们到回收站里将daniel.txt复原，</p>
-<p><a href="http://images.cnitblog.com/blog/580388/201402/081810255847595.png"><img style="background-image: none; float: none; padding-top: 0px; padding-left: 0px; margin-left: auto; display: block; padding-right: 0px; margin-right: auto; border-width: 0px;" title="deletedFile" src="http://long123king.github.io/legacy_blogs/img/blog_120_081810263435966.png" alt="deletedFile" width="470" height="484" border="0" /></a></p>
-<p>选择覆盖，</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> File Ref#       : 0x00050000000c6c3f</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ParentFile Ref# : 0x0005000000000005</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> Usn             : 0x000000002a38b3c0</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> SecurityId      : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Reason          : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Name (020)      : daniel.txt</pre>
-<!--CRLF--></div>
-</div>
-<p>这时的记录就和刚刚创建的时候一致了。</p>
-<p>我们这次将daniel.txt完成删除（不放到回收站里），再创建一个同名的文件</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> File Ref#       : 0x00040000000c6c48</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ParentFile Ref# : 0x0005000000000005</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> Usn             : 0x000000002a38cf48</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> SecurityId      : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Reason          : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Name (020)      : daniel.txt</pre>
-<!--CRLF--></div>
-</div>
-<p>这回记录不一样了，但是我们发现了下面的一条记录</p>
-<div id="codeSnippetWrapper" style="overflow: auto; cursor: text; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 97.5%; direction: ltr; text-align: left; margin: 20px 0px 10px; line-height: 12pt; max-height: 200px; background-color: #f4f4f4; border: silver 1px solid; padding: 4px;">
-<div id="codeSnippet" style="overflow: visible; font-size: 8pt; font-family: 'Courier New', courier, monospace; width: 100%; color: black; direction: ltr; text-align: left; line-height: 12pt; background-color: #f4f4f4; border-style: none; padding: 0px;">
-<pre><span id="lnum1" style="color: #606060;">   1:</span> File Ref#       : 0x00060000000c6c3f</pre>
-<!--CRLF-->
-<pre><span id="lnum2" style="color: #606060;">   2:</span> ParentFile Ref# : 0x0005000000000005</pre>
-<!--CRLF-->
-<pre><span id="lnum3" style="color: #606060;">   3:</span> Usn             : 0x000000002a38bbf0</pre>
-<!--CRLF-->
-<pre><span id="lnum4" style="color: #606060;">   4:</span> SecurityId      : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum5" style="color: #606060;">   5:</span> Reason          : 0x00000000</pre>
-<!--CRLF-->
-<pre><span id="lnum6" style="color: #606060;">   6:</span> Name (034)      : journal_dump4.txt</pre>
-<!--CRLF--></div>
-</div>
+<p>对于应用程序来说，它要操作的是Device，它并不知道该Device相对应的Driver。应用程序如果要操作Device，只能按照文件模型来进行操作，比如Read/Write/IOControl。</p>
+<p>而打开文件，必须知道文件的路径，对于Device来说，它们的路径是\Device目录下，这个路径是不能被应用程序访问到的，因此需要创建软链接到\Global??目录下，这样就可以被应用程序打开了。</p>
+<p>对于PnP设备来说，它们的路径名是动态生成的GUID表示。</p>
 <p>&nbsp;</p>
-<p>可见，MFT表里的位置是很珍贵的，不能随便浪费，因此会不断地复用。</p>
-<p>所以添加了一个更新号来区分究竟是不是同一个文件，只有当File Reference整体都相同时，才有可能是同一个文件。</p></body>
+<p>Device Object与Driver Object是互相通过指针关联在一起的。</p>
+<p>Device Object里面保存device queue，里面保存所有发送到该设备上的IRP数据包；</p>
+<p>IO System会将Device Object的device queue中的IRP按照一定的顺序取出，连同Device Object的指针一同传递给Driver Object，由Driver调用相应的routine完成对于IRP的操作。</p>
+<h2>Opening Devices</h2>
+<p>因为底层设备对于各个用户态的进程来说，属于&ldquo;临界区&rdquo;资源，需要同步各个进程的访问。</p>
+<p>所以如果是要向某个设备write数据时，最好是使用exclusive write的权限打开，这样可以阻止别的进程打开这个文件。</p>
+<p>但是这样就把整个文件的内容都锁住了，也可以使用LockFile，可以只锁住文件的一部分，而文件的其他部分是允许其他进程访问的。</p></body>
 </html>

@@ -1,36 +1,5 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>BAP/BitBlaze&#x7684;&#x505A;&#x6CD5;</title>
-<body><p>BAP/BitBlaze的做法，并不是以instruction为粒度的，甚至比instruction更加细致，因为它使用了VEX项目，生成了一种可以完整表示数据单元变化情况的粒度，比如eflags寄存器是怎样变化的，这就是一个单元操作。</p> <p>&nbsp;</p> <p>这种方式很强大，但是明显是付出了性能上的代价。</p> <p>这种方式完全依赖于静态的分析，如果结合了pin的动态分析，我相信，完全可以在指令级别来完成这些操作。</p> <p>&nbsp;</p> <p>就是一种基于结果的分析框架，执行并观察结果。</p> <p>但是很明显无法执行所有可能路径。</p> <p>&nbsp;</p> <p>对于二进制程序的控制或者观察，大致分为以下几个级别：</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">操作系统级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">应用程序级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">模块级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">段级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">函数/例程级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Trace级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">BBL级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">指令级别</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">单元数据操作级别</pre><!--CRLF--></div></div>
-<p>&nbsp;</p>
-<p>现在的FireEye沙盒项目是在“操作系统级别”到“例程级别”进行监控。</p>
-<p>Pin可以监控“应用程序级别”到“指令级别”的各个级别的情况。</p>
-<p>而BAP/BitBlaze可以做到“单元数据操作级别”。</p>
-<p>&nbsp;</p>
-<p>因此如果只使用Pin，能够有效地控制执行的效率以及整个项目的规模，能够支持全部的执行流监控，但是无法支持完整的数据流监控。</p>
-<p>&nbsp;</p>
-<p>但是基于Pin的方案，如果不对执行流进行人为干预，就只能监控到what has happened的事件，能力很有限。</p>
-<p>&nbsp;</p>
-<p>可以监控以下的异常情况：</p>
-<p>&nbsp;</p>
-<div id="codeSnippetWrapper">
-<div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Cross-Section control flow</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">Cross-Image control flow</pre><!--CRLF--></div></div>
-<p>&nbsp;</p>
-<p>即使不做什么防护方面的Idea, 也可以做一个GUI界面的Sample动态分析器，可以设置断点，查看反汇编，分析执行路径，CFG。</p>
-<p>&nbsp;</p>
-<p>怎样监控stack、heap、以及global data area的使用情况。</p>
-<p>&nbsp;</p>
-<p>stack可以根据esp/ebp来构造stack frame；</p>
-<p>heap就不那么容易了，因为堆是OS层的东西，</p>
-<p>global data可以根据.data section来判断。</p>
-<p>&nbsp;</p>
-<p>可以通过监控memory area的方式，了解程序对内存的操作情况。</p>
-<p>也可以通过OS API，类型Process Hacker的方式，了解到应用程序的内存区域布局，从而对于内存区域的使用情况进行监控。</p>
-<p>&nbsp;</p>
-<p>对于Private(Commit)类型的内存，很可能就是Heap分配出来的内存，当然，也有可能是stack的空间。</p>
-<p>&nbsp;</p>
-<p>1. 通过运行过程中，监控ebp/esp的方式，来标记stack的范围。</p>
-<p>2. 而像那种Private(Commit), Private(Reserve)相互间隔的区域来说，很可能是heap的范围，因为这符合Buddy System的管理特征，或者说是Hash Bucket的管理特征。</p>
-<p>&nbsp;</p>
-<p>常理可知，一个正常的应用程序，它的内存分布可能是十分零散的，而且对于heap利用也只是对于OS漏洞的利用，最后做出恶意行为的直接操刀者还是OS，而不是应用程序本身，这就使用监控内存操作的执行者的工作成为无用功。</p></body>
+<title>awk&#x5185;&#x7F6E;&#x5B57;&#x7B26;&#x4E32;&#x64CD;&#x4F5C;</title>
+<body><p>参考：<a href="http://www.staff.science.uu.nl/~oostr102/docs/nawk/nawk_92.html">http://www.staff.science.uu.nl/~oostr102/docs/nawk/nawk_92.html</a></p></body>
 </html>

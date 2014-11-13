@@ -1,19 +1,107 @@
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn">
 <head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head>
-<title>Profiler&#x7EBF;&#x7A0B;&#x6A21;&#x578B;</title>
-<body><p>为了提高效率，对于Profiler.dll这个pintool采用多线程模型。</p> <p>&nbsp;</p> <p>采用类型消息模型</p> <p>&nbsp;</p> <p>这样做的限制在于，传递消息时，一定要将需要的所有内容传递过去，因为两个线程的栈已经完全不再相同了。</p> <p>&nbsp;</p> <p>可以采用多个消息响应类，而且要添加过滤机制。</p> <p>&nbsp;</p> <p>可以设置多个过滤器，比如Address_Filter，Size_Filter,Name_Filter，</p> <p>都是对应XXX_Address, XXX_Size, XXX_Name设置的。</p> <p>&nbsp;</p> <p>在打开某个级别的Instrument时，就可以添加过滤器。</p> <p>&nbsp;</p> <p>在Instrument_Callback中</p> <div id="codeSnippetWrapper"> <div style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px" id="codeSnippet"><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px"><span style="color: #0000ff">if</span> (filter(sec/trace/rtn…))</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">{</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">    SendInstrumentMessage(type_sec, )</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: #f4f4f4; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">}</pre><!--CRLF--><pre style="border-bottom-style: none; text-align: left; padding-bottom: 0px; line-height: 12pt; border-right-style: none; background-color: white; margin: 0em; padding-left: 0px; width: 100%; padding-right: 0px; font-family: 'Courier New', courier, monospace; direction: ltr; border-top-style: none; color: black; font-size: 8pt; border-left-style: none; overflow: visible; padding-top: 0px">&nbsp;</pre><!--CRLF--></div></div>
+<title>haskell&#x57FA;&#x672C;&#x8BED;&#x6CD5;</title>
+<body><p>定义新类型</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">data EmployeeInfo = Employee Int String String [String]
+         deriving(Read, Show, Eq, Ord)
+</pre>
+</div>
+<p>　　</p>
+<p>EmployeeInfo是新的类型名称，或者说是类型标识</p>
+<p>Employee是构造函数的名称</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">*Main&gt; :t Employee
+Employee :: Int -&gt; String -&gt; String -&gt; [String] -&gt; EmployeeInfo
+</pre>
+</div>
+<p>　　</p>
+<p>这个函数就是将输入的各个参数转换为一个EmployeeInfo的对象。</p>
 <p>&nbsp;</p>
+<p>除此之外，deriving列举了EmployeeInfo支持的操作，比如show，read， 比较相等，以及比较大小的操作。</p>
 <p>&nbsp;</p>
-<p>但是这个构架实现起来没有效率意义。</p>
-<p>
-<hr>
-</p>
-<p>由于pintool的instrument的引入，会导致目标线程的运行时间明显增长，因此绝对时间对于Profiler来说没有意义，有意义的是相对时间及其在总体时间中的比例。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">*Main&gt; :t read
+read :: Read a =&gt; String -&gt; a
+*Main&gt; let thisGuy = read "Employee 12345 \"Daniel King\" \"Boss X\" [\"Colleague A\",\"Colleague B\"]"::EmployeeInfo
+*Main&gt; :t thisGuy
+thisGuy :: EmployeeInfo
+*Main&gt; thisGuy
+Employee 12345 "Daniel King" "Boss X" ["Colleague A","Colleague B"]
+</pre>
+</div>
+<p>　　</p>
+<p>如果只有构造函数，而没有参数，那么与enum的作用是相同的。</p>
+<p>或者可以认为&ldquo;函数&rdquo;与&ldquo;值&rdquo;是相同的概念。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude&gt; data Init = FullInit | PartInit deriving (Show, Read, Eq)
+Prelude&gt; :t FullInit
+FullInit :: Init
+Prelude&gt; :t PartInit
+PartInit :: Init
+Prelude&gt; let a = PartInit
+Prelude&gt; :t a
+a :: Init
+Prelude&gt; let b = FullInit
+Prelude&gt; a == b
+False
+Prelude&gt; a == PartInit
+True
+Prelude&gt; 
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Eq 
+Equality operators == and /=
+Ord 
+Comparison operators &lt; &lt;= &gt; &gt;=; min, max, and compare.
+Enum 
+For enumerations only. Allows the use of list syntax such as [Blue .. Green].
+Bounded 
+Also for enumerations, but can also be used on types that have only one constructor. Provides minBound and maxBound as the lowest and highest values that the type can take.
+Show 
+Defines the function show, which converts a value into a string, and other related functions.
+Read 
+Defines the function read, which parses a string into a value of the type, and other related functions.
+</pre>
+</div>
+<p>　　</p>
+<p>参考：<a href="http://en.wikibooks.org/wiki/Haskell/Classes_and_types">http://en.wikibooks.org/wiki/Haskell/Classes_and_types</a></p>
 <p>&nbsp;</p>
-<p>但是好像enter/leave routine并不是按预想的成对出现，甚至程序刚刚开始就有leave，这是为什么？</p>
-<p>即使考虑到调用层次，也说不通。</p>
-<p>&nbsp;</p>
-<p>或者可以通过另外一种方式，在instruction级别进行统计，找到哪些routine的指令被执行，或者可以放宽一点，对于BBL进行统计，因为BBL是“单入单出”的，可以作为最小的执行粒度。</p>
-<p>&nbsp;</p>
-<p>然后统计时，以routine为单位，同时统计指令执行的条数，以及执行的时间。</p></body>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">Prelude Control.Monad&gt; :t return
+return :: Monad m =&gt; a -&gt; m a
+Prelude Control.Monad&gt; :t (&gt;&gt;=)
+(&gt;&gt;=) :: Monad m =&gt; m a -&gt; (a -&gt; m b) -&gt; m b
+</pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">A monad is a datatype that has two operations: &gt;&gt;= (aka bind) and return (aka unit). return takes an arbitrary value and creates an instance of the monad with it. &gt;&gt;= takes an instance of the monad and maps a function over it. (You can see already that a monad is a strange kind of datatype, since in most programming languages you couldn't write a function that takes an arbitrary value and creates a type from it. Monads use a kind of parametric polymorphism .)
+
+In Haskell notation, the monad interface is written
+
+class Monad m where
+  return :: a -&gt; m a
+  (&gt;&gt;=) :: forall a b . m a -&gt; (a -&gt; m b) -&gt; m b
+These operations are supposed to obey certain "laws", but that's not terrifically important: the "laws" just codify the way sensible implementations of the operations ought to behave (basically, that &gt;&gt;= and return ought to agree about how values get transformed into monad instances and that &gt;&gt;= is associative).
+
+Monads are not just about state and IO: they abstract a common pattern of computation that includes working with state, IO, exceptions, and non-determinism. Probably the simplest monads to understand are lists and option types:
+
+instance Monad [ ] where
+    []     &gt;&gt;= k = []
+    (x:xs) &gt;&gt;= k = k x ++ (xs &gt;&gt;= k)
+    return x     = [x]
+
+instance Monad Maybe where
+    Just x  &gt;&gt;= k = k x
+    Nothing &gt;&gt;= k = Nothing
+    return x      = Just x
+where [] and : are the list constructors, ++ is the concatenation operator, and Just and Nothing are the Maybe constructors. Both of these monads encapsulate common and useful patterns of computation on their respective data types (note that neither has anything to do with side effects or IO).
+
+You really have to play around writing some non-trivial Haskell code to appreciate what monads are about and why they are useful.
+</pre>
+</div>
+<p>　　</p></body>
 </html>
