@@ -1,0 +1,36 @@
+<p>nsert<em>inode</em>hash - hash an inode
+     *  @inode: unhashed inode
+     *  @hashval: unsigned long value used to locate this object in the
+     *      inode<em>hashtable.
+     *
+     *  Add an inode to the inode hash for this superblock.
+     */
+     void _</em>insert<em>inode</em>hash(struct inode *inode, unsigned long hashval)
+     {
+         struct hlist<em>head *b = inode</em>hashtable + hash(inode->i_sb, hashval);</p>
+
+<pre><code>     spin_lock(&amp;inode_hash_lock);
+     spin_lock(&amp;inode-&gt;i_lock);
+     hlist_add_head(&amp;inode-&gt;i_hash, b);
+     spin_unlock(&amp;inode-&gt;i_lock);
+     spin_unlock(&amp;inode_hash_lock);
+ }
+</code></pre>
+
+<h2>     EXPORT<em>SYMBOL(</em><em>insert</em>inode_hash);</h2>
+
+<p><strong>inode<em>hashtable</strong>就是hash table的表头，通过拉链法来解决冲突。
+其中b就是计算出的拉链表，通过hlist</em>add<em>head将<strong>inode->i</em>hash</strong>作为锚点，添加到拉链表的头部。</p>
+
+<p>关于inode_hashtable，参见<a href="http://www.citi.umich.edu/techreports/reports/citi-tr-00-1.pdf">Linux Kernel Hash Table Behavior, Analysis and Improvements</a>一文。</p>
+
+<blockquote>
+  <p>The dentry cache, described above, provides a fast way
+of mapping directory entries to inodes.</p>
+</blockquote>
+
+<p><strong><a href="https://github.com/torvalds/linux/blob/master/include/linux/dcache.h#L108">dentry</a></strong>代表着目录分量，即一个完整的路径被"\"分开的各个部分，并且将其指向到具体的inode上。</p>
+
+<p>因此，<strong>dentry</strong>存在的意义在于，可以通过路径名快速地找到它所对应的<strong>inode</strong>。</p>
+
+<p>所有文件中的数据，说白了，就是该文件映射的内存页面，都是存在的<strong>inode->i<em>mapping->page</em>tree</strong>中，这些页面是在<strong>mmap系统调用</strong>时和具体的文件系统中的节点建立起了映射关系，在<strong>page fault</strong>时从具体的文件系统的节点中读取出内容来初始化的。</p>

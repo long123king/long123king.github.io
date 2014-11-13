@@ -1,4 +1,13 @@
 #Daniel King's Previous blogs#     
+[IO完成端口](http://long123king.github.io/legacy_blogs/blog_300.html)     
+[编写Windows driver的一些经验](http://long123king.github.io/legacy_blogs/blog_301.html)     
+[Use sed and awk to prettify json](http://long123king.github.io/legacy_blogs/blog_302.html)     
+[How to use Intel Pin to analyze sample](http://long123king.github.io/legacy_blogs/blog_303.html)     
+[MongoDB and BSON, Protocol Buffers](http://long123king.github.io/legacy_blogs/blog_304.html)     
+[linux mmap解读thread](http://long123king.github.io/legacy_blogs/blog_305.html)     
+[linux ACL](http://long123king.github.io/legacy_blogs/blog_306.html)     
+[inode的若干锚](http://long123king.github.io/legacy_blogs/blog_307.html)     
+[shell script convert source file to markdown format ](http://long123king.github.io/legacy_blogs/blog_308.html)     
 [itext starter example](http://long123king.github.io/legacy_blogs/blog_10.html)     
 [&#x5982;&#x4F55;&#x4F7F;&#x7528;iText&#x5236;&#x4F5C;&#x4E2D;&#x6587;PDF](http://long123king.github.io/legacy_blogs/blog_11.html)     
 [Font and PDF](http://long123king.github.io/legacy_blogs/blog_12.html)     
