@@ -1,4 +1,9 @@
 # How to safe delete useless files in kindle folder
+
+There may be some a situation, when you delete some kindle files from your kindle device, but some annoying trace files still exist in documents folder, such as **.sdr**, **.opf**, **.jpg** files, here is a python script help you delete these useless files.
+
+IF you have python installed, put this script under root folder of your kindle device, run it.
+
 **********************************************
 	import os,sys,shutil
 
