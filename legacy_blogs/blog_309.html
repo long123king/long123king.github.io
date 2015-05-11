@@ -1,0 +1,148 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<script type="text/javascript" src="d3.min.js"></script>
+
+<body>
+<svg width="80%" height="80%" viewbox="0 0 400 400"
+     xmlns="http://www.w3.org/2000/svg">
+        <path d="M100 100C200 200 300 200 400 100" fill="none" stroke="red"></path>
+        <path d="M100 100L200 200L300 200L400 100" fill="none" stroke="red"></path>
+    </svg>
+</body>
+
+<script type="text/javascript">
+        var getMovingPoints = function (pts, percent) {
+            var new_pts = new Array();
+            d3.pairs(pts).map(function (pt) {                
+                    var new_elem = {};
+                    new_elem.x = pt[0].x * (1.0 - percent) + pt[1].x * percent;
+                    new_elem.y = pt[0].y * (1.0 - percent) + pt[1].y * percent;
+                    new_pts.push(new_elem);
+            });
+            return new_pts;
+        };
+
+        var init_pts = [{ x: 100, y: 100 }, { x: 200, y: 200 }, { x: 300, y: 200 }, { x: 400, y: 100 }];
+        var percent = 0;
+
+        var moving = function () {
+            var first_stage_pts = getMovingPoints(init_pts, percent);
+            var second_stage_pts = getMovingPoints(first_stage_pts, percent);
+            var third_stage_pts = getMovingPoints(second_stage_pts, percent);
+
+            var svg = d3.select("svg");
+
+            if (percent == 0) {
+                svg.selectAll("circle.first")
+                        .data(first_stage_pts)
+                    .enter()
+                        .append("circle")
+                        .style("stroke", "none")
+                        .style("fill", "green")
+                        .attr("class", "first")
+                        .attr("r", 2)
+                        .attr("cx", function (pt) { return pt.x })
+                        .attr("cy", function (pt) { return pt.y });
+
+                svg.selectAll("line.first")
+                        .data(d3.pairs(first_stage_pts))
+                    .enter()
+                        .append("line")
+                        .style("stroke", "green")
+                        .attr("class", "first")
+                        .attr("x1", function (pt) { return pt[0].x })
+                        .attr("y1", function (pt) { return pt[0].y })
+                        .attr("x2", function (pt) { return pt[1].x })
+                        .attr("y2", function (pt) { return pt[1].y });
+
+                svg.selectAll("circle.second")
+                        .data(second_stage_pts)
+                    .enter()
+                        .append("circle")
+                        .style("stroke", "none")
+                        .style("fill", "blue")
+                        .attr("class", "second")
+                        .attr("r", 2)
+                        .attr("cx", function (pt) { return pt.x })
+                        .attr("cy", function (pt) { return pt.y });
+
+                svg.selectAll("line.second")
+                        .data(d3.pairs(second_stage_pts))
+                    .enter()
+                        .append("line")
+                        .style("stroke", "green")
+                        .attr("class", "second")
+                        .attr("x1", function (pt) { return pt[0].x })
+                        .attr("y1", function (pt) { return pt[0].y })
+                        .attr("x2", function (pt) { return pt[1].x })
+                        .attr("y2", function (pt) { return pt[1].y });
+
+                svg.selectAll("circle.third")
+                        .data(third_stage_pts)
+                    .enter()
+                        .append("circle")
+                        .style("stroke", "none")
+                        .style("fill", "yellow")
+                        .attr("class", "third")
+                        .attr("r", 2)
+                        .attr("cx", function (pt) { return pt.x })
+                        .attr("cy", function (pt) { return pt.y });
+            }
+            else {
+                svg.selectAll("circle.first")
+                        .data(first_stage_pts)
+                        .style("stroke", "none")
+                        .style("fill", "green")
+                        .attr("r", 2)
+                        .attr("cx", function (pt) { return pt.x })
+                        .attr("cy", function (pt) { return pt.y });
+
+                svg.selectAll("line.first")
+                        .data(d3.pairs(first_stage_pts))
+                        .style("stroke", "green")
+                        .attr("class", "first")
+                        .attr("x1", function (pt) { return pt[0].x })
+                        .attr("y1", function (pt) { return pt[0].y })
+                        .attr("x2", function (pt) { return pt[1].x })
+                        .attr("y2", function (pt) { return pt[1].y });
+
+                svg.selectAll("circle.second")
+                        .data(second_stage_pts)
+                        .style("stroke", "none")
+                        .style("fill", "blue")
+                        .attr("class", "second")
+                        .attr("r", 2)
+                        .attr("cx", function (pt) { return pt.x })
+                        .attr("cy", function (pt) { return pt.y });
+
+                svg.selectAll("line.second")
+                        .data(d3.pairs(second_stage_pts))
+                        .style("stroke", "blue")
+                        .attr("class", "second")
+                        .attr("x1", function (pt) { return pt[0].x })
+                        .attr("y1", function (pt) { return pt[0].y })
+                        .attr("x2", function (pt) { return pt[1].x })
+                        .attr("y2", function (pt) { return pt[1].y });
+
+                svg.selectAll("circle.third")
+                        .data(third_stage_pts)
+                        .style("stroke", "none")
+                        .style("fill", "yellow")
+                        .attr("class", "third")
+                        .attr("r", 2)
+                        .attr("cx", function (pt) { return pt.x })
+                        .attr("cy", function (pt) { return pt.y });
+            }
+            if (percent >= 1.0) {
+                percent = 0;
+                clearInterval(id);
+            }
+
+            percent = percent + 0.003;
+        };
+
+        var id = setInterval(moving, 10);
+        
+</script>
+
+</html>
