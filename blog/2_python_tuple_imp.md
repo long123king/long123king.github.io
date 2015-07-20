@@ -1,0 +1,909 @@
+# Python Implementation of Tuple
+
+## Tuple Object的底层结构
+PyTupleObject定义如下：
+
+        /*
+        Another generally useful object type is a tuple of object pointers.
+        For Python, this is an immutable type.  C code can change the tuple items
+        (but not their number), and even use tuples are general-purpose arrays of
+        object references, but in general only brand new tuples should be mutated,
+        not ones that might already have been exposed to Python code.
+
+        *** WARNING *** PyTuple_SetItem does not increment the new item's reference
+        count, but does decrement the reference count of the item it replaces,
+        if not nil.  It does *decrement* the reference count if it is *not*
+        inserted in the tuple.  Similarly, PyTuple_GetItem does not increment the
+        returned item's reference count.
+        */
+
+        typedef struct {
+            PyObject_VAR_HEAD
+            PyObject *ob_item[1];
+
+            /* ob_item contains space for 'ob_size' elements.
+             * Items must normally not be NULL, except during construction when
+             * the tuple is not yet visible outside the function that builds it.
+             */
+        } PyTupleObject;
+
+在PyObject\_VAR_HEAD中,
+
+        /* PyObject_VAR_HEAD defines the initial segment of all variable-size
+         * container objects.  These end with a declaration of an array with 1
+         * element, but enough space is malloc'ed so that the array actually
+         * has room for ob_size elements.  Note that ob_size is an element count,
+         * not necessarily a byte count.
+         */
+        #define PyObject_VAR_HEAD               \
+            PyObject_HEAD                       \
+            Py_ssize_t ob_size; /* Number of items in variable part */
+        #define Py_INVALID_SIZE (Py_ssize_t)-1
+
+PyTupleObject的内部其实是PyObject的指针数组，因此它可以保存不同类型的对象。
+tuple在Python层面是immutable，即一旦赋值不能更改，包括元素的个数与元素的内容。但是在C++层面，
+却没有什么机制来限制tuple不可以修改。
+
+我们在**tupleobject.h**头文件中，看到下面一段代码
+
+        /* Macro, trading safety for speed */
+        #define PyTuple_GET_ITEM(op, i) (((PyTupleObject *)(op))->ob_item[i])
+        #define PyTuple_GET_SIZE(op)    Py_SIZE(op)
+
+        /* Macro, *only* to be used to fill in brand new tuples */
+        #define PyTuple_SET_ITEM(op, i, v) (((PyTupleObject *)(op))->ob_item[i] = v)
+
+这样，tuple的内部实现就更加一目了然了。
+
+## 创建一个新的tuple
+
+        PyObject *
+        PyTuple_New(register Py_ssize_t size)
+        {
+            register PyTupleObject *op;
+            Py_ssize_t i;
+            if (size < 0) {
+                PyErr_BadInternalCall();
+                return NULL;
+            }
+        #if PyTuple_MAXSAVESIZE > 0
+            if (size == 0 && free_list[0]) {
+                op = free_list[0];
+                Py_INCREF(op);
+        #ifdef COUNT_ALLOCS
+                tuple_zero_allocs++;
+        #endif
+                return (PyObject *) op;
+            }
+            if (size < PyTuple_MAXSAVESIZE && (op = free_list[size]) != NULL) {
+                free_list[size] = (PyTupleObject *) op->ob_item[0];
+                numfree[size]--;
+        #ifdef COUNT_ALLOCS
+                fast_tuple_allocs++;
+        #endif
+                /* Inline PyObject_InitVar */
+        #ifdef Py_TRACE_REFS
+                Py_SIZE(op) = size;
+                Py_TYPE(op) = &PyTuple_Type;
+        #endif
+                _Py_NewReference((PyObject *)op);
+            }
+            else
+        #endif
+            {
+                Py_ssize_t nbytes = size * sizeof(PyObject *);
+                /* Check for overflow */
+                if (nbytes / sizeof(PyObject *) != (size_t)size ||
+                    (nbytes > PY_SSIZE_T_MAX - sizeof(PyTupleObject) - sizeof(PyObject *)))
+                {
+                    return PyErr_NoMemory();
+                }
+
+                op = PyObject_GC_NewVar(PyTupleObject, &PyTuple_Type, size);
+                if (op == NULL)
+                    return NULL;
+            }
+            for (i=0; i < size; i++)
+                op->ob_item[i] = NULL;
+        #if PyTuple_MAXSAVESIZE > 0
+            if (size == 0) {
+                free_list[0] = op;
+                ++numfree[0];
+                Py_INCREF(op);          /* extra INCREF so that this is never freed */
+            }
+        #endif
+        #ifdef SHOW_TRACK_COUNT
+            count_tracked++;
+        #endif
+            _PyObject_GC_TRACK(op);
+            return (PyObject *) op;
+        }
+
+在创建新tuple时，python程序会在内部维护一个free list，也就是小型对象的快速创建的Pool，
+小的标准是少于PyTuple_MAXSAVESIZE（20）个元素，满足标准并且Pool还有空间的情况下，就尝试直接从Pool中创建，
+
+这里面看到有一个赋值tuple类型的语句
+
+        Py_TYPE(op) = &PyTuple_Type;
+
+我们看一下这个类型对象是如何定义的。
+
+        PyTypeObject PyTuple_Type = {
+            PyVarObject_HEAD_INIT(&PyType_Type, 0)
+            "tuple",
+            sizeof(PyTupleObject) - sizeof(PyObject *),
+            sizeof(PyObject *),
+            (destructor)tupledealloc,                   /* tp_dealloc */
+            (printfunc)tupleprint,                      /* tp_print */
+            0,                                          /* tp_getattr */
+            0,                                          /* tp_setattr */
+            0,                                          /* tp_compare */
+            (reprfunc)tuplerepr,                        /* tp_repr */
+            0,                                          /* tp_as_number */
+            &tuple_as_sequence,                         /* tp_as_sequence */
+            &tuple_as_mapping,                          /* tp_as_mapping */
+            (hashfunc)tuplehash,                        /* tp_hash */
+            0,                                          /* tp_call */
+            0,                                          /* tp_str */
+            PyObject_GenericGetAttr,                    /* tp_getattro */
+            0,                                          /* tp_setattro */
+            0,                                          /* tp_as_buffer */
+            Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC |
+                Py_TPFLAGS_BASETYPE | Py_TPFLAGS_TUPLE_SUBCLASS, /* tp_flags */
+            tuple_doc,                                  /* tp_doc */
+            (traverseproc)tupletraverse,                /* tp_traverse */
+            0,                                          /* tp_clear */
+            tuplerichcompare,                           /* tp_richcompare */
+            0,                                          /* tp_weaklistoffset */
+            tuple_iter,                                 /* tp_iter */
+            0,                                          /* tp_iternext */
+            tuple_methods,                              /* tp_methods */
+            0,                                          /* tp_members */
+            0,                                          /* tp_getset */
+            0,                                          /* tp_base */
+            0,                                          /* tp_dict */
+            0,                                          /* tp_descr_get */
+            0,                                          /* tp_descr_set */
+            0,                                          /* tp_dictoffset */
+            0,                                          /* tp_init */
+            0,                                          /* tp_alloc */
+            tuple_new,                                  /* tp_new */
+            PyObject_GC_Del,                            /* tp_free */
+        };
+
+这个结构体很有启发意义，首先，所在的tuple对象都维护了一个指向该结构体的指针；其次，当一个对象需要执行某种操作时，
+会查询它的type指针，进而找到相应操作对应的函数指针，比如new操作对应的函数指针是tuple_new，而该函数内部调用到了PyTuple\_New。
+
+        static PyObject *
+        tuple_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+        {
+            PyObject *arg = NULL;
+            static char *kwlist[] = {"sequence", 0};
+
+            if (type != &PyTuple_Type)
+                return tuple_subtype_new(type, args, kwds);
+            if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:tuple", kwlist, &arg))
+                return NULL;
+
+            if (arg == NULL)
+                return PyTuple_New(0);
+            else
+                return PySequence_Tuple(arg);
+        }
+
+所以了解一种Python的数据类型，关键在于了解该种类型的类型对象的定义。
+每一种类型对象，本身也是有类型的, 通过下面的语句定义:
+
+        PyVarObject_HEAD_INIT(&PyType_Type, 0)
+
+有趣之处在于，这个类型对象本身也是有类型的，它的类型就是它自己。
+
+        PyTypeObject PyType_Type = {
+            PyVarObject_HEAD_INIT(&PyType_Type, 0)
+            "type",                                     /* tp_name */
+            sizeof(PyHeapTypeObject),                   /* tp_basicsize */
+            sizeof(PyMemberDef),                        /* tp_itemsize */
+            (destructor)type_dealloc,                   /* tp_dealloc */
+            0,                                          /* tp_print */
+            0,                                          /* tp_getattr */
+            0,                                          /* tp_setattr */
+            0,                                  /* tp_compare */
+            (reprfunc)type_repr,                        /* tp_repr */
+            0,                                          /* tp_as_number */
+            0,                                          /* tp_as_sequence */
+            0,                                          /* tp_as_mapping */
+            (hashfunc)_Py_HashPointer,                  /* tp_hash */
+            (ternaryfunc)type_call,                     /* tp_call */
+            0,                                          /* tp_str */
+            (getattrofunc)type_getattro,                /* tp_getattro */
+            (setattrofunc)type_setattro,                /* tp_setattro */
+            0,                                          /* tp_as_buffer */
+            Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC |
+                Py_TPFLAGS_BASETYPE | Py_TPFLAGS_TYPE_SUBCLASS,         /* tp_flags */
+            type_doc,                                   /* tp_doc */
+            (traverseproc)type_traverse,                /* tp_traverse */
+            (inquiry)type_clear,                        /* tp_clear */
+            type_richcompare,                                           /* tp_richcompare */
+            offsetof(PyTypeObject, tp_weaklist),        /* tp_weaklistoffset */
+            0,                                          /* tp_iter */
+            0,                                          /* tp_iternext */
+            type_methods,                               /* tp_methods */
+            type_members,                               /* tp_members */
+            type_getsets,                               /* tp_getset */
+            0,                                          /* tp_base */
+            0,                                          /* tp_dict */
+            0,                                          /* tp_descr_get */
+            0,                                          /* tp_descr_set */
+            offsetof(PyTypeObject, tp_dict),            /* tp_dictoffset */
+            type_init,                                  /* tp_init */
+            0,                                          /* tp_alloc */
+            type_new,                                   /* tp_new */
+            PyObject_GC_Del,                            /* tp_free */
+            (inquiry)type_is_gc,                        /* tp_is_gc */
+        };
+
+A Little Trick: 我们可以通过全文搜索下面语句，找到所有Python天生定义的类型
+
+        daniel@daniel-mint ~/Python-2.7.8 $ grep "PyVarObject_HEAD_INIT(&PyType_Type, 0)" -r -C 1
+        Parser/asdl_c.py-static PyTypeObject AST_type = {
+        Parser/asdl_c.py:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Parser/asdl_c.py-    "_ast.AST",
+        --
+        Modules/threadmodule.c-static PyTypeObject Locktype = {
+        Modules/threadmodule.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Modules/threadmodule.c-    "thread.lock",                      /*tp_name*/
+        --
+        Modules/ossaudiodev.c-static PyTypeObject OSSAudioType = {
+        Modules/ossaudiodev.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Modules/ossaudiodev.c-    "ossaudiodev.oss_audio_device", /*tp_name*/
+        --
+        Modules/ossaudiodev.c-static PyTypeObject OSSMixerType = {
+        Modules/ossaudiodev.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Modules/ossaudiodev.c-    "ossaudiodev.oss_mixer_device", /*tp_name*/
+        --
+        Modules/sunaudiodev.c-static PyTypeObject Sadtype = {
+        Modules/sunaudiodev.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Modules/sunaudiodev.c-    "sunaudiodev.sun_audio_device",     /*tp_name*/
+        --
+        Modules/sunaudiodev.c-static PyTypeObject Sadstatustype = {
+        Modules/sunaudiodev.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Modules/sunaudiodev.c-    "sunaudiodev.sun_audio_device_status", /*tp_name*/
+        --
+        Modules/linuxaudiodev.c-static PyTypeObject Ladtype = {
+        Modules/linuxaudiodev.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Modules/linuxaudiodev.c-    "linuxaudiodev.linux_audio_device", /*tp_name*/
+        --
+        Python/Python-ast.c-static PyTypeObject AST_type = {
+        Python/Python-ast.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Python/Python-ast.c-    "_ast.AST",
+        --
+        Python/symtable.c-PyTypeObject PySTEntry_Type = {
+        Python/symtable.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Python/symtable.c-    "symtable entry",
+        --
+        Python/traceback.c-PyTypeObject PyTraceBack_Type = {
+        Python/traceback.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Python/traceback.c-    "traceback",
+        --
+        Objects/descrobject.c-static PyTypeObject PyMethodDescr_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "method_descriptor",
+        --
+        Objects/descrobject.c-static PyTypeObject PyClassMethodDescr_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "classmethod_descriptor",
+        --
+        Objects/descrobject.c-PyTypeObject PyMemberDescr_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "member_descriptor",
+        --
+        Objects/descrobject.c-PyTypeObject PyGetSetDescr_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "getset_descriptor",
+        --
+        Objects/descrobject.c-PyTypeObject PyWrapperDescr_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "wrapper_descriptor",
+        --
+        Objects/descrobject.c-PyTypeObject PyDictProxy_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "dictproxy",                                /* tp_name */
+        --
+        Objects/descrobject.c-static PyTypeObject wrappertype = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "method-wrapper",                           /* tp_name */
+        --
+        Objects/descrobject.c-PyTypeObject PyProperty_Type = {
+        Objects/descrobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/descrobject.c-    "property",                                 /* tp_name */
+        --
+        Objects/memoryobject.c-PyTypeObject PyMemoryView_Type = {
+        Objects/memoryobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/memoryobject.c-    "memoryview",
+        --
+        Objects/bufferobject.c-PyTypeObject PyBuffer_Type = {
+        Objects/bufferobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/bufferobject.c-    "buffer",
+        --
+        Objects/listobject.c-static PyTypeObject sortwrapper_type = {
+        Objects/listobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/listobject.c-    "sortwrapper",                              /* tp_name */
+        --
+        Objects/listobject.c-static PyTypeObject cmpwrapper_type = {
+        Objects/listobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/listobject.c-    "cmpwrapper",                               /* tp_name */
+        --
+        Objects/listobject.c-PyTypeObject PyList_Type = {
+        Objects/listobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/listobject.c-    "list",
+        --
+        Objects/listobject.c-PyTypeObject PyListIter_Type = {
+        Objects/listobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/listobject.c-    "listiterator",                             /* tp_name */
+        --
+        Objects/listobject.c-PyTypeObject PyListRevIter_Type = {
+        Objects/listobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/listobject.c-    "listreverseiterator",                      /* tp_name */
+        --
+        Objects/stringobject.c-PyTypeObject PyBaseString_Type = {
+        Objects/stringobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/stringobject.c-    "basestring",
+        --
+        Objects/stringobject.c-PyTypeObject PyString_Type = {
+        Objects/stringobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/stringobject.c-    "str",
+        --
+        Objects/enumobject.c-PyTypeObject PyEnum_Type = {
+        Objects/enumobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/enumobject.c-    "enumerate",                    /* tp_name */
+        --
+        Objects/enumobject.c-PyTypeObject PyReversed_Type = {
+        Objects/enumobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/enumobject.c-    "reversed",                     /* tp_name */
+        --
+        Objects/methodobject.c-PyTypeObject PyCFunction_Type = {
+        Objects/methodobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/methodobject.c-    "builtin_function_or_method",
+        --
+        Objects/object.c-static PyTypeObject PyNone_Type = {
+        Objects/object.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/object.c-    "NoneType",
+        --
+        Objects/object.c-static PyTypeObject PyNotImplemented_Type = {
+        Objects/object.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/object.c-    "NotImplementedType",
+        --
+        Objects/cellobject.c-PyTypeObject PyCell_Type = {
+        Objects/cellobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/cellobject.c-    "cell",
+        --
+        Objects/funcobject.c-PyTypeObject PyFunction_Type = {
+        Objects/funcobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/funcobject.c-    "function",
+        --
+        Objects/funcobject.c-PyTypeObject PyClassMethod_Type = {
+        Objects/funcobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/funcobject.c-    "classmethod",
+        --
+        Objects/funcobject.c-PyTypeObject PyStaticMethod_Type = {
+        Objects/funcobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/funcobject.c-    "staticmethod",
+        --
+        Objects/floatobject.c-PyTypeObject PyFloat_Type = {
+        Objects/floatobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/floatobject.c-    "float",
+        --
+        Objects/tupleobject.c-PyTypeObject PyTuple_Type = {
+        Objects/tupleobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/tupleobject.c-    "tuple",
+        --
+        Objects/tupleobject.c-PyTypeObject PyTupleIter_Type = {
+        Objects/tupleobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/tupleobject.c-    "tupleiterator",                            /* tp_name */
+        --
+        Objects/fileobject.c-PyTypeObject PyFile_Type = {
+        Objects/fileobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/fileobject.c-    "file",
+        --
+        Objects/intobject.c-PyTypeObject PyInt_Type = {
+        Objects/intobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/intobject.c-    "int",
+        --
+        Objects/sliceobject.c-PyTypeObject PyEllipsis_Type = {
+        Objects/sliceobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/sliceobject.c-    "ellipsis",                         /* tp_name */
+        --
+        Objects/sliceobject.c-PyTypeObject PySlice_Type = {
+        Objects/sliceobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/sliceobject.c-    "slice",                    /* Name of this type */
+        --
+        Objects/iterobject.c-PyTypeObject PySeqIter_Type = {
+        Objects/iterobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/iterobject.c-    "iterator",                                 /* tp_name */
+        --
+        Objects/iterobject.c-PyTypeObject PyCallIter_Type = {
+        Objects/iterobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/iterobject.c-    "callable-iterator",                        /* tp_name */
+        --
+        Objects/cobject.c-PyTypeObject PyCObject_Type = {
+        Objects/cobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/cobject.c-    "PyCObject",		/*tp_name*/
+        --
+        Objects/complexobject.c-PyTypeObject PyComplex_Type = {
+        Objects/complexobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/complexobject.c-    "complex",
+        --
+        Objects/genobject.c-PyTypeObject PyGen_Type = {
+        Objects/genobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/genobject.c-    "generator",                                /* tp_name */
+        --
+        Objects/capsule.c-PyTypeObject PyCapsule_Type = {
+        Objects/capsule.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/capsule.c-    "PyCapsule",		/*tp_name*/
+        --
+        Objects/frameobject.c-PyTypeObject PyFrame_Type = {
+        Objects/frameobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/frameobject.c-    "frame",
+        --
+        Objects/unicodeobject.c-PyTypeObject PyUnicode_Type = {
+        Objects/unicodeobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/unicodeobject.c-    "unicode",              /* tp_name */
+        --
+        Objects/structseq.c-static PyTypeObject _struct_sequence_template = {
+        Objects/structseq.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/structseq.c-    NULL,                                       /* tp_name */
+        --
+        Objects/stringlib/string_format.h-static PyTypeObject PyFormatterIter_Type = {
+        Objects/stringlib/string_format.h:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/stringlib/string_format.h-    "formatteriterator",                /* tp_name */
+        --
+        Objects/stringlib/string_format.h-static PyTypeObject PyFieldNameIter_Type = {
+        Objects/stringlib/string_format.h:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/stringlib/string_format.h-    "fieldnameiterator",                /* tp_name */
+        --
+        Objects/setobject.c-static PyTypeObject PySetIter_Type = {
+        Objects/setobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/setobject.c-    "setiterator",                              /* tp_name */
+        --
+        Objects/setobject.c-PyTypeObject PySet_Type = {
+        Objects/setobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/setobject.c-    "set",                              /* tp_name */
+        --
+        Objects/setobject.c-PyTypeObject PyFrozenSet_Type = {
+        Objects/setobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/setobject.c-    "frozenset",                        /* tp_name */
+        --
+        Objects/weakrefobject.c-_PyWeakref_RefType = {
+        Objects/weakrefobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/weakrefobject.c-    "weakref",
+        --
+        Objects/weakrefobject.c-_PyWeakref_ProxyType = {
+        Objects/weakrefobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/weakrefobject.c-    "weakproxy",
+        --
+        Objects/weakrefobject.c-_PyWeakref_CallableProxyType = {
+        Objects/weakrefobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/weakrefobject.c-    "weakcallableproxy",
+        --
+        Objects/boolobject.c-PyTypeObject PyBool_Type = {
+        Objects/boolobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/boolobject.c-    "bool",
+        --
+        Objects/dictobject.c-PyTypeObject PyDict_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dict",
+        --
+        Objects/dictobject.c-PyTypeObject PyDictIterKey_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dictionary-keyiterator",                   /* tp_name */
+        --
+        Objects/dictobject.c-PyTypeObject PyDictIterValue_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dictionary-valueiterator",                 /* tp_name */
+        --
+        Objects/dictobject.c-PyTypeObject PyDictIterItem_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dictionary-itemiterator",                  /* tp_name */
+        --
+        Objects/dictobject.c-PyTypeObject PyDictKeys_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dict_keys",                                /* tp_name */
+        --
+        Objects/dictobject.c-PyTypeObject PyDictItems_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dict_items",                               /* tp_name */
+        --
+        Objects/dictobject.c-PyTypeObject PyDictValues_Type = {
+        Objects/dictobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/dictobject.c-    "dict_values",                              /* tp_name */
+        --
+        Objects/bytearrayobject.c-PyTypeObject PyByteArray_Type = {
+        Objects/bytearrayobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/bytearrayobject.c-    "bytearray",
+        --
+        Objects/bytearrayobject.c-PyTypeObject PyByteArrayIter_Type = {
+        Objects/bytearrayobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/bytearrayobject.c-    "bytearray_iterator",              /* tp_name */
+        --
+        Objects/typeobject.c-PyTypeObject PyType_Type = {
+        Objects/typeobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/typeobject.c-    "type",                                     /* tp_name */
+        --
+        Objects/typeobject.c-PyTypeObject PyBaseObject_Type = {
+        Objects/typeobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/typeobject.c-    "object",                                   /* tp_name */
+        --
+        Objects/typeobject.c-PyTypeObject PySuper_Type = {
+        Objects/typeobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/typeobject.c-    "super",                                    /* tp_name */
+        --
+        Objects/codeobject.c-PyTypeObject PyCode_Type = {
+        Objects/codeobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/codeobject.c-    "code",
+        --
+        Objects/moduleobject.c-PyTypeObject PyModule_Type = {
+        Objects/moduleobject.c:    PyVarObject_HEAD_INIT(&PyType_Type, 0)
+        Objects/moduleobject.c-    "module",                                   /* tp_name */
+
+我们再近距离看一下Type Object的结构体
+
+        typedef struct _typeobject {
+            PyObject_VAR_HEAD
+            const char *tp_name; /* For printing, in format "<module>.<name>" */
+            Py_ssize_t tp_basicsize, tp_itemsize; /* For allocation */
+
+            /* Methods to implement standard operations */
+
+            destructor tp_dealloc;
+            printfunc tp_print;
+            getattrfunc tp_getattr;
+            setattrfunc tp_setattr;
+            cmpfunc tp_compare;
+            reprfunc tp_repr;
+
+            /* Method suites for standard classes */
+
+            PyNumberMethods *tp_as_number;
+            PySequenceMethods *tp_as_sequence;
+            PyMappingMethods *tp_as_mapping;
+
+            /* More standard operations (here for binary compatibility) */
+
+            hashfunc tp_hash;
+            ternaryfunc tp_call;
+            reprfunc tp_str;
+            getattrofunc tp_getattro;
+            setattrofunc tp_setattro;
+
+            /* Functions to access object as input/output buffer */
+            PyBufferProcs *tp_as_buffer;
+
+            /* Flags to define presence of optional/expanded features */
+            long tp_flags;
+
+            const char *tp_doc; /* Documentation string */
+
+            /* Assigned meaning in release 2.0 */
+            /* call function for all accessible objects */
+            traverseproc tp_traverse;
+
+            /* delete references to contained objects */
+            inquiry tp_clear;
+
+            /* Assigned meaning in release 2.1 */
+            /* rich comparisons */
+            richcmpfunc tp_richcompare;
+
+            /* weak reference enabler */
+            Py_ssize_t tp_weaklistoffset;
+
+            /* Added in release 2.2 */
+            /* Iterators */
+            getiterfunc tp_iter;
+            iternextfunc tp_iternext;
+
+            /* Attribute descriptor and subclassing stuff */
+            struct PyMethodDef *tp_methods;
+            struct PyMemberDef *tp_members;
+            struct PyGetSetDef *tp_getset;
+            struct _typeobject *tp_base;
+            PyObject *tp_dict;
+            descrgetfunc tp_descr_get;
+            descrsetfunc tp_descr_set;
+            Py_ssize_t tp_dictoffset;
+            initproc tp_init;
+            allocfunc tp_alloc;
+            newfunc tp_new;
+            freefunc tp_free; /* Low-level free-memory routine */
+            inquiry tp_is_gc; /* For PyObject_IS_GC */
+            PyObject *tp_bases;
+            PyObject *tp_mro; /* method resolution order */
+            PyObject *tp_cache;
+            PyObject *tp_subclasses;
+            PyObject *tp_weaklist;
+            destructor tp_del;
+
+            /* Type attribute cache version tag. Added in version 2.6 */
+            unsigned int tp_version_tag;
+
+        #ifdef COUNT_ALLOCS
+            /* these must be last and never explicitly initialized */
+            Py_ssize_t tp_allocs;
+            Py_ssize_t tp_frees;
+            Py_ssize_t tp_maxalloc;
+            struct _typeobject *tp_prev;
+            struct _typeobject *tp_next;
+        #endif
+        } PyTypeObject;
+
+假如我们对tp_traverse感兴趣，可以全文搜索一下：
+
+        daniel@daniel-mint ~/Python-2.7.8 $ grep "Py_TYPE(.*)->tp_traverse" -r -C 1 -n
+        Modules/gcmodule.c-383-    for (; gc != containers; gc=gc->gc.gc_next) {
+        Modules/gcmodule.c:384:        traverse = Py_TYPE(FROM_GC(gc))->tp_traverse;
+        Modules/gcmodule.c-385-        (void) traverse(FROM_GC(gc),
+        --
+        Modules/gcmodule.c-468-            PyObject *op = FROM_GC(gc);
+        Modules/gcmodule.c:469:            traverseproc traverse = Py_TYPE(op)->tp_traverse;
+        Modules/gcmodule.c-470-            assert(gc->gc.gc_refs > 0);
+        --
+        Modules/gcmodule.c-581-        /* Note that the finalizers list may grow during this. */
+        Modules/gcmodule.c:582:        traverse = Py_TYPE(FROM_GC(gc))->tp_traverse;
+        Modules/gcmodule.c-583-        (void) traverse(FROM_GC(gc),
+        --
+        Modules/gcmodule.c-1234-        obj = FROM_GC(gc);
+        Modules/gcmodule.c:1235:        traverse = Py_TYPE(obj)->tp_traverse;
+        Modules/gcmodule.c-1236-        if (obj == objs || obj == resultlist)
+        --
+        Modules/gcmodule.c-1291-            continue;
+        Modules/gcmodule.c:1292:        traverse = Py_TYPE(obj)->tp_traverse;
+        Modules/gcmodule.c-1293-        if (! traverse)
+
+GCModule是Python进行垃圾回收的类，难道就只有这里调用到tp_traverse了吗，这只是C++层面对该函数的调用，
+该函数如果暴露给Python层面，应该是什么样子呢？【To Be Discovered!】
+
+我们回头看一下tuple的tp_traverse是怎么实现的?
+
+        static int
+        tupletraverse(PyTupleObject *o, visitproc visit, void *arg)
+        {
+            Py_ssize_t i;
+
+            for (i = Py_SIZE(o); --i >= 0; )
+                Py_VISIT(o->ob_item[i]);
+            return 0;
+        }
+
+        /* Utility macro to help write tp_traverse functions.
+         * To use this macro, the tp_traverse function must name its arguments
+         * "visit" and "arg".  This is intended to keep tp_traverse functions
+         * looking as much alike as possible.
+         */
+        #define Py_VISIT(op)                                                    \
+            do {                                                                \
+                if (op) {                                                       \
+                    int vret = visit((PyObject *)(op), arg);                    \
+                    if (vret)                                                   \
+                        return vret;                                            \
+                }                                                               \
+            } while (0)
+
+其实就是将tuple中的每个元素作为第一个参数，调用tp_traverse传递进来的函数指针进行操作。
+这个操作和我们在Python中使用的map操作非常相似，那么map操作是怎么实现的呢？
+
+令人失望的是，map和tp_traverse一点关系都没有
+
+        static PyObject *
+        builtin_map(PyObject *self, PyObject *args)
+        {
+            typedef struct {
+                PyObject *it;           /* the iterator object */
+                int saw_StopIteration;  /* bool:  did the iterator end? */
+            } sequence;
+
+            PyObject *func, *result;
+            sequence *seqs = NULL, *sqp;
+            Py_ssize_t n, len;
+            register int i, j;
+
+            n = PyTuple_Size(args);
+            if (n < 2) {
+                PyErr_SetString(PyExc_TypeError,
+                                "map() requires at least two args");
+                return NULL;
+            }
+
+            func = PyTuple_GetItem(args, 0);
+            n--;
+
+            if (func == Py_None) {
+                if (PyErr_WarnPy3k("map(None, ...) not supported in 3.x; "
+                                   "use list(...)", 1) < 0)
+                    return NULL;
+                if (n == 1) {
+                    /* map(None, S) is the same as list(S). */
+                    return PySequence_List(PyTuple_GetItem(args, 1));
+                }
+            }
+
+            /* Get space for sequence descriptors.  Must NULL out the iterator
+             * pointers so that jumping to Fail_2 later doesn't see trash.
+             */
+            if ((seqs = PyMem_NEW(sequence, n)) == NULL) {
+                PyErr_NoMemory();
+                return NULL;
+            }
+            for (i = 0; i < n; ++i) {
+                seqs[i].it = (PyObject*)NULL;
+                seqs[i].saw_StopIteration = 0;
+            }
+
+            /* Do a first pass to obtain iterators for the arguments, and set len
+             * to the largest of their lengths.
+             */
+            len = 0;
+            for (i = 0, sqp = seqs; i < n; ++i, ++sqp) {
+                PyObject *curseq;
+                Py_ssize_t curlen;
+
+                /* Get iterator. */
+                curseq = PyTuple_GetItem(args, i+1);
+                sqp->it = PyObject_GetIter(curseq);
+                if (sqp->it == NULL) {
+                    static char errmsg[] =
+                        "argument %d to map() must support iteration";
+                    char errbuf[sizeof(errmsg) + 25];
+                    PyOS_snprintf(errbuf, sizeof(errbuf), errmsg, i+2);
+                    PyErr_SetString(PyExc_TypeError, errbuf);
+                    goto Fail_2;
+                }
+
+                /* Update len. */
+                curlen = _PyObject_LengthHint(curseq, 8);
+                if (curlen > len)
+                    len = curlen;
+            }
+
+            /* Get space for the result list. */
+            if ((result = (PyObject *) PyList_New(len)) == NULL)
+                goto Fail_2;
+
+            /* Iterate over the sequences until all have stopped. */
+            for (i = 0; ; ++i) {
+                PyObject *alist, *item=NULL, *value;
+                int numactive = 0;
+
+                if (func == Py_None && n == 1)
+                    alist = NULL;
+                else if ((alist = PyTuple_New(n)) == NULL)
+                    goto Fail_1;
+
+                for (j = 0, sqp = seqs; j < n; ++j, ++sqp) {
+                    if (sqp->saw_StopIteration) {
+                        Py_INCREF(Py_None);
+                        item = Py_None;
+                    }
+                    else {
+                        item = PyIter_Next(sqp->it);
+                        if (item)
+                            ++numactive;
+                        else {
+                            if (PyErr_Occurred()) {
+                                Py_XDECREF(alist);
+                                goto Fail_1;
+                            }
+                            Py_INCREF(Py_None);
+                            item = Py_None;
+                            sqp->saw_StopIteration = 1;
+                        }
+                    }
+                    if (alist)
+                        PyTuple_SET_ITEM(alist, j, item);
+                    else
+                        break;
+                }
+
+                if (!alist)
+                    alist = item;
+
+                if (numactive == 0) {
+                    Py_DECREF(alist);
+                    break;
+                }
+
+                if (func == Py_None)
+                    value = alist;
+                else {
+                    value = PyEval_CallObject(func, alist);
+                    Py_DECREF(alist);
+                    if (value == NULL)
+                        goto Fail_1;
+                }
+                if (i >= len) {
+                    int status = PyList_Append(result, value);
+                    Py_DECREF(value);
+                    if (status < 0)
+                        goto Fail_1;
+                }
+                else if (PyList_SetItem(result, i, value) < 0)
+                    goto Fail_1;
+            }
+
+            if (i < len && PyList_SetSlice(result, i, len, NULL) < 0)
+                goto Fail_1;
+
+            goto Succeed;
+
+        Fail_1:
+            Py_DECREF(result);
+        Fail_2:
+            result = NULL;
+        Succeed:
+            assert(seqs);
+            for (i = 0; i < n; ++i)
+                Py_XDECREF(seqs[i].it);
+            PyMem_DEL(seqs);
+            return result;
+        }
+
+Python的其他的builtin methods有哪些？
+
+        static PyMethodDef builtin_methods[] = {
+            {"__import__",      (PyCFunction)builtin___import__, METH_VARARGS | METH_KEYWORDS, import_doc},
+            {"abs",             builtin_abs,        METH_O, abs_doc},
+            {"all",             builtin_all,        METH_O, all_doc},
+            {"any",             builtin_any,        METH_O, any_doc},
+            {"apply",           builtin_apply,      METH_VARARGS, apply_doc},
+            {"bin",             builtin_bin,        METH_O, bin_doc},
+            {"callable",        builtin_callable,   METH_O, callable_doc},
+            {"chr",             builtin_chr,        METH_VARARGS, chr_doc},
+            {"cmp",             builtin_cmp,        METH_VARARGS, cmp_doc},
+            {"coerce",          builtin_coerce,     METH_VARARGS, coerce_doc},
+            {"compile",         (PyCFunction)builtin_compile,    METH_VARARGS | METH_KEYWORDS, compile_doc},
+            {"delattr",         builtin_delattr,    METH_VARARGS, delattr_doc},
+            {"dir",             builtin_dir,        METH_VARARGS, dir_doc},
+            {"divmod",          builtin_divmod,     METH_VARARGS, divmod_doc},
+            {"eval",            builtin_eval,       METH_VARARGS, eval_doc},
+            {"execfile",        builtin_execfile,   METH_VARARGS, execfile_doc},
+            {"filter",          builtin_filter,     METH_VARARGS, filter_doc},
+            {"format",          builtin_format,     METH_VARARGS, format_doc},
+            {"getattr",         builtin_getattr,    METH_VARARGS, getattr_doc},
+            {"globals",         (PyCFunction)builtin_globals,    METH_NOARGS, globals_doc},
+            {"hasattr",         builtin_hasattr,    METH_VARARGS, hasattr_doc},
+            {"hash",            builtin_hash,       METH_O, hash_doc},
+            {"hex",             builtin_hex,        METH_O, hex_doc},
+            {"id",              builtin_id,         METH_O, id_doc},
+            {"input",           builtin_input,      METH_VARARGS, input_doc},
+            {"intern",          builtin_intern,     METH_VARARGS, intern_doc},
+            {"isinstance",  builtin_isinstance, METH_VARARGS, isinstance_doc},
+            {"issubclass",  builtin_issubclass, METH_VARARGS, issubclass_doc},
+            {"iter",            builtin_iter,       METH_VARARGS, iter_doc},
+            {"len",             builtin_len,        METH_O, len_doc},
+            {"locals",          (PyCFunction)builtin_locals,     METH_NOARGS, locals_doc},
+            {"map",             builtin_map,        METH_VARARGS, map_doc},
+            {"max",             (PyCFunction)builtin_max,        METH_VARARGS | METH_KEYWORDS, max_doc},
+            {"min",             (PyCFunction)builtin_min,        METH_VARARGS | METH_KEYWORDS, min_doc},
+            {"next",            builtin_next,       METH_VARARGS, next_doc},
+            {"oct",             builtin_oct,        METH_O, oct_doc},
+            {"open",            (PyCFunction)builtin_open,       METH_VARARGS | METH_KEYWORDS, open_doc},
+            {"ord",             builtin_ord,        METH_O, ord_doc},
+            {"pow",             builtin_pow,        METH_VARARGS, pow_doc},
+            {"print",           (PyCFunction)builtin_print,      METH_VARARGS | METH_KEYWORDS, print_doc},
+            {"range",           builtin_range,      METH_VARARGS, range_doc},
+            {"raw_input",       builtin_raw_input,  METH_VARARGS, raw_input_doc},
+            {"reduce",          builtin_reduce,     METH_VARARGS, reduce_doc},
+            {"reload",          builtin_reload,     METH_O, reload_doc},
+            {"repr",            builtin_repr,       METH_O, repr_doc},
+            {"round",           (PyCFunction)builtin_round,      METH_VARARGS | METH_KEYWORDS, round_doc},
+            {"setattr",         builtin_setattr,    METH_VARARGS, setattr_doc},
+            {"sorted",          (PyCFunction)builtin_sorted,     METH_VARARGS | METH_KEYWORDS, sorted_doc},
+            {"sum",             builtin_sum,        METH_VARARGS, sum_doc},
+        #ifdef Py_USING_UNICODE
+            {"unichr",          builtin_unichr,     METH_VARARGS, unichr_doc},
+        #endif
+            {"vars",            builtin_vars,       METH_VARARGS, vars_doc},
+            {"zip",         builtin_zip,        METH_VARARGS, zip_doc},
+            {NULL,              NULL},
+        };
+
+还有许多内容需要探究。。。。。。

@@ -1,0 +1,17 @@
+body {
+	background:rgb(220, 220, 220);
+	font-family:'Comic Sans MS';
+}
+code {
+	font-family:'Courier New';
+    	background:black;
+    	color:green;
+    	font-size:18px;
+	overflow-y: auto;
+	max-height: 400px;
+	display: block;
+}
+pre {
+	background:black;
+}
+
