@@ -1359,5 +1359,136 @@
 <p>But the result is quite odd, it's every processes' _HANDLE_TABLE member, </p>
 
 <p>we can confirm this with the pid and handle count against the result of <em>!process 0 0</em>.</p>
+
+<p>Apparently this is not the handle table, but where is it?</p>
+
+<p>It is in the "TableCode" member, and the lower 2 bits indicates the table level.</p>
+
+<pre><code>    kd&gt; dq fffff8a00162b560
+
+    fffff8a0`0162b560  fffff8a0`016cf001 fffffa80`1ac9b140
+</code></pre>
+
+<p>So the table is 2 levels (the lower 2 bits: 01 means 2 levels, 00 means 1 level),</p>
+
+<p>and the address of the first level table is fffff8a0<code>016cf001 &amp; 0xFFFFFFFF</code>FFFFFF00 = fffff8a0`016cf000</p>
+
+<pre><code>    kd&gt; dq fffff8a0`016cf000
+
+    fffff8a0`016cf000  fffff8a0`0167a000 fffff8a0`016d0000
+
+    fffff8a0`016cf010  fffff8a0`02377000 00000000`00000000
+
+    fffff8a0`016cf020  00000000`00000000 00000000`00000000
+</code></pre>
+
+<p>we can see 3 entries:</p>
+
+<p>so the first 256 handles are in the first table at fffff8a0`0167a000, each entry occupy a 8 byte pointer to _OBJECT_HEADER, </p>
+
+<p>and an access mask of 4 bytes, but for alignment, it occupies total 16 bytes.</p>
+
+<p>so each table is 16 * 256 = 0x10 * 0x100 = 4096 = 0x1000 bytes, it is just ONE page.</p>
+
+<p>we check the 0004 handle, it should be within the first 2-level table</p>
+
+<pre><code>    kd&gt; dq fffff8a0`0167a000
+
+    fffff8a0`0167a000  00000000`00000000 00000000`fffffffe
+
+    fffff8a0`0167a010  fffff8a0`01675691 00000000`00000009
+
+    fffff8a0`0167a020  fffff8a0`0387ade1 00000000`00000003
+
+    fffff8a0`0167a030  fffffa80`1a73ba01 00000000`00100020
+
+    fffff8a0`0167a040  fffff8a0`01660e51 00000000`00020019
+
+    fffff8a0`0167a050  fffffa80`1ac9dae1 00000000`001f0001
+
+    fffff8a0`0167a060  fffffa80`1a73b601 00000000`001f0001
+
+    fffff8a0`0167a070  fffffa80`1ac9d8b1 00000000`001f0001
+</code></pre>
+
+<p>so it address is fffff8a0\<code>01660e50 ( the lower 3 bits are ignored), and access mask is 00000000\</code>00020019.</p>
+
+<p>we see the _OBJECT_HEADER structure.</p>
+
+<pre><code>    kd&gt; dt _OBJECT_HEADER fffff8a0`01660e50
+
+    nt!_OBJECT_HEADER
+
+       +0x000 PointerCount     : 0n1
+
+       +0x008 HandleCount      : 0n1
+
+       +0x008 NextToFree       : 0x00000000`00000001 Void
+
+       +0x010 Lock             : _EX_PUSH_LOCK
+
+       +0x018 TypeIndex        : 0x23 '#'
+
+       +0x019 TraceFlags       : 0 ''
+
+       +0x01a InfoMask         : 0x8 ''
+
+       +0x01b Flags            : 0 ''
+
+       +0x020 ObjectCreateInfo : 0xfffff800`02c5bc00 _OBJECT_CREATE_INFORMATION
+
+       +0x020 QuotaBlockCharged : 0xfffff800`02c5bc00 Void
+
+       +0x028 SecurityDescriptor : (null) 
+
+       +0x030 Body             : _QUAD
+
+    kd&gt; !object fffff8a0`01660e50+0x30
+
+    Object: fffff8a001660e80  Type: (fffffa8018dfb3c0) Key
+
+        ObjectHeader: fffff8a001660e50 (new version)
+
+        HandleCount: 1  PointerCount: 1
+
+        Directory Object: 00000000  Name: \REGISTRY\MACHINE\SYSTEM\CONTROLSET001\CONTROL\NLS\SORTING\VERSIONS
+</code></pre>
+
+<p>seems convincing, lets confirm it with !handle command.</p>
+
+<p>but it turns out to be the 0x30 handle, what is the problem?</p>
+
+<pre><code>    kd&gt; !handle 0x10 7 0x1f8
+
+
+
+    Searching for Process with Cid == 1f8
+
+    PROCESS fffffa801ac9b140
+
+        SessionId: 0  Cid: 01f8    Peb: 7fffffdb000  ParentCid: 0184
+
+        DirBase: 2159a000  ObjectTable: fffff8a00162b560  HandleCount: 510.
+
+        Image: lsass.exe
+
+
+
+    Handle table at fffff8a00162b560 with 510 entries in use
+
+
+
+    0010: Object: fffff8a001660e80  GrantedAccess: 00020019 Entry: fffff8a00167a040
+
+    Object: fffff8a001660e80  Type: (fffffa8018dfb3c0) Key
+
+        ObjectHeader: fffff8a001660e50 (new version)
+
+            HandleCount: 1  PointerCount: 1
+
+            Directory Object: 00000000  Name: \REGISTRY\MACHINE\SYSTEM\CONTROLSET001\CONTROL\NLS\SORTING\VERSIONS
+</code></pre>
+
+<p>so the handle is the offset divided by 4, where 4 is each entry's size. so the examined entry is (fffff8a0\<code>0167a040 - fffff8a0\</code>0167a000)/ 4 = 0x10.</p>
 </body>
 </html>
