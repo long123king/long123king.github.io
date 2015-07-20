@@ -129,7 +129,7 @@ we see the \_OBJECT\_HEADER structure.
             Directory Object: 00000000  Name: \REGISTRY\MACHINE\SYSTEM\CONTROLSET001\CONTROL\NLS\SORTING\VERSIONS
 
 seems convincing, lets confirm it with !handle command.
-but it turns out to be the 0x30 handle, what is the problem?
+but it turns out to be the 0x10 handle, what is the problem?
 
         kd> !handle 0x10 7 0x1f8
 
