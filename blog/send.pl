@@ -38,3 +38,8 @@ my $html_content = $prefix.$content.$suffix;
 open HTML_HANDLE, ">".$html_file or die $!;
 print HTML_HANDLE $html_content;
 close HTML_HANDLE;
+
+system("git", "add", $md_file);
+system("git", "add", $html_file);
+system("git", "commit", "-m", $title);
+system("git", "push");
