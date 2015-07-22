@@ -39,7 +39,12 @@ open HTML_HANDLE, ">".$html_file or die $!;
 print HTML_HANDLE $html_content;
 close HTML_HANDLE;
 
+open ENTRY_HANDLE, ">>../new_entry.md" or die $!;
+print ENTRY_HANDLE "[$title](http://long123king.github.io/blog/$html_file)    ";
+close ENTRY_HANDLE;
+
 system("git", "add", $md_file);
 system("git", "add", $html_file);
+system("git", "add", "../new_entry.md");
 system("git", "commit", "-m", $title);
 system("git", "push");
