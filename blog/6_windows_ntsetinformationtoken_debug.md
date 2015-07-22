@@ -1,0 +1,456 @@
+# Windows NtSetInformationToken Debug
+
+## Fail to set a new Owner for Token, let's inspect the reason.
+
+First set a conditional breakpoint.
+
+            kd> bp nt!NtSetInformationToken ".if(@rdx == 4){ kv; }.else{g;}"
+
+Check if the rdx (InfoClass) is 0x1B = 27 = TokenMandatoryPolicy
+
+            kd> 
+            nt!NtSetInformationToken+0x7d:
+            fffff800`02d16836 83fa1b          cmp     edx,1Bh
+            kd> 
+            nt!NtSetInformationToken+0x80:
+            fffff800`02d16839 741d            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+
+Let first look at the paramters in registers:
+
+            kd> r
+            rax=0000000000000000 rbx=fffffa801ac40060 rcx=0000000000000030
+            rdx=0000000000000004 rsi=00000000002b43d0 rdi=0000000000000000
+            rip=fffff80002d167b8 rsp=fffff88004ce7ad8 rbp=fffff88004ce7b60
+             r8=00000000002b43d0  r9=0000000000000018 r10=fffff80002d167b8
+            r11=00000000002944b8 r12=000000000017f9c8 r13=0000000000000000
+            r14=000000000017f9f8 r15=000000000017fae0
+            iopl=0         nv up ei pl zr na po nc
+            cs=0010  ss=0018  ds=002b  es=002b  fs=0053  gs=002b             efl=00000246
+            nt!NtSetInformationToken:
+            fffff800`02d167b8 488bc4          mov     rax,rsp
+
+Skip several parameter checks unrelated to rdx:
+
+            kd> t
+            nt!NtSetInformationToken+0x3:
+            fffff800`02d167bb 48895808        mov     qword ptr [rax+8],rbx
+
+            ...
+
+            kd> 
+            nt!NtSetInformationToken+0x26:
+            fffff800`02d167de 8bda            mov     ebx,edx
+
+            ...
+
+            kd> 
+            nt!NtSetInformationToken+0x7d:
+            fffff800`02d16836 83fa1b          cmp     edx,1Bh
+            kd> 
+            nt!NtSetInformationToken+0x80:
+            fffff800`02d16839 741d            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+
+
+and the switch/case infrastructure codes:
+
+            kd> u fffff800`02d16836 L40
+            nt!NtSetInformationToken+0x7d:
+            fffff800`02d16836 83fa1b          cmp     edx,1Bh
+            fffff800`02d16839 741d            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02d1683b 83fa0e          cmp     edx,0Eh
+            fffff800`02d1683e 7418            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02d16840 83fa10          cmp     edx,10h
+            fffff800`02d16843 7413            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02d16845 83fa17          cmp     edx,17h
+            fffff800`02d16848 740e            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02d1684a 83fa0c          cmp     edx,0Ch
+            fffff800`02d1684d 7409            je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02d1684f 83fa11          cmp     edx,11h
+            fffff800`02d16852 0f85c1050000    jne     nt!NtSetInformationToken+0x660 (fffff800`02d16e19)
+
+So we can see that when rdx == 0x11, it takes a large chunk of code (fffff80002d16852 - fffff80002d16e19) to process it.
+we simply skip it.
+
+            nt!NtSetInformationToken+0x660:
+            fffff800`02d16e19 83fa06          cmp     edx,6
+            fffff800`02d16e1c 0f8436faffff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02d16e22 e9d9800b00      jmp     nt! ?? ::NNGAKEGL::`string'+0x45d40 (fffff800`02dcef00)
+
+jump again:
+
+            nt! ?? ::NNGAKEGL::`string'+0x45d40:
+            fffff800`02dcef00 83fa04          cmp     edx,4
+            fffff800`02dcef03 0f844f79f4ff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02dcef09 83fa05          cmp     edx,5
+            fffff800`02dcef0c 0f844679f4ff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02dcef12 83fa13          cmp     edx,13h
+            fffff800`02dcef15 0f843d79f4ff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02dcef1b 83fa19          cmp     edx,19h
+            fffff800`02dcef1e 0f843479f4ff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02dcef24 83fa18          cmp     edx,18h
+            fffff800`02dcef27 0f842b79f4ff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02dcef2d 83fa1a          cmp     edx,1Ah
+            fffff800`02dcef30 0f842279f4ff    je      nt!NtSetInformationToken+0x9f (fffff800`02d16858)
+            fffff800`02dcef36 b8030000c0      mov     eax,0C0000003h
+            fffff800`02dcef3b e9527bf4ff      jmp     nt!NtSetInformationToken+0x2d9 (fffff800`02d16a92)
+
+jump again:
+
+            kd> u fffff800`02d16a92 L20
+            nt!NtSetInformationToken+0x2d9:
+            fffff800`02d16a92 4c8d9c24f0000000 lea     r11,[rsp+0F0h]
+            fffff800`02d16a9a 498b5b20        mov     rbx,qword ptr [r11+20h]
+            fffff800`02d16a9e 498b7328        mov     rsi,qword ptr [r11+28h]
+            fffff800`02d16aa2 498b7b30        mov     rdi,qword ptr [r11+30h]
+            fffff800`02d16aa6 4d8b6338        mov     r12,qword ptr [r11+38h]
+            fffff800`02d16aaa 498be3          mov     rsp,r11
+            fffff800`02d16aad 415f            pop     r15
+            fffff800`02d16aaf 415e            pop     r14
+            fffff800`02d16ab1 415d            pop     r13
+            fffff800`02d16ab3 c3              ret
+
+so we can see that which of rdx values will be processed.
+
+            1B 0E 10 17 0C 11 06 04 05 13 19 18 1A
+
+for other values, the following error status will be returned.
+
+            0xc0000003          STATUS_INVALID_INFO_CLASS            
+
+Let do some simple look-up work.
+
+            dk@dk-VirtualBox ~ $ cat do.pl 
+            while (<>)
+            {
+	            $_ =~ s/,//;
+	            printf "0x%02x\t%s", $., $_;
+            }
+
+            dk@dk-VirtualBox ~ $ perl do.pl xxx
+            0x01	    TokenUser
+            0x02	    TokenGroups
+            0x03	    TokenPrivileges
+            0x04	    TokenOwner
+            0x05	    TokenPrimaryGroup
+            0x06	    TokenDefaultDacl
+            0x07	    TokenSource
+            0x08	    TokenType
+            0x09	    TokenImpersonationLevel
+            0x0a	    TokenStatistics
+            0x0b	    TokenRestrictedSids
+            0x0c	    TokenSessionId
+            0x0d	    TokenGroupsAndPrivileges
+            0x0e	    TokenSessionReference
+            0x0f	    TokenSandBoxInert
+            0x10	    TokenAuditPolicy
+            0x11	    TokenOrigin
+            0x12	    TokenElevationType
+            0x13	    TokenLinkedToken
+            0x14	    TokenElevation
+            0x15	    TokenHasRestrictions
+            0x16	    TokenAccessInformation
+            0x17	    TokenVirtualizationAllowed
+            0x18	    TokenVirtualizationEnabled
+            0x19	    TokenIntegrityLevel
+            0x1a	    TokenUIAccess
+            0x1b	    TokenMandatoryPolicy
+            0x1c	    TokenLogonSid
+            0x1d	    TokenIsAppContainer
+            0x1e	    TokenCapabilities
+            0x1f	    TokenAppContainerSid
+            0x20	    TokenAppContainerNumber
+            0x21	    TokenUserClaimAttributes
+            0x22	    TokenDeviceClaimAttributes
+            0x23	    TokenRestrictedUserClaimAttributes
+            0x24	    TokenRestrictedDeviceClaimAttributes
+            0x25	    TokenDeviceGroups
+            0x26	    TokenRestrictedDeviceGroups
+            0x27	    TokenSecurityAttributes
+            0x28	    TokenIsRestricted
+            0x29	    TokenProcessTrustLevel
+
+            dk@dk-VirtualBox ~ $ cat do.pl 
+            @supported = [0x1B, 0x0E, 0x10, 0x17, 0x0C, 0x11, 0x06, 0x04, 0x05, 0x13, 0x19, 0x18, 0x1A];
+            while (<>)
+            {
+	            $_ =~ s/,//;
+	            if ( $. ~~ @supported)
+	            {
+		            printf "0x%02x\t%s", $., $_;
+	            }
+            }
+            dk@dk-VirtualBox ~ $ perl do.pl xxx 2>/dev/zero
+            0x04	    TokenOwner
+            0x05	    TokenPrimaryGroup
+            0x06	    TokenDefaultDacl
+            0x0c	    TokenSessionId
+            0x0e	    TokenSessionReference
+            0x10	    TokenAuditPolicy
+            0x11	    TokenOrigin
+            0x13	    TokenLinkedToken
+            0x17	    TokenVirtualizationAllowed
+            0x18	    TokenVirtualizationEnabled
+            0x19	    TokenIntegrityLevel
+            0x1a	    TokenUIAccess
+            0x1b	    TokenMandatoryPolicy
+
+Now it clear what type of token information support setting.
+
+But why it fails for TokenOwner, let's inspect it further.
+
+we can see that many values redirect flow to a common code block, nt!NtSetInformationToken+0x9f (fffff80002d16858), it just falls into 
+the range (fffff80002d16852 - fffff80002d16e19) we met before dealing with 0x11, 
+so the control flow concentrating again.
+
+we guess this routine is responsible for assign a new owner,
+
+            SepIdAssignableAsOwner
+
+            fffff800`02dcf572 e8b948cdff      call    nt!RtlEqualSid (fffff800`02aa3e30)
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            fffff800`02dcf57b 403ac6          cmp     al,sil
+            fffff800`02dcf57e 0f84ce000000    je      nt! ?? ::NNGAKEGL::`string'+0x46527 (fffff800`02dcf652)
+            fffff800`02dcf584 8bd7            mov     edx,edi
+            fffff800`02dcf586 488bcb          mov     rcx,rbx
+            fffff800`02dcf589 e8feb7f4ff      call    nt!SepIdAssignableAsOwner (fffff800`02d1ad8c)
+
+and this logic in WRK as :
+
+            //
+            //  Walk through the list of user and group IDs looking
+            //  for a match to the specified SID.  If one is found,
+            //  make sure it may be assigned as an owner.  If it can,
+            //  then set the index in the token's OwnerIndex field.
+            //  Otherwise, return invalid owner error.
+            //
+
+            while (Index < Token->UserAndGroupCount) {
+
+                try {
+
+                    Found = RtlEqualSid(
+                                CapturedOwner,
+                                Token->UserAndGroups[Index].Sid
+                                );
+
+                    if ( Found ) {
+
+                        if ( SepIdAssignableAsOwner(Token,Index) ){
+
+                            Token->DefaultOwnerIndex = Index;
+                            TokenModified = TRUE;
+                            Status = STATUS_SUCCESS;
+
+                        } else {
+
+                            Status = STATUS_INVALID_OWNER;
+
+                        } //endif assignable
+
+
+we can set breakpoint at fffff80002dcf577 to see the result of RtlEqualSid:
+
+            kd> bp fffff800`02dcf577 ".echo 'param1:'; db @rcx; .echo 'param2:'; db @rdx; .echo 'result:'; r @rax;"
+
+            kd> g
+            'param1:'
+            fffff8a0`0192b600  01 01 00 00 00 00 00 01-00 00 00 00 84 03 00 00  ................
+            fffff8a0`0192b610  02 01 0a 03 41 6c 53 65-00 00 00 00 00 00 00 00  ....AlSe........
+            fffff8a0`0192b620  80 99 92 01 a0 f8 ff ff-b0 98 92 01 a0 f8 ff ff  ................
+            fffff8a0`0192b630  00 03 00 00 01 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0192b640  a8 66 8f 01 a0 f8 ff ff-86 00 00 00 00 00 00 00  .f..............
+            fffff8a0`0192b650  00 68 2a 19 80 fa ff ff-70 23 1b 1b 80 fa ff ff  .h*.....p#......
+            fffff8a0`0192b660  0c 00 00 00 01 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0192b670  70 3a 95 01 a0 f8 ff ff-00 00 00 00 00 00 00 00  p:..............
+            'param2:'
+            fffff8a0`0232edc8  01 05 00 00 00 00 00 05-15 00 00 00 93 cb f6 95  ................
+            fffff8a0`0232edd8  22 07 16 54 d3 60 f9 c3-e8 03 00 00 01 05 00 00  "..T.`..........
+            fffff8a0`0232ede8  00 00 00 05 15 00 00 00-93 cb f6 95 22 07 16 54  ............"..T
+            fffff8a0`0232edf8  d3 60 f9 c3 01 02 00 00-01 01 00 00 00 00 00 01  .`..............
+            fffff8a0`0232ee08  00 00 00 00 01 02 00 00-00 00 00 05 20 00 00 00  ............ ...
+            fffff8a0`0232ee18  20 02 00 00 01 02 00 00-00 00 00 05 20 00 00 00   ........... ...
+            fffff8a0`0232ee28  21 02 00 00 01 01 00 00-00 00 00 05 04 00 00 00  !...............
+            fffff8a0`0232ee38  01 01 00 00 00 00 00 02-01 00 00 00 01 01 00 00  ................
+            'result:'
+            rax=0000000000000500
+            nt! ?? ::NNGAKEGL::`string'+0x46435:
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            kd> g
+            'param1:'
+            fffff8a0`0192b600  01 01 00 00 00 00 00 01-00 00 00 00 84 03 00 00  ................
+            fffff8a0`0192b610  02 01 0a 03 41 6c 53 65-00 00 00 00 00 00 00 00  ....AlSe........
+            fffff8a0`0192b620  80 99 92 01 a0 f8 ff ff-b0 98 92 01 a0 f8 ff ff  ................
+            fffff8a0`0192b630  00 03 00 00 01 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0192b640  a8 66 8f 01 a0 f8 ff ff-86 00 00 00 00 00 00 00  .f..............
+            fffff8a0`0192b650  00 68 2a 19 80 fa ff ff-70 23 1b 1b 80 fa ff ff  .h*.....p#......
+            fffff8a0`0192b660  0c 00 00 00 01 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0192b670  70 3a 95 01 a0 f8 ff ff-00 00 00 00 00 00 00 00  p:..............
+            'param2:'
+            fffff8a0`0232ede4  01 05 00 00 00 00 00 05-15 00 00 00 93 cb f6 95  ................
+            fffff8a0`0232edf4  22 07 16 54 d3 60 f9 c3-01 02 00 00 01 01 00 00  "..T.`..........
+            fffff8a0`0232ee04  00 00 00 01 00 00 00 00-01 02 00 00 00 00 00 05  ................
+            fffff8a0`0232ee14  20 00 00 00 20 02 00 00-01 02 00 00 00 00 00 05   ... ...........
+            fffff8a0`0232ee24  20 00 00 00 21 02 00 00-01 01 00 00 00 00 00 05   ...!...........
+            fffff8a0`0232ee34  04 00 00 00 01 01 00 00-00 00 00 02 01 00 00 00  ................
+            fffff8a0`0232ee44  01 01 00 00 00 00 00 05-0b 00 00 00 01 01 00 00  ................
+            fffff8a0`0232ee54  00 00 00 05 0f 00 00 00-01 03 00 00 00 00 00 05  ................
+            'result:'
+            rax=0000000000000500
+            nt! ?? ::NNGAKEGL::`string'+0x46435:
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            kd> g
+            'param1:'
+            fffff8a0`0192b60c  84 03 00 00 02 01 0a 03-41 6c 53 65 00 00 00 00  ........AlSe....
+            fffff8a0`0192b61c  00 00 00 00 80 99 92 01-a0 f8 ff ff b0 98 92 01  ................
+            fffff8a0`0192b62c  a0 f8 ff ff 00 03 00 00-01 00 00 00 00 00 00 00  ................
+            fffff8a0`0192b63c  00 00 00 00 a8 66 8f 01-a0 f8 ff ff 86 00 00 00  .....f..........
+            fffff8a0`0192b64c  00 00 00 00 00 68 2a 19-80 fa ff ff 70 23 1b 1b  .....h*.....p#..
+            fffff8a0`0192b65c  80 fa ff ff 0c 00 00 00-01 00 00 00 00 00 00 00  ................
+            fffff8a0`0192b66c  00 00 00 00 70 3a 95 01-a0 f8 ff ff 00 00 00 00  ....p:..........
+            fffff8a0`0192b67c  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+            'param2:'
+            00000000`00a03800  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03810  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03820  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03830  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03840  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03850  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03860  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            00000000`00a03870  ?? ?? ?? ?? ?? ?? ?? ??-?? ?? ?? ?? ?? ?? ?? ??  ????????????????
+            'result:'
+            rax=0000000000000001
+            nt! ?? ::NNGAKEGL::`string'+0x46435:
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            kd> g
+
+let's see the implementation of SepIdAssignableAsOwner:
+
+            kd> uf nt!SepIdAssignableAsOwner
+            nt!SepIdAssignableAsOwner:
+            fffff800`02d1ad8c 85d2            test    edx,edx
+            fffff800`02d1ad8e 7503            jne     nt!SepIdAssignableAsOwner+0x7 (fffff800`02d1ad93)
+
+            nt!SepIdAssignableAsOwner+0x4:
+            fffff800`02d1ad90 b001            mov     al,1
+            fffff800`02d1ad92 c3              ret
+
+            nt!SepIdAssignableAsOwner+0x7:
+            fffff800`02d1ad93 488b8990000000  mov     rcx,qword ptr [rcx+90h]
+            fffff800`02d1ad9a 8bc2            mov     eax,edx
+            fffff800`02d1ad9c 48c1e004        shl     rax,4
+            fffff800`02d1ada0 8a440808        mov     al,byte ptr [rax+rcx+8]
+            fffff800`02d1ada4 c0e803          shr     al,3
+            fffff800`02d1ada7 2401            and     al,1
+            fffff800`02d1ada9 c3              ret
+
+very simple, so the main checking job is done in NtSetInformationToken.
+
+Determine VA of fffff80002d1ad8e :
+
+            fffff80002d1ad8e    :   ?   =   0000000140319d8e    -->     nt!SepIdAssignableAsOwner:
+            fffff80002dcf572    :   ?   =   00000001403ce572    -->     call    nt!RtlEqualSid
+            fffff80002d167b8    :           00000001403157B8
+
+redefine breakpoints:
+
+            kd> bp fffff800`02dcf577 "r @rax;"
+            kd> bp fffff800`02dcf572 ".echo 'param1:'; db @rcx; .echo 'param2:'; db @rdx; .echo 'result:';g;"
+
+and the result is:
+
+            kd> g
+            'param1:'
+            fffff8a0`0216f450  01 01 00 00 00 00 00 01-00 00 00 00 84 03 00 00  ................
+            fffff8a0`0216f460  02 03 04 03 4d 6d 53 6d-01 00 08 82 00 00 00 00  ....MmSm........
+            fffff8a0`0216f470  90 b2 b6 19 80 fa ff ff-40 00 00 00 00 00 0c 00  ........@.......
+            fffff8a0`0216f480  00 00 00 00 00 00 00 00-00 00 04 00 00 00 00 00  ................
+            fffff8a0`0216f490  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0216f4a0  04 03 01 00 54 6f 6b e5-cb 58 01 00 00 00 00 00  ....Tok..X......
+            fffff8a0`0216f4b0  01 03 04 03 43 4d 4e e2-40 65 d3 18 80 fa ff ff  ....CMN.@e......
+            fffff8a0`0216f4c0  01 00 02 00 00 00 00 00-d0 a4 6d 99 00 00 00 00  ..........m.....
+            'param2:'
+            fffff8a0`0aa03e68  01 05 00 00 00 00 00 05-15 00 00 00 93 cb f6 95  ................
+            fffff8a0`0aa03e78  22 07 16 54 d3 60 f9 c3-e8 03 00 00 01 05 00 00  "..T.`..........
+            fffff8a0`0aa03e88  00 00 00 05 15 00 00 00-93 cb f6 95 22 07 16 54  ............"..T
+            fffff8a0`0aa03e98  d3 60 f9 c3 01 02 00 00-01 01 00 00 00 00 00 01  .`..............
+            fffff8a0`0aa03ea8  00 00 00 00 01 02 00 00-00 00 00 05 20 00 00 00  ............ ...
+            fffff8a0`0aa03eb8  20 02 00 00 01 02 00 00-00 00 00 05 20 00 00 00   ........... ...
+            fffff8a0`0aa03ec8  21 02 00 00 01 01 00 00-00 00 00 05 04 00 00 00  !...............
+            fffff8a0`0aa03ed8  01 01 00 00 00 00 00 02-01 00 00 00 01 01 00 00  ................
+            'result:'
+            rax=0000000000000500
+            nt! ?? ::NNGAKEGL::`string'+0x46435:
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            kd> g
+            'param1:'
+            fffff8a0`0216f450  01 01 00 00 00 00 00 01-00 00 00 00 84 03 00 00  ................
+            fffff8a0`0216f460  02 03 04 03 4d 6d 53 6d-01 00 08 82 00 00 00 00  ....MmSm........
+            fffff8a0`0216f470  90 b2 b6 19 80 fa ff ff-40 00 00 00 00 00 0c 00  ........@.......
+            fffff8a0`0216f480  00 00 00 00 00 00 00 00-00 00 04 00 00 00 00 00  ................
+            fffff8a0`0216f490  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0216f4a0  04 03 01 00 54 6f 6b e5-cb 58 01 00 00 00 00 00  ....Tok..X......
+            fffff8a0`0216f4b0  01 03 04 03 43 4d 4e e2-40 65 d3 18 80 fa ff ff  ....CMN.@e......
+            fffff8a0`0216f4c0  01 00 02 00 00 00 00 00-d0 a4 6d 99 00 00 00 00  ..........m.....
+            'param2:'
+            fffff8a0`0aa03e84  01 05 00 00 00 00 00 05-15 00 00 00 93 cb f6 95  ................
+            fffff8a0`0aa03e94  22 07 16 54 d3 60 f9 c3-01 02 00 00 01 01 00 00  "..T.`..........
+            fffff8a0`0aa03ea4  00 00 00 01 00 00 00 00-01 02 00 00 00 00 00 05  ................
+            fffff8a0`0aa03eb4  20 00 00 00 20 02 00 00-01 02 00 00 00 00 00 05   ... ...........
+            fffff8a0`0aa03ec4  20 00 00 00 21 02 00 00-01 01 00 00 00 00 00 05   ...!...........
+            fffff8a0`0aa03ed4  04 00 00 00 01 01 00 00-00 00 00 02 01 00 00 00  ................
+            fffff8a0`0aa03ee4  01 01 00 00 00 00 00 05-0b 00 00 00 01 01 00 00  ................
+            fffff8a0`0aa03ef4  00 00 00 05 0f 00 00 00-01 03 00 00 00 00 00 05  ................
+            'result:'
+            rax=0000000000000500
+            nt! ?? ::NNGAKEGL::`string'+0x46435:
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            kd> g
+            'param1:'
+            fffff8a0`0216f450  01 01 00 00 00 00 00 01-00 00 00 00 84 03 00 00  ................
+            fffff8a0`0216f460  02 03 04 03 4d 6d 53 6d-01 00 08 82 00 00 00 00  ....MmSm........
+            fffff8a0`0216f470  90 b2 b6 19 80 fa ff ff-40 00 00 00 00 00 0c 00  ........@.......
+            fffff8a0`0216f480  00 00 00 00 00 00 00 00-00 00 04 00 00 00 00 00  ................
+            fffff8a0`0216f490  00 00 00 00 00 00 00 00-00 00 00 00 00 00 00 00  ................
+            fffff8a0`0216f4a0  04 03 01 00 54 6f 6b e5-cb 58 01 00 00 00 00 00  ....Tok..X......
+            fffff8a0`0216f4b0  01 03 04 03 43 4d 4e e2-40 65 d3 18 80 fa ff ff  ....CMN.@e......
+            fffff8a0`0216f4c0  01 00 02 00 00 00 00 00-d0 a4 6d 99 00 00 00 00  ..........m.....
+            'param2:'
+            fffff8a0`0aa03ea0  01 01 00 00 00 00 00 01-00 00 00 00 01 02 00 00  ................
+            fffff8a0`0aa03eb0  00 00 00 05 20 00 00 00-20 02 00 00 01 02 00 00  .... ... .......
+            fffff8a0`0aa03ec0  00 00 00 05 20 00 00 00-21 02 00 00 01 01 00 00  .... ...!.......
+            fffff8a0`0aa03ed0  00 00 00 05 04 00 00 00-01 01 00 00 00 00 00 02  ................
+            fffff8a0`0aa03ee0  01 00 00 00 01 01 00 00-00 00 00 05 0b 00 00 00  ................
+            fffff8a0`0aa03ef0  01 01 00 00 00 00 00 05-0f 00 00 00 01 03 00 00  ................
+            fffff8a0`0aa03f00  00 00 00 05 05 00 00 00-00 00 00 00 a0 58 01 00  .............X..
+            fffff8a0`0aa03f10  01 01 00 00 00 00 00 02-00 00 00 00 01 02 00 00  ................
+            'result:'
+            rax=0000000000000001
+            nt! ?? ::NNGAKEGL::`string'+0x46435:
+            fffff800`02dcf577 88442470        mov     byte ptr [rsp+70h],al
+            kd> g
+            'result:'
+            rax=0000000000000000
+            nt! ?? ::NNGAKEGL::`string'+0x4644c:
+            fffff800`02dcf58e 403ac6          cmp     al,sil
+
+so we can judge that RtlEqualSid succeeds, but SepIdAssignableAsOwner fails.
+
+This function has 2 parameters: index into user and groups array, and the pointer to the token object.
+lets reverse the source code:
+            
+            bool    SepIdAssignableAsOwner( std::uint32_t index, CTokenObject* token)
+            {
+                      if (0 == index)  
+                            return false;
+
+                     
+                    byte* user_and_groups = token->UserAndGroups;
+
+                    byte flag = *((byte*)user_and_groups  + index * 16 + 8);
+                    return (flag >> 3) & 0x01;
+            }
+
+            // test if the 8th byte has set the 3rd bits.
+
+So it means that the provided SID is not suitable to be an owner.
+
