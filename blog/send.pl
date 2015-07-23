@@ -39,9 +39,23 @@ open HTML_HANDLE, ">".$html_file or die $!;
 print HTML_HANDLE $html_content;
 close HTML_HANDLE;
 
-open ENTRY_HANDLE, ">>../new_entry.md" or die $!;
-print ENTRY_HANDLE "[$title](http://long123king.github.io/blog/$html_file)    ";
+
+my $to_append = "";
+open ENTRY_HANDLE, "<../new_entry.md" or die $!;
+my @entry_lines = <ENTRY_HANDLE>;
+my $entry_content = join("\n", @entry_lines);
+print $entry_content;
+if ($entry_content !~ /\[$title\]\(http:\/\/long123king.github.io\/blog\/$html_file\)/)
+{
+	$to_append = "do it";
+}
 close ENTRY_HANDLE;
+if ($to_append)
+{
+	open ENTRY_HANDLE, ">>../new_entry.md" or die $!;
+	print ENTRY_HANDLE "[$title](http://long123king.github.io/blog/$html_file)    \n";
+	close ENTRY_HANDLE;
+}
 
 system("git", "add", $md_file);
 system("git", "add", $html_file);
