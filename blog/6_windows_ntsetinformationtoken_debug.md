@@ -454,3 +454,59 @@ lets reverse the source code:
 
 So it means that the provided SID is not suitable to be an owner.
 
+we can comfirm it with the WRK implementation
+
+            BOOLEAN
+            SepIdAssignableAsOwner(
+                IN PTOKEN Token,
+                IN ULONG Index
+                )
+
+            /*++
+
+
+            Routine Description:
+
+                This routine returns a boolean value indicating whether the user
+                or group ID in the specified token with the specified index is
+                assignable as the owner of an object.
+
+                If the index is 0, which is always the USER ID, then the ID is
+                assignable as owner.  Otherwise, the ID is that of a group, and
+                it must have the "Owner" attribute set to be assignable.
+
+
+
+            Arguments:
+
+                Token - Pointer to a locked Token to use.
+
+                Index - Index into the Token's UserAndGroupsArray.  This value
+                    is assumed to be valid.
+
+            Return Value:
+
+                TRUE  - Indicates the index corresponds to an ID that may be assigned
+                        as the owner of objects.
+
+                FALSE - Indicates the index does not correspond to an ID that may be
+                        assigned as the owner of objects.
+
+            --*/
+            {
+                PAGED_CODE();
+
+                if (Index == 0) {
+
+                    return TRUE;
+
+                } else {
+
+                    return (BOOLEAN)
+                               ( (SepTokenGroupAttributes(Token,Index) & SE_GROUP_OWNER)
+                                 != 0
+                               );
+                }
+            }
+
+So now it is clear, only the user sid and group sid which has SE\_GROUP\_OWNER attribute can be assigned as owner.
