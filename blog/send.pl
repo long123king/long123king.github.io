@@ -44,7 +44,6 @@ my $to_append = "";
 open ENTRY_HANDLE, "<../new_entry.md" or die $!;
 my @entry_lines = <ENTRY_HANDLE>;
 my $entry_content = join("\n", @entry_lines);
-print $entry_content;
 if ($entry_content !~ /\[$title\]\(http:\/\/long123king.github.io\/blog\/$html_file\)/)
 {
 	$to_append = "do it";
