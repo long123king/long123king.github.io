@@ -5,4 +5,5 @@
 [3_python_call_imp.htm](http://long123king.github.io/blog/3_python_call_imp.htm)    
 [4_windows_low_frag_heap.html](http://long123king.github.io/blog/4_windows_low_frag_heap.html)    
 [5_windbg_inspect_object_security_structure.html](http://long123king.github.io/blog/5_windbg_inspect_object_security_structure.html)    
-[6_windows_ntsetinformationtoken_debug](http://long123king.github.io/blog/6_windows_ntsetinformationtoken_debug.html)    [6_windows_ntsetinformationtoken_debug](http://long123king.github.io/blog/6_windows_ntsetinformationtoken_debug.html)    
+[6_windows_ntsetinformationtoken_debug](http://long123king.github.io/blog/6_windows_ntsetinformationtoken_debug.html)   
+[6_windows_ntsetinformationtoken_debug](http://long123king.github.io/blog/6_windows_ntsetinformationtoken_debug.html)    
