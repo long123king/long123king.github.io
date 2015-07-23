@@ -118,6 +118,7 @@ for other values, the following error status will be returned.
             0xc0000003          STATUS_INVALID_INFO_CLASS            
 
 Let do some simple look-up work.
+First let get a value and literal map:
 
             dk@dk-VirtualBox ~ $ cat do.pl 
             while (<>)
@@ -125,6 +126,8 @@ Let do some simple look-up work.
 	            $_ =~ s/,//;
 	            printf "0x%02x\t%s", $., $_;
             }
+
+Result is :
 
             dk@dk-VirtualBox ~ $ perl do.pl xxx
             0x01	    TokenUser
@@ -169,6 +172,8 @@ Let do some simple look-up work.
             0x28	    TokenIsRestricted
             0x29	    TokenProcessTrustLevel
 
+Then we filtered the supported setting fields:
+
             dk@dk-VirtualBox ~ $ cat do.pl 
             @supported = [0x1B, 0x0E, 0x10, 0x17, 0x0C, 0x11, 0x06, 0x04, 0x05, 0x13, 0x19, 0x18, 0x1A];
             while (<>)
@@ -179,6 +184,9 @@ Let do some simple look-up work.
 		            printf "0x%02x\t%s", $., $_;
 	            }
             }
+
+Result is : 
+
             dk@dk-VirtualBox ~ $ perl do.pl xxx 2>/dev/zero
             0x04	    TokenOwner
             0x05	    TokenPrimaryGroup

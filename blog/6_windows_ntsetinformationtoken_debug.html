@@ -210,6 +210,8 @@
 
 <p>Let do some simple look-up work.</p>
 
+<p>First let get a value and literal map:</p>
+
 <pre><code>        dk@dk-VirtualBox ~ $ cat do.pl 
 
         while (&lt;&gt;)
@@ -221,10 +223,11 @@
             printf "0x%02x\t%s", $., $_;
 
         }
+</code></pre>
 
+<p>Result is :</p>
 
-
-        dk@dk-VirtualBox ~ $ perl do.pl xxx
+<pre><code>        dk@dk-VirtualBox ~ $ perl do.pl xxx
 
         0x01        TokenUser
 
@@ -307,10 +310,11 @@
         0x28        TokenIsRestricted
 
         0x29        TokenProcessTrustLevel
+</code></pre>
 
+<p>Then we filtered the supported setting fields:</p>
 
-
-        dk@dk-VirtualBox ~ $ cat do.pl 
+<pre><code>        dk@dk-VirtualBox ~ $ cat do.pl 
 
         @supported = [0x1B, 0x0E, 0x10, 0x17, 0x0C, 0x11, 0x06, 0x04, 0x05, 0x13, 0x19, 0x18, 0x1A];
 
@@ -329,8 +333,11 @@
             }
 
         }
+</code></pre>
 
-        dk@dk-VirtualBox ~ $ perl do.pl xxx 2&gt;/dev/zero
+<p>Result is : </p>
+
+<pre><code>        dk@dk-VirtualBox ~ $ perl do.pl xxx 2&gt;/dev/zero
 
         0x04        TokenOwner
 
