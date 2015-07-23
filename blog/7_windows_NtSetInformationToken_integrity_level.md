@@ -73,3 +73,4 @@ and they both come from [here](http://microsoft.public.platformsdk.security.nark
 
 That's all for this.
 
+Actually, the integrity level SID is just an entry in groups.
