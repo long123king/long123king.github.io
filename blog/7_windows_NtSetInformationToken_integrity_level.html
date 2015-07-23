@@ -1,0 +1,132 @@
+<!DOCCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>7_windows_NtSetInformationToken_integrity_level</title>
+    <link rel="stylesheet" type="text/css" href="daniel_blog.css" />
+</head>
+
+<body>
+<h1>What does it mean for integrity level attribute</h1>
+
+<p>let's see the codes below:</p>
+
+<pre><code>        loc_1403A9BB4:
+
+        cmp     r12d, 10h
+
+        jb      loc_1403AA374
+
+
+
+        lea     rax, [rsp+118h+var_48]
+
+        mov     [rsp+118h+var_D8], rax ; __int64
+
+        lea     rax, [rsp+118h+var_68]
+
+        mov     [rsp+118h+var_E0], rax ; __int64
+
+        mov     dword ptr [rsp+118h+Object], esi ; int
+
+        xor     r9d, r9d        ; int
+
+        mov     r8b, r14b       ; int
+
+        lea     edx, [r9+1]     ; int
+
+        mov     rcx, r15        ; Src
+
+        call    SeCaptureSidAndAttributesArray
+
+        mov     [rsp+118h+var_BC], eax
+
+        jmp     short loc_1403A9C07
+</code></pre>
+
+<p>It first do the following check:</p>
+
+<pre><code>        if (Length &gt;= sizeof(TOKEN_MANDATORY_LABEL))
+
+            //continue;
+</code></pre>
+
+<p>then invoke SeCaptureSidAndAttributesArray.</p>
+
+<p>Actually we find no hint about the attribute value until here.</p>
+
+<p>Let's google it, a piece of code come to my eyes:</p>
+
+<pre><code>        PTSTR szIntegritySid = "S-1-16-12288"; //high
+
+        PSID pIntegritySid = NULL;
+
+        TOKEN_MANDATORY_LABEL TIL = {0};
+
+
+
+        ConvertStringSidToSid(szIntegritySid, &amp;pIntegritySid);
+
+        TIL.Label.Attributes = SE_GROUP_INTEGRITY;
+
+        TIL.Label.Sid = pIntegritySid;
+
+
+
+        AmSetTokenInformation(*hRunToken, TokenIntegrityLevel, &amp;TIL,
+
+        sizeof(TOKEN_MANDATORY_LABEL) + GetLengthSid(pIntegritySid));
+
+        //------------------------------------------------------------------------
+</code></pre>
+
+<p>So the attribute is just group attributes:</p>
+
+<pre><code>        { 0x00000020, "integrity" },
+
+        { 0x00000040, "integrity-enabled" },
+</code></pre>
+
+<p>So the attribute should be 0x60.</p>
+
+<p>By the way, another piece of code to use the linked elevated token to create a new process with admin rights:</p>
+
+<pre><code>        TOKEN_LINKED_TOKEN linkedToken = {0};
+
+        /* The token is not elevated, we will build an elevated token for the */
+
+        /* user. */
+
+        dwSize = sizeof linkedToken;
+
+        /* Get the linked token, which is the elevated version of the current */
+
+        /* token. */
+
+        if (GetTokenInformation(hToken,
+
+        TokenLinkedToken,
+
+        &amp;linkedToken,
+
+        dwSize, &amp;dwSize)) {
+
+        /* The linked token is not a primary token, so we create one from it. */
+
+        if (DuplicateTokenEx(linkedToken.LinkedToken,
+
+        MAXIMUM_ALLOWED,
+
+        NULL,
+
+        SecurityImpersonation,
+
+        TokenPrimary,
+
+        &amp;hPrimaryToken)) {
+</code></pre>
+
+<p>and they both come from <a href="http://microsoft.public.platformsdk.security.narkive.com/8GZREGtk/how-to-create-an-process-with-administrator-privilege-from-service">here</a>.</p>
+
+<p>That's all for this.</p>
+</body>
+</html>
