@@ -7,3 +7,4 @@
 [5_windbg_inspect_object_security_structure.html](http://long123king.github.io/blog/5_windbg_inspect_object_security_structure.html)    
 [6_windows_ntsetinformationtoken_debug](http://long123king.github.io/blog/6_windows_ntsetinformationtoken_debug.html)    
 [7_windows_NtSetInformationToken_integrity_level](http://long123king.github.io/blog/7_windows_NtSetInformationToken_integrity_level.html)    
+[8_from_process_to_token](http://long123king.github.io/blog/8_from_process_to_token.html)    
