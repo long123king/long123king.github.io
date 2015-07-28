@@ -9,3 +9,4 @@
 [7_windows_NtSetInformationToken_integrity_level](http://long123king.github.io/blog/7_windows_NtSetInformationToken_integrity_level.html)    
 [8_from_process_to_token](http://long123king.github.io/blog/8_from_process_to_token.html)    
 [9_volatility_source_code_object_hierarchy](http://long123king.github.io/blog/9_volatility_source_code_object_hierarchy.html)    
+[10_PspCidTable_analysis](http://long123king.github.io/blog/10_PspCidTable_analysis.html)    
