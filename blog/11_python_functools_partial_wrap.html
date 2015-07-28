@@ -1,0 +1,97 @@
+<!DOCCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>11_python_functools_partial_wrap</title>
+    <link rel="stylesheet" type="text/css" href="daniel_blog.css" />
+</head>
+
+<body>
+<p>﻿# Python functools wraps and partial</p>
+
+<p>Official documenation is <a href="https://docs.python.org/2/library/functools.html">here</a></p>
+
+<h2>partial</h2>
+
+<p>partial is just like the C++ bind mechanism, it is used to degrade the order of function.</p>
+
+<blockquote>
+  <p>In mathematics and computer science, currying is the technique of translating the evaluation of a function </p>
+
+<p>that takes multiple arguments (or a tuple of arguments) into evaluating a sequence of functions, </p>
+
+<p>each with a single argument (partial application). </p>
+
+<p>It was introduced by Moses Schönfinkel and later developed by Haskell Curry.</p>
+</blockquote>
+
+<p>from <a href="https://en.wikipedia.org/wiki/Currying">Wikipedia: Currying</a></p>
+
+<p>also notice the great figure behind the currying:</p>
+
+<blockquote>
+  <p>Haskell Brooks Curry (/ˈhæskəl ˈkɜri/; September 12, 1900 – September 1, 1982) was an American mathematician and logician. </p>
+
+<p>...</p>
+
+<p>There are three programming languages named after him, Haskell, Brooks and Curry, as well as the concept of currying, </p>
+
+<p>a technique used for transforming functions in mathematics and computer science.</p>
+</blockquote>
+
+<p>from <a href="https://en.wikipedia.org/wiki/Haskell_Curry">Wikipedia: Haskell Curry</a></p>
+
+<p>In my own words, currying is just turns a function with multiple paramters </p>
+
+<p>into a series of functions with just one parameter (maybe combined with an function parameter).</p>
+
+<h2>wraps</h2>
+
+<p>wrapper provide a mechanism for decorating functions with modifying their prototypes.</p>
+
+<p>It is very useful for documentation.</p>
+
+<p>Let's see an example:</p>
+
+<pre><code>        from functools import wraps
+
+
+
+        def my_decorator(func):
+
+            @wraps(func)
+
+            def wrapper(*args, **kwds):
+
+                print "invoking ", func.__name__, "(", args, ", ", kwds, " )"
+
+                print func.__doc__
+
+                return func(*args, **kwds)
+
+            return wrapper
+
+
+
+        @my_decorator
+
+        def example(name, **properties):
+
+            '''This is used for documentation.'''
+
+            print "This is the demo function"
+
+
+
+        example("Daniel King", gender="Male", company="Keen")
+</code></pre>
+
+<p>and result is:</p>
+
+<pre><code>        invoking  example ( ('Daniel King',) ,  {'gender': 'Male', 'company': 'Keen'}  )
+
+        This is used for documentation.
+
+        This is the demo function
+</code></pre>
+</body>
+</html>
