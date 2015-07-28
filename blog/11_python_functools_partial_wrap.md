@@ -9,13 +9,12 @@ partial is just like the C++ bind mechanism, it is used to degrade the order of 
 > In mathematics and computer science, currying is the technique of translating the evaluation of a function 
 > that takes multiple arguments (or a tuple of arguments) into evaluating a sequence of functions, 
 > each with a single argument (partial application). 
-> It was introduced by Moses Schönfinkel and later developed by Haskell Curry.
 
 from [Wikipedia: Currying](https://en.wikipedia.org/wiki/Currying)
 
 also notice the great figure behind the currying:
 
-> Haskell Brooks Curry (/ˈhæskəl ˈkɜri/; September 12, 1900 – September 1, 1982) was an American mathematician and logician. 
+> Haskell Brooks Curry was an American mathematician and logician. 
 > ...
 > There are three programming languages named after him, Haskell, Brooks and Curry, as well as the concept of currying, 
 > a technique used for transforming functions in mathematics and computer science.
