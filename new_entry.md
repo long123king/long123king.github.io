@@ -11,3 +11,4 @@
 [9_volatility_source_code_object_hierarchy](http://long123king.github.io/blog/9_volatility_source_code_object_hierarchy.html)    
 [10_PspCidTable_analysis](http://long123king.github.io/blog/10_PspCidTable_analysis.html)    
 [11_python_functools_partial_wrap](http://long123king.github.io/blog/11_python_functools_partial_wrap.html)    
+[19_SepDuplicateToken](http://long123king.github.io/blog/19_SepDuplicateToken.html)    

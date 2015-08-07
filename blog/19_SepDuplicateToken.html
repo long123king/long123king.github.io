@@ -1,0 +1,329 @@
+<!DOCCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>19_SepDuplicateToken</title>
+    <link rel="stylesheet" type="text/css" href="daniel_blog.css" />
+</head>
+
+<body>
+<h1>How SepDuplicateToken works</h1>
+
+<h2>DuplicateToken so important</h2>
+
+<p>If we want to get a workable token to use when CreateProcessAsUser,</p>
+
+<p>we have to use DuplicateToken, and we can provide several important parameters,</p>
+
+<p>for example, the Impersonation Level and Token Type.</p>
+
+<p>The IL is so important as James Shaw says, I am going to see what has happened </p>
+
+<p>in the process of DuplicateToken.</p>
+
+<h2>RtlSidHashInitialize</h2>
+
+<p>very exciting name, maybe we can find some hints about the algorithm of hashing.</p>
+
+<h2>SepDuplicateToken routine from WRK</h2>
+
+<p>parameter validation</p>
+
+<pre><code>         429     if ( TokenType == TokenImpersonation ) {
+
+         430 
+
+         431         ASSERT( SecurityDelegation     &gt; SecurityImpersonation );
+
+         432         ASSERT( SecurityImpersonation  &gt; SecurityIdentification );
+
+         433         ASSERT( SecurityIdentification &gt; SecurityAnonymous );
+
+         434 
+
+         435         if ( (ImpersonationLevel &gt; SecurityDelegation)  ||
+
+         436              (ImpersonationLevel &lt; SecurityAnonymous) ) {
+
+         437 
+
+         438             return STATUS_BAD_IMPERSONATION_LEVEL;
+
+         439         }
+
+         440     }
+</code></pre>
+
+<p>after some proxy and audit data processing, it directly create a new Token object:</p>
+
+<pre><code>         502     Status = ObCreateObject(
+
+         503                  RequestorMode,      // ProbeMode
+
+         504                  SeTokenObjectType, // ObjectType
+
+         505                  ObjectAttributes,   // ObjectAttributes
+
+         506                  RequestorMode,      // OwnershipMode
+
+         507                  NULL,               // ParseContext
+
+         508                  TokenBodyLength,    // ObjectBodySize
+
+         509                  PagedPoolSize,      // PagedPoolCharge
+
+         510                  NonPagedPoolSize,   // NonPagedPoolCharge
+
+         511                  (PVOID *)&amp;NewToken  // Return pointer to object
+
+         512                  );
+</code></pre>
+
+<p>then just copy some simple fields from existing token or respective parameters to</p>
+
+<p>the new token:</p>
+
+<pre><code>         529     ExAllocateLocallyUniqueId( &amp;(NewToken-&gt;TokenId) );
+
+         530     NewToken-&gt;TokenInUse = FALSE;
+
+         531     NewToken-&gt;TokenType = TokenType;
+
+         532     NewToken-&gt;ImpersonationLevel = ImpersonationLevel;
+
+         533     NewToken-&gt;TokenLock = TokenLock;
+
+         534 
+
+         535     ExInitializeResourceLite( NewToken-&gt;TokenLock );
+
+         536 
+
+         537     NewToken-&gt;AuthenticationId = ExistingToken-&gt;AuthenticationId;
+
+         538     NewToken-&gt;TokenSource = ExistingToken-&gt;TokenSource;
+
+         539     NewToken-&gt;DynamicAvailable = 0;
+
+         540     NewToken-&gt;ProxyData = NewProxyData;
+
+         541     NewToken-&gt;AuditData = NewAuditData;
+
+         542     NewToken-&gt;ParentTokenId = ExistingToken-&gt;ParentTokenId;
+
+         543     NewToken-&gt;ExpirationTime = ExistingToken-&gt;ExpirationTime;
+
+         544     NewToken-&gt;OriginatingLogonSession  = ExistingToken-&gt;OriginatingLogonSession ;
+</code></pre>
+
+<p>same as above:</p>
+
+<pre><code>         562     NewToken-&gt;ModifiedId = ExistingToken-&gt;ModifiedId;
+
+         563     NewToken-&gt;DynamicCharged = ExistingToken-&gt;DynamicCharged;
+
+         564     NewToken-&gt;DefaultOwnerIndex = ExistingToken-&gt;DefaultOwnerIndex;
+
+         565     NewToken-&gt;UserAndGroupCount = ExistingToken-&gt;UserAndGroupCount;
+
+         566     NewToken-&gt;RestrictedSidCount = ExistingToken-&gt;RestrictedSidCount;
+
+         567     NewToken-&gt;PrivilegeCount = ExistingToken-&gt;PrivilegeCount;
+
+         568     NewToken-&gt;VariableLength = ExistingToken-&gt;VariableLength;
+
+         569     NewToken-&gt;TokenFlags = ExistingToken-&gt;TokenFlags &amp; ~TOKEN_SESSION_NOT_REFERENCED;
+
+         570     NewToken-&gt;SessionId = ExistingToken-&gt;SessionId;
+
+         571     NewToken-&gt;AuditPolicy = ExistingToken-&gt;AuditPolicy;
+</code></pre>
+
+<p>duplicate logon session reference:</p>
+
+<pre><code>         580     Status = SepDuplicateLogonSessionReference (NewToken, ExistingToken);
+</code></pre>
+
+<p>Then for some varariant part of the token, reuse the existing allocated buffer, just adjust the pointers to them.</p>
+
+<p>It seems WRK has not gave us sufficient information for this duplicate process.</p>
+
+<h2>How NtDuplicateToken works</h2>
+
+<p>after inspecting SepDuplicateToken codes,</p>
+
+<p>we believe some important logic are controled by NtDuplicateToken,</p>
+
+<p>which is before SepDuplicateToken.</p>
+
+<p>first capture the options specified in the object attribute parameter:</p>
+
+<pre><code>         165     Status = SeCaptureSecurityQos(                                                                                                                        
+
+         166                  ObjectAttributes,                                                                                                                        
+
+         167                  PreviousMode,
+
+         168                  &amp;SecurityQosPresent,                                                                                                                     
+
+         169                  &amp;SecurityQos                                                                                                                             
+
+         170                  );                                                                                                                                       
+
+         171     
+
+         172     if (!NT_SUCCESS(Status)) {                                                                                                                            
+
+         173         return Status;                                                                                                                                    
+
+         174     }
+</code></pre>
+
+<p>then get the pointer to the existig token object:</p>
+
+<pre><code>         183     Status = ObReferenceObjectByHandle(  
+
+         184                  ExistingTokenHandle,    // Handle
+
+         185                  TOKEN_DUPLICATE,        // DesiredAccess
+
+         186                  SeTokenObjectType,     // ObjectType
+
+         187                  PreviousMode,           // AccessMode
+
+         188                  (PVOID *)&amp;Token,        // Object
+
+         189                  &amp;HandleInformation      // GrantedAccess
+
+         190                  );
+</code></pre>
+
+<p>as we can see, the Impersonation Level options for the new token are passing </p>
+
+<p>through the object attribute parameter.</p>
+
+<p>If no explicit Impersonation Level given, just copy from the existing token.</p>
+
+<pre><code>         219     if ( !SecurityQosPresent ) {
+
+         220 
+
+         221         SecurityQos.ImpersonationLevel = Token-&gt;ImpersonationLevel;
+
+         222 
+
+         223     }
+</code></pre>
+
+<p>If we want to get an impersonation token by duplicating an existing impersionation token,</p>
+
+<pre><code>        Impersonation Token --&gt; Impersonation Token
+</code></pre>
+
+<p>the requested impersonation level could not be higher than the existing token's impersonation level.</p>
+
+<pre><code>         232     if ( (Token-&gt;TokenType == TokenImpersonation) &amp;&amp;
+
+         233          (TokenType == TokenImpersonation)
+
+         234        ) {
+
+         235 
+
+         236         //
+
+         237         // Make sure a legitimate transformation is being requested:
+
+         238         //
+
+         239         //    (1) The impersonation level of a target duplicate must not
+
+         240         //        exceed that of the source token.
+
+         241         //
+
+         242         //
+
+         243 
+
+         244         ASSERT( SecurityDelegation     &gt; SecurityImpersonation );
+
+         245         ASSERT( SecurityImpersonation  &gt; SecurityIdentification );
+
+         246         ASSERT( SecurityIdentification &gt; SecurityAnonymous );
+
+         247 
+
+         248         if ( (SecurityQos.ImpersonationLevel &gt; Token-&gt;ImpersonationLevel) ) {
+
+         249 
+
+         250             ObDereferenceObject( (PVOID)Token );
+
+         251             if (SecurityQosPresent) {
+
+         252                 SeFreeCapturedSecurityQos( &amp;SecurityQos );
+
+         253             }
+
+         254             return STATUS_BAD_IMPERSONATION_LEVEL;
+
+         255         }
+
+         256 
+
+         257     }
+</code></pre>
+
+<p>If we want to producing a primary token from an existing impersonation token, </p>
+
+<pre><code>        Impersonation Token --&gt; Primary Token
+</code></pre>
+
+<p>the existing impersonation token's impersonation level should not be lower than <em>Impersonation</em> Level.</p>
+
+<pre><code>         265     if ( (Token-&gt;TokenType == TokenImpersonation) &amp;&amp;
+
+         266          (TokenType == TokenPrimary)              &amp;&amp;
+
+         267          (Token-&gt;ImpersonationLevel &lt;  SecurityImpersonation)
+
+         268        ) {
+
+         269         ObDereferenceObject( (PVOID)Token );
+
+         270         if (SecurityQosPresent) {
+
+         271             SeFreeCapturedSecurityQos( &amp;SecurityQos );
+
+         272         }
+
+         273         return STATUS_BAD_IMPERSONATION_LEVEL;
+
+         274     }
+</code></pre>
+
+<p>then NtDuplicateToken will call SepDuplicateToken.</p>
+
+<h2>Recap</h2>
+
+<h3>Primary Token --> Impersonation Token</h3>
+
+<h3>Primary Token --> Primary Token</h3>
+
+<p>do just as parameters says</p>
+
+<h3>Impersonation Token --> Primary Token</h3>
+
+<p>if the existing impersonation token has a level lower than <em>Impersonation</em>, for example, </p>
+
+<p>the <em>Identification</em>, it means this token cannot produce any other Primary Token.</p>
+
+<p>This is forbidden.</p>
+
+<h3>Impersonation Token --> Impersonation Token</h3>
+
+<p>the requested level should not be higher than the existing token's level.</p>
+
+<p>It means the impersonation level should not be elevated during the duplication process.</p>
+</body>
+</html>
