@@ -32,6 +32,7 @@ my $md_input = join("\n", @md_lines);
 close MD_HANDLE;
 
 my $content = Markdown::Markdown($md_input);
+$content =~ s/\n\n/\n/g; 
 
 my $html_content = $prefix.$content.$suffix;
 
