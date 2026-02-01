@@ -12,9 +12,9 @@
         }
 
         body {
-            background: #0a0e27;
-            color: #e0e0e0;
-            font-family: 'Courier New', monospace;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Courier New', monospace;
             line-height: 1.6;
             overflow-x: hidden;
         }
@@ -28,8 +28,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent),
-                linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent);
+                linear-gradient(0deg, transparent 24%, rgba(0, 122, 204, 0.05) 25%, rgba(0, 122, 204, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 122, 204, 0.05) 75%, rgba(0, 122, 204, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(0, 122, 204, 0.05) 25%, rgba(0, 122, 204, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 122, 204, 0.05) 75%, rgba(0, 122, 204, 0.05) 76%, transparent 77%, transparent);
             background-size: 50px 50px;
             z-index: -1;
             pointer-events: none;
@@ -50,12 +50,12 @@
 
         h1.main-title {
             font-size: 3.5em;
-            color: #00ffff;
+            color: #4ec9b0;
             text-shadow: 
-                0 0 10px #00ffff,
-                0 0 20px #00ffff,
-                0 0 30px #00ffff,
-                0 0 40px #ff00ff;
+                0 0 10px #4ec9b0,
+                0 0 20px #4ec9b0,
+                0 0 30px #4ec9b0,
+                0 0 40px #007acc;
             margin-bottom: 20px;
             animation: glitch 3s infinite;
         }
@@ -77,41 +77,41 @@
 
         .subtitle {
             font-size: 1.2em;
-            color: #ff00ff;
-            text-shadow: 0 0 10px #ff00ff;
+            color: #dcdcaa;
+            text-shadow: 0 0 10px #dcdcaa;
         }
 
         .section {
-            background: rgba(20, 25, 60, 0.8);
-            border: 2px solid #00ffff;
+            background: rgba(37, 37, 38, 0.8);
+            border: 2px solid #007acc;
             border-radius: 10px;
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 
-                0 0 20px rgba(0, 255, 255, 0.3),
-                inset 0 0 20px rgba(0, 255, 255, 0.05);
+                0 0 20px rgba(0, 122, 204, 0.3),
+                inset 0 0 20px rgba(0, 122, 204, 0.05);
             transition: all 0.3s ease;
         }
 
         .section:hover {
             transform: translateY(-5px);
             box-shadow: 
-                0 0 30px rgba(0, 255, 255, 0.5),
-                inset 0 0 20px rgba(0, 255, 255, 0.1);
+                0 0 30px rgba(0, 122, 204, 0.5),
+                inset 0 0 20px rgba(0, 122, 204, 0.1);
         }
 
         .section-title {
             font-size: 2em;
-            color: #ff00ff;
-            text-shadow: 0 0 10px #ff00ff;
+            color: #4ec9b0;
+            text-shadow: 0 0 10px #4ec9b0;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #00ffff;
+            border-bottom: 2px solid #007acc;
         }
 
         .section-title::before {
             content: '> ';
-            color: #00ffff;
+            color: #ce9178;
         }
 
         .links {
@@ -128,12 +128,12 @@
             content: '▸';
             position: absolute;
             left: 0;
-            color: #00ffff;
+            color: #ce9178;
             font-size: 1.2em;
         }
 
         a {
-            color: #00ffff;
+            color: #569cd6;
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
@@ -147,13 +147,13 @@
             height: 2px;
             bottom: -2px;
             left: 0;
-            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            background: linear-gradient(90deg, #007acc, #4ec9b0);
             transition: width 0.3s ease;
         }
 
         a:hover {
-            color: #ff00ff;
-            text-shadow: 0 0 10px #ff00ff;
+            color: #4ec9b0;
+            text-shadow: 0 0 10px #4ec9b0;
         }
 
         a:hover::after {
@@ -168,25 +168,25 @@
         }
 
         .cve-badge {
-            background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
-            color: #0a0e27;
+            background: linear-gradient(135deg, #007acc 0%, #4ec9b0 100%);
+            color: #1e1e1e;
             padding: 8px 16px;
             border-radius: 20px;
             font-weight: bold;
             font-size: 0.9em;
-            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            box-shadow: 0 0 15px rgba(0, 122, 204, 0.5);
             transition: all 0.3s ease;
         }
 
         .cve-badge:hover {
             transform: scale(1.1);
-            box-shadow: 0 0 25px rgba(255, 0, 255, 0.8);
+            box-shadow: 0 0 25px rgba(78, 201, 176, 0.8);
         }
 
         footer {
             text-align: center;
             padding: 40px 20px;
-            color: #00ffff;
+            color: #608b4e;
             font-size: 0.9em;
         }
 
