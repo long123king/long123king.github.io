@@ -1,18 +1,270 @@
 <!DOCTYPE html>
-<html>
-<body>
-  <p><h1> Blogs: </h1></p>
-<p><a href="https://github.com/long123king/long123king.github.io/blob/master/entry.md">My Old Blogs</a></p>
-<p><a href="https://github.com/long123king/long123king.github.io/blob/master/new_entry.md">My New Blogs</a></p>
-  
-<p><h1> Conference Slides: </h1></p>
-<p><a href="https://github.com/long123king/tokenext/blob/master/doc/Did_You_Get_Your_Token.pdf">ZeroNights 2015: Did You Get Your Token?</a></p>
-<p><a href="https://github.com/zer0mem/slides/blob/master/DeathNoteOfWindowsKernel_CodeBlue_KeenLab_zer0mem_long123king.pdf">CodeBlue 2016: Deathnote of the Windows Kernel</a></p>
-<p><a href="https://github.com/zer0mem/slides/blob/master/Rainbow_over_the_Windows.pdf">Ruxcon 2016: Rainbow Over the Windows</a></p>
-<p><a href="https://github.com/Microsoft/MSRC-Security-Research/blob/master/presentations/2019_02_OffensiveCon/2019_02%20-%20OffensiveCon%20-%20Growing%20Hypervisor%200day%20with%20Hyperseed.pdf">OffensiveCon 2019: Growing Hypervisor 0day with Hyperseed</a></p>
-<p><a href="https://github.com/microsoft/MSRC-Security-Research/blob/master/presentations/2020_08_BlackHatUSA/Breaking_VSM_by_Attacking_SecureKernel.pdf">BlackHat USA 2020: Breaking VSM by Attacking Securekernel</a></p>
-</body>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daniel King - Security Researcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-<p><h1> CVEs: </h1></p>
-CVE-2016-0026, CVE-2016-3334, CVE-2016-7184, CVE-2018-8439, CVE-2019-1398, CVE-2020-0917
+        body {
+            background: #0a0e27;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(0deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent),
+                linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.05) 25%, rgba(0, 255, 255, 0.05) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.05) 75%, rgba(0, 255, 255, 0.05) 76%, transparent 77%, transparent);
+            background-size: 50px 50px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        h1.main-title {
+            font-size: 3.5em;
+            color: #00ffff;
+            text-shadow: 
+                0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 30px #00ffff,
+                0 0 40px #ff00ff;
+            margin-bottom: 20px;
+            animation: glitch 3s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 90%, 100% {
+                transform: translate(0);
+            }
+            92% {
+                transform: translate(-2px, 2px);
+            }
+            94% {
+                transform: translate(2px, -2px);
+            }
+            96% {
+                transform: translate(-2px, -2px);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        .section {
+            background: rgba(20, 25, 60, 0.8);
+            border: 2px solid #00ffff;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.3),
+                inset 0 0 20px rgba(0, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 
+                0 0 30px rgba(0, 255, 255, 0.5),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .section-title {
+            font-size: 2em;
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #00ffff;
+        }
+
+        .section-title::before {
+            content: '> ';
+            color: #00ffff;
+        }
+
+        .links {
+            list-style: none;
+        }
+
+        .links li {
+            margin: 15px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .links li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: #00ffff;
+            font-size: 1.2em;
+        }
+
+        a {
+            color: #00ffff;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            display: inline-block;
+        }
+
+        a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: -2px;
+            left: 0;
+            background: linear-gradient(90deg, #00ffff, #ff00ff);
+            transition: width 0.3s ease;
+        }
+
+        a:hover {
+            color: #ff00ff;
+            text-shadow: 0 0 10px #ff00ff;
+        }
+
+        a:hover::after {
+            width: 100%;
+        }
+
+        .cve-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .cve-badge {
+            background: linear-gradient(135deg, #00ffff 0%, #ff00ff 100%);
+            color: #0a0e27;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+
+        .cve-badge:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 25px rgba(255, 0, 255, 0.8);
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: #00ffff;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            h1.main-title {
+                font-size: 2em;
+            }
+
+            .section {
+                padding: 20px;
+            }
+
+            .section-title {
+                font-size: 1.5em;
+            }
+        }
+
+        /* Scanline effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.15),
+                rgba(0, 0, 0, 0.15) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1 class="main-title">DANIEL KING</h1>
+            <div class="subtitle">Security Researcher | Kernel Developer | Speaker</div>
+        </header>
+
+        <section class="section">
+            <h2 class="section-title">Blogs</h2>
+            <ul class="links">
+                <li><a href="https://github.com/long123king/long123king.github.io/blob/master/entry.md">My Old Blogs</a></li>
+                <li><a href="https://github.com/long123king/long123king.github.io/blob/master/new_entry.md">My New Blogs</a></li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">Conference Slides</h2>
+            <ul class="links">
+                <li><a href="https://github.com/long123king/tokenext/blob/master/doc/Did_You_Get_Your_Token.pdf">ZeroNights 2015: Did You Get Your Token?</a></li>
+                <li><a href="https://github.com/zer0mem/slides/blob/master/DeathNoteOfWindowsKernel_CodeBlue_KeenLab_zer0mem_long123king.pdf">CodeBlue 2016: Deathnote of the Windows Kernel</a></li>
+                <li><a href="https://github.com/zer0mem/slides/blob/master/Rainbow_over_the_Windows.pdf">Ruxcon 2016: Rainbow Over the Windows</a></li>
+                <li><a href="https://github.com/Microsoft/MSRC-Security-Research/blob/master/presentations/2019_02_OffensiveCon/2019_02%20-%20OffensiveCon%20-%20Growing%20Hypervisor%200day%20with%20Hyperseed.pdf">OffensiveCon 2019: Growing Hypervisor 0day with Hyperseed</a></li>
+                <li><a href="https://github.com/microsoft/MSRC-Security-Research/blob/master/presentations/2020_08_BlackHatUSA/Breaking_VSM_by_Attacking_SecureKernel.pdf">BlackHat USA 2020: Breaking VSM by Attacking Securekernel</a></li>
+            </ul>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">CVEs</h2>
+            <div class="cve-list">
+                <span class="cve-badge">CVE-2016-0026</span>
+                <span class="cve-badge">CVE-2016-3334</span>
+                <span class="cve-badge">CVE-2016-7184</span>
+                <span class="cve-badge">CVE-2018-8439</span>
+                <span class="cve-badge">CVE-2019-1398</span>
+                <span class="cve-badge">CVE-2020-0917</span>
+            </div>
+        </section>
+
+        <footer>
+            <p>[ SYSTEM ONLINE ] // Security Research & Development</p>
+        </footer>
+    </div>
+</body>
 </html>
